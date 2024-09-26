@@ -1,0 +1,97 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File (Integrated Terminal)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Remote Attach",
+      "type": "debugpy",
+      "request": "attach",
+      "port": 5678,
+      "host": "localhost",
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ]
+    },
+    {
+      "name": "Python: Module",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "celery -A app.celery worker -E --loglevel=INFO",
+      "console": "integratedTerminal",
+      "args": [
+        "runserver",
+        "--noreload",
+        "--nothreading"
+      ]
+    },
+    {
+      "name": "Python: Django",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "console": "integratedTerminal",
+      "args": [
+        "runserver",
+        "--noreload",
+        "--nothreading"
+      ],
+      "django": true
+    },
+    {
+      "name": "Python: Flask",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "flask",
+      "env": {
+        "FLASK_APP": "app/__init__.py",
+        "PODLIB_NAMESPACE": "uvarc-services",
+        "PODLIB_INCLUSTER": "false",
+        "PODLIB_CONFIG": "userpods",
+        "KUBECONFIG":"/var/folders/gc/gx8d1fl95plgqy78qyg_wgm00000gn/T/kubeconfig-c111135a92a73b6f6c06108c708640ec"
+      },
+      "args": [
+        "run",
+        "--no-debugger",
+        "--no-reload"
+      ],
+      "jinja": true
+    },
+    {
+      "name": "Python: Celery",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "celery",
+      "console": "integratedTerminal",
+      "env": {
+        "KUBECONFIG":"/var/folders/gc/gx8d1fl95plgqy78qyg_wgm00000gn/T/kubeconfig-c111135a92a73b6f6c06108c708640ec"
+      }
+      "args": [
+          "-A",
+          "app.celery",
+          "worker",
+          "-E",
+          "-l",
+          "info"
+      ]
+    },
+    {
+      "name": "Python: Current File (External Terminal)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "externalTerminal"
+    }
+  ]
+}

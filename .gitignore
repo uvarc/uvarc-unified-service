@@ -1,0 +1,14 @@
+.venv
+.project
+*.pyc
+__pycache__
+/app.sock
+/.pydevproject
+/supervisord.log
+/pypy-env/
+/python-env/
+.env
+/.DS_Store
+/celerybeat-schedule
+celerybeat-schedule.db
+data

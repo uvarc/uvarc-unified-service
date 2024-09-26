@@ -1,0 +1,9 @@
+{
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Path": ".venv/bin/flake8",
+  "python.linting.pylintEnabled": false,
+  "python.linting.enabled": true,
+  "python.formatting.provider": "autopep8",
+  "python.pythonPath": ".venv/bin/python",
+  "python.autoComplete.extraPaths": [".venv/lib/python3.12/site-packages"]
+}

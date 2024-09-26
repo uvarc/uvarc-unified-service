@@ -1,0 +1,126 @@
+import logging
+import os
+import signal
+
+from datetime import timedelta
+from flask import Flask, jsonify
+from celery import Celery
+from celery.schedules import crontab
+from flask_bcrypt import Bcrypt
+from flask_cors import CORS
+from flask_httpauth import HTTPTokenAuth
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_marshmallow import Marshmallow
+from flask_pymongo import PyMongo
+from flask_sso import SSO
+# from common_service_handlers.aws_service_handler import AWSServiceHandler
+# from common_service_handlers.kube_service_handler import KubeService
+# from common_service_handlers.email_service_handler import EmailService
+from common_utils.rest_exception import RestException
+
+
+
+# def make_celery(app):
+#     celery = Celery(
+#         'EOD_TASKS',
+#         broker=app.config['CELERY_BROKER_URL']
+#     )
+#     celery.config_from_object(app.config)
+#     celery.Task = 
+#     # celery.conf.update(app.config)
+#     return celery
+
+
+app = Flask(__name__, instance_relative_config=True)
+
+# Load the configuration from the instance folder
+app.config.from_pyfile('settings.py')
+
+if (app.config['DEBUG']):
+    app.debug = True
+    log_level = logging.DEBUG
+else:
+    log_level = logging.INFO
+
+logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_level,
+                    format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+
+# Enable CORS
+if (app.config['CORS_ENABLED']):
+    cors = CORS(app, resources={r"*": {"origins": "*"}})
+
+
+# Flask-Marshmallow provides HATEOAS links
+ma = Marshmallow(app)
+
+# # email service
+# email_service = EmailService(app)
+
+# Single Signon
+sso = SSO(app=app)
+
+# Token Authentication
+auth = HTTPTokenAuth('Bearer')
+
+# Password Encryption
+bcrypt = Bcrypt(app)
+mongo = PyMongo(app)
+# kube_service = KubeService(app)
+# aws_service = AWSServiceHandler(app)
+
+limiter = Limiter(key_func=get_remote_address)
+limiter.init_app(app)
+
+celery = Celery(
+    app.name,
+    broker=app.config['CELERY_BROKER_URL']
+)
+celery.conf.result_backend = app.config['CELERY_BROKER_URL']
+celery.conf.mongodb_backend_settings = app.config['CELERY_BACKEND_SETTINGS']
+celery.conf.beat_schedule = app.config['CELERY_BEAT_SCHEDULE']
+celery.conf.task_track_started = True
+celery.conf.worker_send_task_events = True
+celery.conf.update(app.config)
+
+
+def handler(error, endpoint, values=''):
+    print('URL Build error:' + str(error))
+    return ''
+
+
+app.url_build_error_handlers.append(handler)
+
+
+# Handle errors consistently
+@app.errorhandler(RestException)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
+@app.errorhandler(404)
+def handle_404(error):
+    return handle_invalid_usage(RestException(RestException.NOT_FOUND, 404))
+
+
+@app.cli.command()
+def stop():
+    """Stop the server."""
+    pid = os.getpid()
+    if pid:
+        print('Stopping server...')
+        os.kill(pid, signal.SIGTERM)
+        print('Server stopped.')
+    else:
+        print('Server is not running.')
+
+from app.allocation_requests import allocation_requests
+from app.ticket_requests import ticket_requests
+from app.ldap_requests import ldap_requests
+app.register_blueprint(allocation_requests)
+app.register_blueprint(ticket_requests)
+app.register_blueprint(ldap_requests)
+
+from common_service_handlers import tasks

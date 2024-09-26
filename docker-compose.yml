@@ -1,0 +1,69 @@
+networks:
+  uvarc_unified_service_network_private:
+    name: uvarc_unified_service_network_private
+    external: false
+  uvarc_unified_db_network_private:
+    name: uvarc_unified_db_network_private
+    external: false
+services:
+  postfix:
+    image: boky/postfix
+    container_name: postfix
+    environment:
+      - ALLOWED_SENDER_DOMAINS=api_uvarc_io.org, virginia.edu
+    ports:
+      - 25:25
+    networks:
+      - uvarc_unified_service_network_private
+  uvarc_unified_service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        - BUILD_ENV=docker
+    environment:
+      - 'SETTINGS_JSON={
+        "ENV": "local",
+        "MONGODB": {"HOSTS":["uvarc_unified_db"], "PORT":"27017"},
+        "JIRA_CLOUD": {"HOSTS":["varesearchhelp.atlassian.net"], "PORT":"443", "CLIENT_ID":"rc-jirabot@virginia.edu"},
+        "SMTP": {"HOSTS":["postfix"], "PORT":"25", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "AWS": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECREY":""},
+        "CORS_ENABLED":false,
+        "DEBUG":true
+        }'
+      - MONGO_USER=uvarc_unified_db_user
+      - MONGO_PASSWORD=uvarc_unified_db_pass  
+      - JIRA_CLOUD_CLIENT_SECRET=xyz
+      - SMTP_CLIENT_SECRET=xyz
+      - AWS_CLIENT_ID=xyz
+      - AWS_CLIENT_SECRET=xyz
+    volumes:
+      - ./app:/opt/local/non_root_user/uvarc_unified_service/app
+      - ./common_service_handlers:/opt/local/non_root_user/uvarc_unified_service/common_service_handlers
+      - ./common_utils:/opt/local/non_root_user/uvarc_unified_service/common_utils
+      - ./config:/opt/local/non_root_user/uvarc_unified_service/config
+    container_name: uvarc_unified_service
+    ports:
+      - 5000:5000
+    networks:
+      - uvarc_unified_service_network_private
+      - uvarc_unified_db_network_private
+    depends_on:
+      - postfix
+      - uvarc_unified_db
+  uvarc_unified_db:
+      user: "root"
+      image: mongo
+      restart: always
+      container_name: uvarc_unified_db
+      ports:
+        - 27017:27017
+      networks:
+        - uvarc_unified_db_network_private
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: root
+        MONGO_INITDB_ROOT_PASSWORD: example
+      volumes:
+        # - ./data/mongodb:/data/db
+        - ./init_db.js:/docker-entrypoint-initdb.d/init_db.js
+  
