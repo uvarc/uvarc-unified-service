@@ -116,7 +116,7 @@ def stop():
     else:
         print('Server is not running.')
 
-from app.allocation_requests import allocation_requests
+from app.resource_requests import allocation_requests
 from app.ticket_requests import ticket_requests
 from app.ldap_requests import ldap_requests
 app.register_blueprint(allocation_requests)
