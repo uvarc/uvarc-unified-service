@@ -67,7 +67,7 @@ CELERY_BACKEND_SETTINGS = {
 }
 CELERY_BEAT_SCHEDULE = {
     'sync_ldap_data_task-interval': {
-        'task': 'sync_ldap_data_task',
+        'task': 'ldap_requests_sync_ldap_data_task',
         'schedule': timedelta(seconds=60)
     },
     # 'process_curvex_aiai_msgs_task-interval': {
