@@ -45,8 +45,8 @@ jobs:
           file: ./docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/uvarc/$BUILD_PROJ:$BRANCH
-            ghcr.io/uvarc/$BUILD_PROJ:latest
+            $BRANCH
+            latest
       -
         name: Build and push
         if: github.ref != 'refs/heads/master'
@@ -56,4 +56,4 @@ jobs:
           file: ./docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/uvarc/$BUILD_PROJ:$BRANCH
+            $BRANCH
