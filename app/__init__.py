@@ -81,6 +81,7 @@ celery.conf.mongodb_backend_settings = app.config['CELERY_BACKEND_SETTINGS']
 celery.conf.beat_schedule = app.config['CELERY_BEAT_SCHEDULE']
 celery.conf.task_track_started = True
 celery.conf.worker_send_task_events = True
+celery.conf.broker_connection_retry_on_startup = True
 celery.conf.update(app.config)
 
 
@@ -123,4 +124,7 @@ app.register_blueprint(allocation_requests)
 app.register_blueprint(ticket_requests)
 app.register_blueprint(ldap_requests)
 
-from common_service_handlers import tasks
+from app.ldap_requests import tasks
+from app.resource_requests import tasks
+from app.ticket_requests import tasks
+from common_utils import tasks

@@ -6,7 +6,7 @@ from flask_restful import reqparse
 from app import app
 from . import allocation_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.allocation_requests.endpoints import StorageRequestEndpoint
+from app.resource_requests.endpoints import StorageRequestEndpoint
 
 
 api = UVARCUnifiedApi(allocation_requests)
