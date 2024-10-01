@@ -25,9 +25,9 @@ jobs:
         name: Extract branch name
         shell: bash
         run: |
-          branch=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/.*\///')
-          echo "Building release version $branch"
-          echo "BRANCH=$branch" >> $GITHUB_ENV
+          build_branch=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/.*\///')
+          echo "Building release version $build_branch"
+          echo "BUILD_BRANCH=$build_branch" >> $GITHUB_ENV
         id: extract_branch
       -
         name: Login to GHCR
@@ -45,7 +45,7 @@ jobs:
           file: ./docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ${{ env.BUILD_PROJ }}:${{ env.BRANCH }}
+            ${{ env.BUILD_PROJ }}:${{ env.BUILD_BRANCH }}
             ${{ env.BUILD_PROJ }}:${{ env.latest }}
       -
         name: Build and push
@@ -56,4 +56,4 @@ jobs:
           file: ./docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ${{ env.BUILD_PROJ }}:${{ env.BRANCH }}
+            ${{ env.BUILD_PROJ }}:${{ env.BUILD_BRANCH }}
