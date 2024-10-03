@@ -4,4 +4,4 @@ db.createUser({
   pwd: "uvarc_unified_db_pass", // or cleartext password
   roles: [{ role: "readWrite", db: "uvarc_unified_data" }],
 });
-db.createCollection('user_info');
+db.createCollection('users');
