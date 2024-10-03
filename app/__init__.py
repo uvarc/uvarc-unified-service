@@ -5,6 +5,7 @@ import signal
 from datetime import timedelta
 from flask import Flask, jsonify
 from celery import Celery
+from flasgger import Swagger
 from celery.schedules import crontab
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
@@ -20,17 +21,14 @@ from flask_sso import SSO
 from common_utils.rest_exception import RestException
 
 
-
-# def make_celery(app):
-#     celery = Celery(
-#         'EOD_TASKS',
-#         broker=app.config['CELERY_BROKER_URL']
-#     )
-#     celery.config_from_object(app.config)
-#     celery.Task = 
-#     # celery.conf.update(app.config)
-#     return celery
-
+template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "UVARC Unified services APIs",
+        "description": "This API was developed using Python Flask, which provides an unified set of endpoints to support Research Computing automation needs.",
+        "version": "1.0"
+    }
+}
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -84,6 +82,13 @@ celery.conf.worker_send_task_events = True
 celery.conf.broker_connection_retry_on_startup = True
 celery.conf.update(app.config)
 
+#Swagger setup
+app.config['SWAGGER'] = {
+    'title': 'UVARC Unified services APIs',
+    'uiversion': 2,
+    'template': './resources/flasgger/swagger_ui.html'
+}
+swagger = Swagger(app, template=template)
 
 def handler(error, endpoint, values=''):
     print('URL Build error:' + str(error))
@@ -91,7 +96,6 @@ def handler(error, endpoint, values=''):
 
 
 app.url_build_error_handlers.append(handler)
-
 
 # Handle errors consistently
 @app.errorhandler(RestException)
@@ -116,6 +120,7 @@ def stop():
         print('Server stopped.')
     else:
         print('Server is not running.')
+
 
 from app.resource_requests import allocation_requests
 from app.ticket_requests import ticket_requests
