@@ -25,7 +25,7 @@ services:
       - 'SETTINGS_JSON={
         "ENV": "local",
         "MONGODB": {"HOSTS":["uvarc_unified_db"], "PORT":"27017"},
-        "JIRA_CLOUD": {"HOSTS":["varesearchhelp.atlassian.net"], "PORT":"443", "CLIENT_ID":"rc-jirabot@virginia.edu"},
+        "JIRA": {"HOSTS":["jira-dev.admin.virginia.edu"], "PORT":"443", "CLIENT_ID":"rcjirabot"},
         "SMTP": {"HOSTS":["postfix"], "PORT":"25", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "AWS": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECREY":""},
         "CORS_ENABLED":false,
@@ -33,7 +33,7 @@ services:
         }'
       - MONGO_USER=uvarc_unified_db_user
       - MONGO_PASSWORD=uvarc_unified_db_pass  
-      - JIRA_CLOUD_CLIENT_SECRET=xyz
+      - JIRA_CLIENT_SECRET=xyz
       - SMTP_CLIENT_SECRET=xyz
       - AWS_CLIENT_ID=xyz
       - AWS_CLIENT_SECRET=xyz

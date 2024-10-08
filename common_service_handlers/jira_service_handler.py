@@ -3,29 +3,21 @@ import requests
 
 
 class JiraServiceHandler:
-    def __init__(self, app, is_cloud=False):
+    def __init__(self, app):
         self._connect_host_url, self._auth = self.__get_jira_host_info(
-            app, is_cloud)
-        self._default_reporter = app.config['JIRA_CLOUD_CONN_INFO']['CLIENT_ID']
+            app)
+        self._default_reporter = app.config['JIRA_CONN_INFO']['CLIENT_ID']
         self._project_info_lookup_dict = app.config['JIRA_PROJECT_INFO_LOOKUP']
         self._project_request_type_lookup_dict =\
             app.config['JIRA_PROJECT_REQUEST_TYPE_LOOKUP']
 
-    def __get_jira_host_info(self, app, is_cloud):
-        # if is_cloud:
+    def __get_jira_host_info(self, app):
         return [
-            'https://{}:{}/rest/'.format(app.config['JIRA_CLOUD_CONN_INFO']['HOST'],
-                                            app.config['JIRA_CLOUD_CONN_INFO']['PORT']),
-            (app.config['JIRA_CLOUD_CONN_INFO']['CLIENT_ID'],
-                app.config['JIRA_CLOUD_CONN_INFO']['PASSWORD'])
+            'https://{}:{}/rest/'.format(app.config['JIRA_CONN_INFO']['HOST'],
+                                            app.config['JIRA_CONN_INFO']['PORT']),
+            (app.config['JIRA_CONN_INFO']['CLIENT_ID'],
+                app.config['JIRA_CONN_INFO']['PASSWORD'])
         ]
-        # else:
-        #     return [
-        #         'https://{}:{}/rest/'.format(app.config['JIRA_CONN_INFO']['HOST'],
-        #                                      app.config['JIRA_CONN_INFO']['PORT']),
-        #         (app.config['JIRA_CONN_INFO']['CLIENT_ID'],
-        #          app.config['JIRA_CONN_INFO']['PASSWORD'])
-        #     ]
 
     def __get_jira_ticket_route_ids(self, project_name, request_type):
         try:
