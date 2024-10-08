@@ -11,4 +11,3 @@ __pycache__
 /.DS_Store
 /celerybeat-schedule
 celerybeat-schedule.db
-data
