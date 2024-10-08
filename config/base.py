@@ -34,26 +34,13 @@ DEBUG = settings_info["DEBUG"]
 #     'CLIENT_SECRET': settings_info['AWS']['CLIENT_SECRET']
 # }
 
-# ENV_NAME = settings_info['ENV']
-# if ENV_NAME == 'prod':
-#     os.environ["HTTP_PROXY"] = "http://awx:sB5VwXJYzc0QWpgqELWVjYkn@figgis-s.hpc.virginia.edu:8081"
-#     os.environ["HTTPS_PROXY"] = "http://awx:sB5VwXJYzc0QWpgqELWVjYkn@figgis-s.hpc.virginia.edu:8081"
-#     AWS_CONN_INFO['CURVEX_INBOUND_QUEUE'] = 'aiai-stage-file-upload-queue'
-#     AWS_CONN_INFO['CURVEX_OUTBOUND_QUEUE'] = 'aiai-stage-incoming-status-updates'
-#     PREPROCESSOR_MODEL_VERSION = 'NN_V_1_0'
-#     NEURALNETWORK_MODEL_VERSION = 'NN_V_1_0'
-# elif ENV_NAME == 'test':
-#     os.environ["HTTP_PROXY"] = "http://awx:sB5VwXJYzc0QWpgqELWVjYkn@figgis-s.hpc.virginia.edu:8081"
-#     os.environ["HTTPS_PROXY"] = "http://awx:sB5VwXJYzc0QWpgqELWVjYkn@figgis-s.hpc.virginia.edu:8081"
-#     AWS_CONN_INFO['CURVEX_INBOUND_QUEUE'] = 'aiai-stage-file-upload-queue'
-#     AWS_CONN_INFO['CURVEX_OUTBOUND_QUEUE'] = 'aiai-stage-incoming-status-updates'
-#     PREPROCESSOR_MODEL_VERSION = 'latest'
-#     NEURALNETWORK_MODEL_VERSION = 'latest'
-# else:
-#     AWS_CONN_INFO['CURVEX_INBOUND_QUEUE'] = 'aiai-stage-file-upload-queue'
-#     AWS_CONN_INFO['CURVEX_OUTBOUND_QUEUE'] = 'aiai-stage-incoming-status-updates'
-#     PREPROCESSOR_MODEL_VERSION = 'latest'
-#     NEURALNETWORK_MODEL_VERSION = 'latest'
+ENV_NAME = settings_info['ENV']
+if ENV_NAME == 'prod':
+    pass
+elif ENV_NAME == 'test':
+    pass
+else:
+    pass
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
@@ -70,12 +57,4 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'ldap_requests_sync_ldap_data_task',
         'schedule': timedelta(seconds=60)
     },
-    # 'process_curvex_aiai_msgs_task-interval': {
-    #     'task': 'process_curvex_aiai_msgs_task',
-    #     'schedule': timedelta(seconds=120)
-    # },
-    # 'cleanup_finished_aiai_jobs_task-interval': {
-    #     'task': 'cleanup_finished_aiai_jobs_task',
-    #     'schedule': timedelta(seconds=5)
-    # },
 }
