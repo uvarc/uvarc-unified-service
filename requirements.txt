@@ -83,6 +83,7 @@ oauthlib==3.2.0
 ordered-set==4.1.0
 orderedmultidict==1.0.1
 orderly-set==5.2.2
+pandas==2.2.3
 packaging==21.3
 parsel==1.6.0
 platformdirs==2.5.2

@@ -6,8 +6,7 @@ from flask_restful import reqparse
 from app import app
 from . import ldap_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.ldap_requests.endpoints import LDAPUserInfoEndpoint
-
+from app.ldap_requests.endpoints import GetUserFromDBEndpoint, GetMultiUserFromDBEndpoint
 
 api = UVARCUnifiedApi(ldap_requests)
 
@@ -15,7 +14,8 @@ parser = flask_restful.reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
-    (LDAPUserInfoEndpoint, '/get_user_details'),
+    (GetUserFromDBEndpoint, '/get_user_details'),
+    (GetMultiUserFromDBEndpoint, '/get_multiuser_details'),
 ]
 
 

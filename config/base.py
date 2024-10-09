@@ -39,10 +39,29 @@ print(settings_info)
 CORS_ENABLED = settings_info["CORS_ENABLED"]
 DEBUG = settings_info["DEBUG"]
 
+ESERVICES_LDAP_HOST = settings_info["LDAP_PRIVATE"]["HOSTS"][0]
+ESERVICES_LDAP_PORT = settings_info["LDAP_PRIVATE"]["PORT"]
+ESERVICES_LDAP_CLIENT_ID = settings_info["LDAP_PRIVATE"]["CLIENT_ID"]
+ESERVICES_LDAP_CLIENT_SECRET = settings_info["LDAP_PRIVATE"]["CLIENT_SECRET"]
+
+PUBLIC_LDAP_HOST = settings_info["LDAP_PUBLIC"]["HOSTS"][0]
+PUBLIC_LDAP_PORT = settings_info["LDAP_PUBLIC"]["PORT"]
+
+HPC_HOST = settings_info["HPC_API"]["HOSTS"][0]
+HPC_CLIENT_SECRET = settings_info["HPC_API"]["CLIENT_SECRET"]
+
 AWS_CONN_INFO = {
     'CLIENT_ID': settings_info['AWS']['CLIENT_ID'],
     'CLIENT_SECRET': settings_info['AWS']['CLIENT_SECRET']
 }
+
+ENV_NAME = settings_info['ENV']
+if ENV_NAME == 'prod':
+    pass
+elif ENV_NAME == 'test':
+    pass
+else:
+    pass
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
@@ -57,7 +76,7 @@ CELERY_BACKEND_SETTINGS = {
 CELERY_BEAT_SCHEDULE = {
     'sync_ldap_data_task-interval': {
         'task': 'ldap_requests_sync_ldap_data_task',
-        'schedule': timedelta(seconds=60)
+        'schedule': timedelta(minutes=1)
     },
 }
 
