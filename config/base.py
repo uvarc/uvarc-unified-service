@@ -10,14 +10,23 @@ VERSION = '0.1'
 def fetch_connections_info():
     if 'SETTINGS_JSON' in os.environ:
         settings = json.loads(os.environ['SETTINGS_JSON'])
+        settings["JIRA"]['CLIENT_ID'] = os.environ['JIRA_CLIENT_ID']
         settings["JIRA"]['CLIENT_SECRET'] = os.environ['JIRA_CLIENT_SECRET']
+        settings["SMTP"]['CLIENT_ID'] = os.environ['SMTP_CLIENT_ID']
+        settings["SMTP"]['CLIENT_SECRET'] = os.environ['SMTP_CLIENT_SECRET']
         settings["AWS"]['CLIENT_ID'] = os.environ['AWS_CLIENT_ID']
         settings["AWS"]['CLIENT_SECRET'] = os.environ['AWS_CLIENT_SECRET']
         settings["MONGODB"]['CLIENT_ID'] = os.environ['MONGO_USER']
         settings["MONGODB"]['CLIENT_SECRET'] = os.environ['MONGO_PASSWORD']
+        settings["LDAP_PUBLIC"]['CLIENT_ID'] = os.environ['LDAP_PUBLIC_CLIENT_ID']
+        settings["LDAP_PUBLIC"]['CLIENT_SECRET'] = os.environ['LDAP_PUBLIC_CLIENT_SECRET']
+        settings["LDAP_PRIVATE"]['CLIENT_ID'] = os.environ['LDAP_PRIVATE_CLIENT_ID']
+        settings["LDAP_PRIVATE"]['CLIENT_SECRET'] = os.environ['LDAP_PRIVATE_CLIENT_SECRET']
+        settings["HPC_API"]['CLIENT_ID'] = os.environ['HPC_API_CLIENT_ID']
+        settings["HPC_API"]['CLIENT_SECRET'] = os.environ['HPC_API_CLIENT_SECRET']
         return settings
     else:
-        return json.load(open('./connections.json'))
+        return json.load(open('./data/connections.json'))
 
 
 def auth_callback_url_tuple(portal_host_url, auth_callback_route, auth_email_reset_route, auth_email_confirm_route): return (
