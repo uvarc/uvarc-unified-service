@@ -1,9 +1,12 @@
 {
         "ENV": "local",
-        "JIRA": {"HOSTS":["jira-dev.admin.virginia.edu"], "PORT":"443", "CLIENT_ID":"rcjirabot", "CLIENT_SECRET":"Bot@4321"},
+        "JIRA": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "SMTP": {"HOSTS":["localhost"], "PORT":"25", "CLIENT_ID":"", "CLIENT_SECRET":"", "SECURE_KEY":""},
 	"AWS":  {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "MONGODB": {"HOSTS":["localhost"], "PORT":"27017", "CLIENT_ID":"uvarc_unified_db_user", "CLIENT_SECRET":"uvarc_unified_db_pass"},
+        "LDAP_PUBLIC": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "LDAP_PRIVATE":  {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "HPC_API": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "CORS_ENABLED":true,
         "DEBUG":true,
         "API_URL":"http://localhost:5000" 
