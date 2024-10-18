@@ -1,49 +1,62 @@
 from ldap3 import Server, Connection, ALL
 
-class EServicesLDAPServiceHandler:
+
+class PrivateLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.eservices_ldap_url = f"ldap://{app.config["ESERVICES_LDAP_HOST"]}:{app.config["ESERVICES_LDAP_PORT"]}"
-        self.eservices_ldap_bind_user = f"{app.config["ESERVICES_LDAP_CLIENT_ID"]}@{app.config["ESERVICES_LDAP_HOST"]}"
-        self.eservices_ldap_bind_pass = app.config['ESERVICES_LDAP_CLIENT_SECRET']
-        self.eservices_ldap_attribute_list = [
-                                                "sAMAccountName",
-                                                "displayName",
-                                                "department",
-                                                "title",
-                                                "pwdLastSet",
-                                                "userAccountControl",
-                                                "memberOf",
-                                                "uidNumber",
-                                                "primaryGroupID"
-                                            ]
-        self.eservices_ldap_conn = self.create_eservices_ldap_connection()
+        self.private_ldap_url = f"ldap://{app.config["ESERVICES_LDAP_HOST"]}:{
+            app.config["ESERVICES_LDAP_PORT"]}"
+        self.private_ldap_bind_user = f"{
+            app.config["ESERVICES_LDAP_CLIENT_ID"]}@{app.config["ESERVICES_LDAP_HOST"]}"
+        self.private_ldap_bind_pass = app.config['ESERVICES_LDAP_CLIENT_SECRET']
+        self.__private_ldap_attribute_list = [
+            "sAMAccountName",
+            "displayName",
+            "department",
+            "title",
+            "pwdLastSet",
+            "userAccountControl",
+            "memberOf",
+            "uidNumber",
+            "primaryGroupID"
+        ]
+        self.__private_ldap_connection = None
+        self.__private_ldap_connection = self.connect()
 
-
-    def create_eservices_ldap_connection(self):
+    def connect(self):
         """Create a connection to the specified LDAP server."""
         try:
-            server = Server(self.eservices_ldap_url, get_info=ALL, connect_timeout=10)
-            conn = Connection(server, user=self.eservices_ldap_bind_user, password=self.eservices_ldap_bind_pass, auto_bind=True)
-            return conn
+            return Connection(
+                Server(self.private_ldap_url, get_info=ALL, connect_timeout=10),
+                user=self.private_ldap_bind_user,
+                password=self.private_ldap_bind_pass, auto_bind=True
+            )
         except Exception as ex:
-            self.app.logger.error(f"Failed to create LDAP connection: {ex}")
-            return None
-        
-    def get_eservices_ldap_info(self, uid, conn):
-    
-        filter_string = f"(sAMAccountName={uid})"
+            self.app.logger.error(
+                f"Error occured while connecting to private LDAP: {ex}")
+            raise ex
 
-        conn.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string, search_scope="SUBTREE", attributes=self.eservices_ldap_attribute_list)
+    def close(self):
+        if self.__private_ldap_connection:
+            self.__private_ldap_connection.unbind()
+    
+    def __del__(self):
+        self.close()
+        self.__private_ldap_connection = None
+
+    def get_private_ldap_info(self, uid):
+        filter_string = f"(sAMAccountName={uid})"
+        self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
+                    search_scope="SUBTREE", attributes=self.__private_ldap_attribute_list)
 
         # Invalid uid
-        if not conn.entries:
+        if not self.__private_ldap_connection.entries:
             # self.app.logger.error(f"uid produced no values: {uid}")
             return None
-        
-        entries = conn.entries
-        
-        # Should only be one entry 
+
+        entries = self.__private_ldap_connection.entries
+
+        # Should only be one entry
         entry = entries[0]
 
         ldap_dict_entry = entry.entry_attributes_as_dict
@@ -52,15 +65,15 @@ class EServicesLDAPServiceHandler:
         sponsored = -1  # Initialize with a value that indicates "not found"
         for i, e in enumerate(ldap_dict_entry["memberOf"]):
             if "sponsored" in e:
-                sponsored = i  
-                break    
+                sponsored = i
+                break
         if sponsored != -1:
             sponsor = ""
             for part in ldap_dict_entry["memberOf"]:
                 sections = part.split(",")
                 my_sec = sections[0]
                 if "CN=UV" in my_sec:
-                    sponsor +=  my_sec[6:] + " "
+                    sponsor += my_sec[6:] + " "
             ldap_dict_entry["Sponsored"] = "True [" + sponsor + "sponsored]"
         else:
             ldap_dict_entry["Sponsored"] = "False"
@@ -71,7 +84,7 @@ class EServicesLDAPServiceHandler:
         elif ldap_dict_entry["userAccountControl"][0] == 514:
             ldap_dict_entry["userAccountControl"] = "disabled"
         elif ldap_dict_entry["userAccountControl"][0] == 8388608:
-                ldap_dict_entry["userAccountControl"] = "password expired"
+            ldap_dict_entry["userAccountControl"] = "password expired"
 
         pwd_last_set = ldap_dict_entry["pwdLastSet"][0]
         # Remove microseconds by setting them to 0
@@ -85,20 +98,20 @@ class EServicesLDAPServiceHandler:
             if isinstance(value, list) and len(value) == 1:
                 ldap_dict_entry[key] = value[0]
             if isinstance(value, list) and len(value) == 0:
-                    ldap_dict_entry[key] = ""
-            
+                ldap_dict_entry[key] = ""
 
         # Convert Numbers to Strings
-        ldap_dict_entry["primaryGroupID"] = str(ldap_dict_entry["primaryGroupID"])
+        ldap_dict_entry["primaryGroupID"] = str(
+            ldap_dict_entry["primaryGroupID"])
         ldap_dict_entry["uidNumber"] = str(ldap_dict_entry["uidNumber"])
         # Add in school
         ldap_dict_entry = self.__add_school(ldap_dict_entry)
 
         return ldap_dict_entry
-    
+
     def __add_school(self, response):
         department = response["department"]
-        if department != None or department == "": 
+        if department != None or department == "":
             school = department[0:2]
             if school.isupper():
                 response["school"] = school
@@ -109,50 +122,65 @@ class EServicesLDAPServiceHandler:
                     response["school"] = "DS"
                 elif "Arts % Sciences" in department:
                     response["school"] = "AS"
-                else: response["school"] = "Others"
+                else:
+                    response["school"] = "Others"
         else:
             response["school"] = ""
         return response
-    
+
+
 class PublicLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.public_ldap_url = f"ldap://{app.config["PUBLIC_LDAP_HOST"]}:{app.config["PUBLIC_LDAP_PORT"]}"
-        print("Public LDAP", self.public_ldap_url)
-        self.public_ldap_attribute_list = ["uid", "description", "uvaDisplayDepartment"]
-        self.public_ldap_conn = self.create_public_ldap_connection()
+        self.public_ldap_url = f"ldap://{app.config["PUBLIC_LDAP_HOST"]}:{
+            app.config["PUBLIC_LDAP_PORT"]}"
+        self.__public_ldap_query_attribute_list = [
+            "uid", "description", "uvaDisplayDepartment"]
+        self.__public_ldap_conn = None
+        self.__public_ldap_conn = self.__connect()
 
-    def create_public_ldap_connection(self):
+    def __connect(self):
         try:
-            server = Server(self.public_ldap_url, get_info=ALL, connect_timeout=10)
-            conn = Connection(server, auto_bind=True)
-            return conn
+            return Connection(
+                    Server(
+                        self.public_ldap_url,
+                        get_info=ALL,
+                        connect_timeout=10
+                    ),
+                    auto_bind=True
+                )
         except Exception as ex:
-            self.app.logger.error(f"Failed to create public LDAP connection: {ex}")
-            return None
-        
-    def get_public_ldap_info(self, uid, conn):
+            self.app.logger.error(
+                f"Error occured while connecting to public LDAP: {ex}"
+            )
+            raise ex
 
+    def close(self):
+        if self.__public_ldap_conn:
+            self.__public_ldap_conn.unbind()
+
+    def __del__(self):
+        self.close()
+        self.__public_ldap_conn = None
+    
+    def get_public_ldap_query_attribute_list(self):
+        return self.__public_ldap_query_attribute_list
+
+    def get_public_ldap_info(self, uid):
         filter_string = f"(uid={uid})"
+        self.__public_ldap_conn.search(
+            search_base="ou=People,o=University of Virginia,c=US", 
+            search_filter=filter_string,
+            search_scope="SUBTREE", 
+            attributes=self.__public_ldap_query_attribute_list
+        )
+        if not self.__public_ldap_conn.entries:
+            return None
 
-        conn.search(search_base="ou=People,o=University of Virginia,c=US", search_filter=filter_string, search_scope="SUBTREE", attributes=self.public_ldap_attribute_list)
-        if not conn.entries:
-            return None 
-        
-        entries = conn.entries
+        entries = self.__public_ldap_conn.entries
         entry = entries[0]
 
         ldap_dict_entry = entry.entry_attributes_as_dict
         # Convert from list to string
         ldap_dict_entry["uid"] = ldap_dict_entry["uid"][0]
-
         return ldap_dict_entry
-    
-
-# Method to close connection
-def close_connection(self, conn):
-    if conn:
-        conn.unbind()
-    
-
-    
