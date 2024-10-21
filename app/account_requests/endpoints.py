@@ -2,15 +2,15 @@ from flask_restful import Resource
 from flask import g, request, make_response, jsonify
 from datetime import datetime
 from app import mongo_service
-from .business import GetDBInfoBusinessLogic
+from app.account_requests.business import UVARCUsersDataManager
 
 
-class GetUserFromDBEndpoint(Resource):
+class UVARCUserEndpoint(Resource):
     def get(self):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = GetDBInfoBusinessLogic()
+        get_info_helper = UVARCUsersDataManager()
 
         id = request.args.get("id")
         if not id:
@@ -25,18 +25,18 @@ class GetUserFromDBEndpoint(Resource):
             except ValueError:
                 return {"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}, 400
 
-            return {"data": get_info_helper.user_db_call_with_time(id, query_time)}, 200
+            return {"data": get_info_helper.get_user_hist_info(id, query_time)}, 200
 
         # default approach
-        return {"data": get_info_helper.user_db_call(id)}, 200
+        return {"data": get_info_helper.get_user_info(id)}, 200
 
 
-class GetMultiUserFromDBEndpoint(Resource):
+class UVARCUsersEndpoint(Resource):
     def get(self):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = GetDBInfoBusinessLogic()
+        get_info_helper = UVARCUsersDataManager()
 
         ids = request.args.get("ids")
         if not ids:
@@ -55,12 +55,12 @@ class GetMultiUserFromDBEndpoint(Resource):
             response_data = []
             for id in list_of_ids:
                 response_data.append(
-                    get_info_helper.user_db_call_with_time(id, query_time))
+                    get_info_helper.get_user_hist_info(id, query_time))
             return {"data": response_data}, 200
 
         response_data = []
         for id in list_of_ids:
-            response_data.append(get_info_helper.user_db_call(id))
+            response_data.append(get_info_helper.get_user_info(id))
 
         return {"data": response_data}, 200
 

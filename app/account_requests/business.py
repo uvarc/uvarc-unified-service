@@ -9,9 +9,9 @@ from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandl
 from common_utils import synchronized
 
 
-class GetDBInfoBusinessLogic:
+class UVARCUsersDataManager:
     def __init__(self):
-        self.correlations = {
+        self.__correlations = {
             "AS": "CLAS",
             "BA": "BATT",
             "BI": "BII",
@@ -27,45 +27,55 @@ class GetDBInfoBusinessLogic:
             "RC": "ITS/RC",
             "RS": "RESEARCH",
         }
-        self.combined_ldap_attributes_list = [
-            "uid",
-            "displayName",
-            "title",
-            "description",
-            "uvaDisplayDepartment",
-            "department",
-            "school",
-            "pwdLastSet",
-            "userAccountControl",
-            "primaryGroupID",
-            "Sponsored",
-            "Rivanna_Status",
-            "date_of_query",
-        ]
 
-    def user_db_call(self, id):
+    def __school_conversion(self, user):
+        prev_school = user["school"]
+        if prev_school != "":
+            if self.__correlations[prev_school]:
+                user["school"] = self.__correlations[prev_school]
+            else:
+                user["school"] = "Other"
+        else:
+            user["school"] = ""
+        return user
+
+    def __format_dates_for_output(self, user):
+
+        user["date_of_query"] = pytz.utc.localize(user["date_of_query"]).astimezone(
+            pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
+
+        if user["pwdLastSet"] != "":
+            user["pwdLastSet"] = pytz.utc.localize(user["pwdLastSet"]).astimezone(
+                pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
+
+        return user
+
+    def __format_user_info(self, user):
+        return self.__school_conversion(
+            self.__format_dates_for_output(user)
+        )
+
+    def get_user_info(self, id):
         user = mongo_service.db.uvarc_users.find_one({"UserID": id})
+        del user['ldap_info_log']
         response = None
         if user:
-            recent_ldap_info = user["recent_ldap_info"]
-            recent_ldap_info = self.__format_dates_for_output(recent_ldap_info)
-            recent_ldap_info = self.__school_conversion(recent_ldap_info)
-            response = {key: recent_ldap_info[key] for key in recent_ldap_info}
+            user = self.__format_user_info(user)
+            response = {key: user[key] for key in user}
+            return response
         else:
-            response = {key: "" for key in self.combined_ldap_attributes_list}
-            response["uid"] = id
-        return response
+            return None
 
-    def user_db_call_with_time(self, id, time):
+    def get_user_hist_info(self, id, time):
         user = mongo_service.db.uvarc_users.find_one({"UserID": id})
 
         if user:
             recent_record = None
             # First check recent
-            if user["recent_ldap_info"]["date_of_query"] <= time:
-                recent_record = user["recent_ldap_info"]
+            if user["date_of_query"] <= time:
+                recent_record = user
             # Then check historical
-            if len(user["ldap_info_log"]) > 0:
+            if 'ldap_info_log' in user and len(user["ldap_info_log"]) > 0:
                 if not recent_record:
                     recent_record = user["ldap_info_log"][0]
                 for record in user["ldap_info_log"]:
@@ -73,41 +83,11 @@ class GetDBInfoBusinessLogic:
                         if record["date_of_query"] > recent_record["date_of_query"]:
                             recent_record = record
             if recent_record:
-                recent_record = self.__school_conversion(recent_record)
-                recent_record = self.__format_dates_for_output(recent_record)
-                return recent_record
+                return self.__format_user_info(recent_record)
             else:
-                recent_ldap_info = user["recent_ldap_info"]
-                recent_ldap_info = self.__format_dates_for_output(
-                    recent_ldap_info)
-                recent_ldap_info = self.__school_conversion(recent_ldap_info)
-                return recent_ldap_info
-        # default entry
-        response = {key: "" for key in self.combined_ldap_attributes_list}
-        response["uid"] = id
-        return response
-
-    def __school_conversion(self, response):
-        prev_school = response["school"]
-        if prev_school != "":
-            if self.correlations[prev_school]:
-                response["school"] = self.correlations[prev_school]
-            else:
-                response["school"] = "Other"
+                return self.__format_user_info(user)
         else:
-            response["school"] = ""
-        return response
-
-    def __format_dates_for_output(self, response):
-
-        response["date_of_query"] = pytz.utc.localize(response["date_of_query"]).astimezone(
-            pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
-
-        if response["pwdLastSet"] != "":
-            response["pwdLastSet"] = pytz.utc.localize(response["pwdLastSet"]).astimezone(
-                pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
-
-        return response
+            return None
 
 
 class UVARCUsersSyncManager:
@@ -119,7 +99,7 @@ class UVARCUsersSyncManager:
         self.__public_ldap_service_handler = PublicLDAPServiceHandler(app)
         self.hpc_url = f"https://{app.config["HPC_HOST"]}/api"
         self.hpc_key = app.config['HPC_CLIENT_SECRET']
-        self.combined_ldap_attributes_list = [
+        self.__combined_ldap_attributes_list = [
             "uid",
             "displayName",
             "title",
@@ -180,7 +160,7 @@ class UVARCUsersSyncManager:
 
         return response
 
-    def get_user_all_info(self, uid):
+    def fetch_user_all_info(self, uid):
         eservices_entry = self.__private_ldap_service_handler.get_private_ldap_info(
             uid)
         public_entry = self.__public_ldap_service_handler.get_public_ldap_info(
@@ -222,7 +202,7 @@ class UVARCUsersSyncManager:
 
         restructured_ldap_entry = {}
         # ordering restructure
-        for attr in self.combined_ldap_attributes_list:
+        for attr in self.__combined_ldap_attributes_list:
             restructured_ldap_entry[attr] = complete_ldap_entry[attr]
 
         # print("Final entry: ", restructured_ldap_entry)
@@ -319,7 +299,7 @@ class UVARCUsersSyncManager:
             self.sync_user_info(user)
 
     def sync_user_info(self, user):
-        combined_ldap_entry = self.get_user_all_info(user['uid'])
+        combined_ldap_entry = self.fetch_user_all_info(user['uid'])
 
         if combined_ldap_entry:
             combined_ldap_entry = self.__format_dates_for_input(
