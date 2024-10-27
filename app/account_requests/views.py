@@ -4,22 +4,22 @@ from flask import jsonify, url_for
 from flask_restful import reqparse
 
 from app import app
-from . import ldap_requests
+from . import account_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.ldap_requests.endpoints import GetUserFromDBEndpoint, GetMultiUserFromDBEndpoint
+from app.account_requests.endpoints import UVARCUserEndpoint, UVARCUsersEndpoint
 
-api = UVARCUnifiedApi(ldap_requests)
+api = UVARCUnifiedApi(account_requests)
 
 parser = flask_restful.reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
-    (GetUserFromDBEndpoint, '/get_user_details'),
-    (GetMultiUserFromDBEndpoint, '/get_multiuser_details'),
+    (UVARCUserEndpoint, '/get_user_details'),
+    (UVARCUsersEndpoint, '/get_multiuser_details'),
 ]
 
 
-@ldap_requests.route('/', methods=['GET'])
+@account_requests.route('/', methods=['GET'])
 def root():
     output = {}
     for rule in app.url_map.iter_rules():

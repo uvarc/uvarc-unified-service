@@ -19,6 +19,7 @@ from flask_sso import SSO
 # from common_service_handlers.kube_service_handler import KubeService
 # from common_service_handlers.email_service_handler import EmailService
 from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandler, PublicLDAPServiceHandler
+# from app.ldap_requests.business import LDAPSyncJobBusinessLogic
 from common_service_handlers.jira_service_handler import JiraServiceHandler
 from common_utils.rest_exception import RestException
 
@@ -65,12 +66,9 @@ auth = HTTPTokenAuth('Bearer')
 
 # Password Encryption
 bcrypt = Bcrypt(app)
-mongo = PyMongo(app)
+mongo_service = PyMongo(app)
 # kube_service = KubeService(app)
 # aws_service = AWSServiceHandler(app)
-
-private_ldap = PrivateLDAPServiceHandler(app)
-public_ldap = PublicLDAPServiceHandler(app)
 jira_service = JiraServiceHandler(app)
 
 limiter = Limiter(key_func=get_remote_address)
@@ -115,6 +113,10 @@ def handle_invalid_usage(error):
 def handle_404(error):
     return handle_invalid_usage(RestException(RestException.NOT_FOUND, 404))
 
+# @app.cli.command()
+# def initdb():
+#     ldap_sync = LDAPSyncJobBusinessLogic(app)
+#     ldap_sync.backfill_users_info()
 
 @app.cli.command()
 def stop():
@@ -127,14 +129,15 @@ def stop():
     else:
         print('Server is not running.')
 
+from app.account_requests import account_requests
 from app.resource_requests import allocation_requests
 from app.ticket_requests import ticket_requests
-from app.ldap_requests import ldap_requests
+app.register_blueprint(account_requests)
 app.register_blueprint(allocation_requests)
 app.register_blueprint(ticket_requests)
-app.register_blueprint(ldap_requests)
 
-from app.ldap_requests import tasks
+
+from app.account_requests import tasks
 from app.resource_requests import tasks
 from app.ticket_requests import tasks
 from common_utils import tasks
