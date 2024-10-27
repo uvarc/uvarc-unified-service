@@ -1,4 +1,4 @@
-from app import app,mongo,public_ldap,eservices_ldap
+from app import app,mongo,public_ldap,private_ldap
 from datetime import datetime, timezone
 import pytz
 import requests
@@ -127,7 +127,7 @@ class LDAPSyncJobBusinessLogic:
 
     def get_combined_ldap_info(self, uid):
     
-        eservices_entry = eservices_ldap.get_eservices_ldap_info(uid, eservices_ldap.eservices_ldap_conn)
+        eservices_entry = private_ldap.get_private_ldap_info(uid, private_ldap.eservices_ldap_conn)
         public_entry = public_ldap.get_public_ldap_info(uid, public_ldap.public_ldap_conn)
         commission_entry =  self.__get_commission(uid)
 
@@ -174,145 +174,47 @@ class LDAPSyncJobBusinessLogic:
         # Read CSV File
         df = pd.read_csv("data/ldap_files/all_users_formatted_to_ldap.csv")
 
-        # Only repopulate the database if there are no documents in there currently 
-        if mongo.db.users.count_documents({}) == 0:
-            # convert to datatime object
-            df["date_of_query"] = pd.to_datetime(df["date_of_query"])
+        csv_user_id_set = set()
 
-            # Convert NaN entries to empty strings
-            df = df.fillna('')
+        for index, row in df.iterrows():
+            user_id = row["UserID"]
+            csv_user_id_set.add(user_id)
 
-            #Insert uid 
-            df.insert(loc=0, column="uid", value=df["UserID"])
+        for uid in csv_user_id_set:
+            print(uid)
+            combined_ldap_entry = self.get_combined_ldap_info(uid)
+            user = mongo.db.users.find_one({"UserID": uid})
 
-            # Replace Lastname and Firstname w/ displayName
-            df.insert(loc=1, column="displayName", value=(df["Lastname"] + ", " + df["Firstname"] + " (" + df["uid"] + ")"))
-            df.drop(columns=["Lastname","Firstname"], inplace=True)
+            if combined_ldap_entry:
+                combined_ldap_entry = self.__format_dates_for_input(combined_ldap_entry)
+                if user:
+                    # if no changes, then no dictionary is sent back 
+                    changed_fields =  DeepDiff(user["recent_ldap_info"], combined_ldap_entry, exclude_paths="root['date_of_query']", significant_digits=6)
 
-            # Fill out department 
-            def extract_department(affiliation):
-                if ':' in affiliation:
-                    return affiliation.split(':')[1]
-                return affiliation
-            
-            df["department"] = df["affiliation"].apply(extract_department)
-            # Create uvaDisplayDepartment attribute [in current ldap info -> might be list] and drop affiliation
-            df.insert(loc=4, column="uvaDisplayDepartment", value=(df["affiliation"]))
-            df.drop(columns="affiliation", inplace=True)
-
-            
-
-            # Create a dictionary to hold user data
-            user_data = {}
-            # Create set of names
-            uids = set()
-
-            # Iterate over rows
-            for index, row in df.iterrows():
-                user_id = row["UserID"]
-                uids.add(user_id)
-                query = row.drop(labels="UserID").to_dict()  # Convert the row to a dictionary and drop 'UserID'
-                
-                if user_id in user_data:
-                    if query["date_of_query"] > user_data[user_id]["recent_ldap_info"]["date_of_query"]:
-                        user_data[user_id]["ldap_info_log"].append(user_data[user_id]["recent_ldap_info"])
-                        user_data[user_id]["recent_ldap_info"] = query
-                    else:
-                        user_data[user_id]["ldap_info_log"].append(query)
+                    if changed_fields:
+                        user["ldap_info_log"].append(user["recent_ldap_info"])
+                        user["recent_ldap_info"] = combined_ldap_entry
+                        
+                        mongo.db.users.update_one(
+                            {"UserID": user["UserID"]},  # Filter to find the document
+                            {"$set": {
+                                "ldap_info_log": user["ldap_info_log"],
+                                "recent_ldap_info": user["recent_ldap_info"],
+                                "date_modified": user["recent_ldap_info"]["date_of_query"],
+                                "comments_on_changes": changed_fields["values_changed"]
+                            }
+                            }
+                        ) 
                 else:
-                    user_data[user_id] = {"recent_ldap_info": query, "ldap_info_log": []}
-            
-            # UTC data w/ timestamp
-            current_timestamp = datetime.now(timezone.utc)
-
-            # Convert user_data for Mongo Insertion
-            records = [{"UserID": user_id, "recent_ldap_info" : queries["recent_ldap_info"], "ldap_info_log": queries["ldap_info_log"],"date_modified": current_timestamp, "comments_on_changes": "Initial Entry"} for user_id, queries in user_data.items()]
-
-            # Insert records into the MongoDB collection
-            mongo.db.users.insert_many(records)
-
-            print("Database initialization complete")
-
-            for uid in uids:
-                print(uid)
-                combined_ldap_entry = self.get_combined_ldap_info(uid)
-
-                user = mongo.db.users.find_one({"UserID": uid})
-
-                if combined_ldap_entry:
-                    combined_ldap_entry = self.__format_dates_for_input(combined_ldap_entry)
-                    if user:
-                        print(combined_ldap_entry)
-                        # if no changes, then no dictionary is sent back 
-                        changed_fields =  DeepDiff(user["recent_ldap_info"], combined_ldap_entry, exclude_paths="root['date_of_query']")
-
-                        if changed_fields:
-                            user["ldap_info_log"].append(user["recent_ldap_info"])
-                            user["recent_ldap_info"] = combined_ldap_entry
-                            
-                            mongo.db.users.update_one(
-                                {"UserID": user["UserID"]},  # Filter to find the document
-                                {"$set": {
-                                    "ldap_info_log": user["ldap_info_log"],
-                                    "recent_ldap_info": user["recent_ldap_info"],
-                                    "date_modified": user["recent_ldap_info"]["date_of_query"],
-                                    "comments_on_changes": changed_fields["values_changed"]
-                                }
-                                }
-                            ) 
-                    else:
-                        # Should never reach here, but just included as a safety net
-                        mongo.db.users.insert_one(
-                                    {"UserID": combined_ldap_entry["uid"],
-                                        "recent_ldap_info": combined_ldap_entry,
-                                        "ldap_info_log": [],
-                                        "date_modified": combined_ldap_entry["date_of_query"],
-                                        "comments_on_changes": "Initial Entry"
-                                    }     
-                                )
-
-        else:
-            csv_user_id_set = set()
-
-            for index, row in df.iterrows():
-                user_id = row["UserID"]
-                csv_user_id_set.add(user_id)
-
-            for uid in csv_user_id_set:
-                print(uid)
-                combined_ldap_entry = self.get_combined_ldap_info(uid)
-                user = mongo.db.users.find_one({"UserID": uid})
-
-                if combined_ldap_entry:
-                    combined_ldap_entry = self.__format_dates_for_input(combined_ldap_entry)
-                    if user:
-                        # if no changes, then no dictionary is sent back 
-                        changed_fields =  DeepDiff(user["recent_ldap_info"], combined_ldap_entry, exclude_paths="root['date_of_query']", significant_digits=6)
-
-                        if changed_fields:
-                            user["ldap_info_log"].append(user["recent_ldap_info"])
-                            user["recent_ldap_info"] = combined_ldap_entry
-                            
-                            mongo.db.users.update_one(
-                                {"UserID": user["UserID"]},  # Filter to find the document
-                                {"$set": {
-                                    "ldap_info_log": user["ldap_info_log"],
-                                    "recent_ldap_info": user["recent_ldap_info"],
-                                    "date_modified": user["recent_ldap_info"]["date_of_query"],
-                                    "comments_on_changes": changed_fields["values_changed"]
-                                }
-                                }
-                            ) 
-                    else:
-                        # Should never reach here, but just included as a safety net
-                        mongo.db.users.insert_one(
-                                    {"UserID": combined_ldap_entry["uid"],
-                                        "recent_ldap_info": combined_ldap_entry,
-                                        "ldap_info_log": [],
-                                        "date_modified": combined_ldap_entry["date_of_query"],
-                                        "comments_on_changes": "Initial Entry"
-                                    }     
-                                )
+                    # Should never reach here, but just included as a safety net
+                    mongo.db.users.insert_one(
+                                {"UserID": combined_ldap_entry["uid"],
+                                    "recent_ldap_info": combined_ldap_entry,
+                                    "ldap_info_log": [],
+                                    "date_modified": combined_ldap_entry["date_of_query"],
+                                    "comments_on_changes": "Initial Entry"
+                                }     
+                            )
                         
 
     def __get_commission(self, uid):

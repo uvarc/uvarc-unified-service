@@ -1,6 +1,6 @@
 from ldap3 import Server, Connection, ALL
 
-class EServicesLDAPServiceHandler:
+class PrivateLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
         self.eservices_ldap_url = f"ldap://{app.config["ESERVICES_LDAP_HOST"]}:{app.config["ESERVICES_LDAP_PORT"]}"
@@ -17,10 +17,10 @@ class EServicesLDAPServiceHandler:
                                                 "uidNumber",
                                                 "primaryGroupID"
                                             ]
-        self.eservices_ldap_conn = self.create_eservices_ldap_connection()
+        self.eservices_ldap_conn = self.create_private_ldap_connection()
 
 
-    def create_eservices_ldap_connection(self):
+    def create_private_ldap_connection(self):
         """Create a connection to the specified LDAP server."""
         try:
             server = Server(self.eservices_ldap_url, get_info=ALL, connect_timeout=10)
@@ -30,7 +30,7 @@ class EServicesLDAPServiceHandler:
             self.app.logger.error(f"Failed to create LDAP connection: {ex}")
             return None
         
-    def get_eservices_ldap_info(self, uid, conn):
+    def get_private_ldap_info(self, uid, conn):
     
         filter_string = f"(sAMAccountName={uid})"
 

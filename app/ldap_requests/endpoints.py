@@ -3,7 +3,6 @@ from flask import g, request, make_response, jsonify
 from datetime import datetime
 from app import mongo
 from .business import GetDBInfoBusinessLogic
-from common_service_handlers.ldap_service_handler import PublicLDAPServiceHandler, EServicesLDAPServiceHandler
 
 class GetUserFromDBEndpoint(Resource):
     def get(self):

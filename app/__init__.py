@@ -18,7 +18,7 @@ from flask_sso import SSO
 # from common_service_handlers.aws_service_handler import AWSServiceHandler
 # from common_service_handlers.kube_service_handler import KubeService
 # from common_service_handlers.email_service_handler import EmailService
-from common_service_handlers.ldap_service_handler import EServicesLDAPServiceHandler, PublicLDAPServiceHandler
+from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandler, PublicLDAPServiceHandler
 from common_service_handlers.jira_service_handler import JiraServiceHandler
 from common_utils.rest_exception import RestException
 
@@ -69,7 +69,7 @@ mongo = PyMongo(app)
 # kube_service = KubeService(app)
 # aws_service = AWSServiceHandler(app)
 
-eservices_ldap = EServicesLDAPServiceHandler(app)
+private_ldap = PrivateLDAPServiceHandler(app)
 public_ldap = PublicLDAPServiceHandler(app)
 jira_service = JiraServiceHandler(app)
 

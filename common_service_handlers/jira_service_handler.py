@@ -100,7 +100,23 @@ class JiraServiceHandler:
             return r.text
         except Exception as ex:
             print("Couldn't create customer {} in JIRA: {}".format(name, str(ex)))
+##            
+    def get_customer_by_email(self,email):
+        try:
+            headers={
+                "Content-Type": "application/json",
+                "X-ExperimentalApi": "opt-in"
 
+            }
+            r = requests.get(
+                ''.join([self._connect_host_url, 'api/2/user?username='+email]),
+                headers=headers,
+                auth=self._auth
+            )
+            return r.text
+        except Exception as ex:
+            print("Couldn't create customer {} in JIRA: {}".format(name, str(ex)))
+            
     def create_new_ticket(
         self,
         reporter=None,
@@ -152,6 +168,70 @@ class JiraServiceHandler:
             auth=self._auth
         )
         return response.text
+
+##
+    def create_new_officehour_ticket(self, reporter,form_data,ldap_info):
+        mapped_details = [{'value': item['value']} for item in form_data['details']]
+        ticket_data = {
+            "fields": {
+                "project": {"key": "OH"},
+                "reporter": {"name": reporter},  
+                "issuetype": {"id": '10700'},  
+                "description": form_data['comments'],  
+                "customfield_13184": {"value": form_data['requestType']}, 
+                "customfield_10972": "Office Hours Request",  
+                "customfield_13176": ldap_info['department'],  
+                "customfield_13196": ldap_info['school'],  
+                "customfield_13175": form_data['date'], 
+                "customfield_13190": form_data['discipline'],  
+                "customfield_13194": mapped_details,  
+                "customfield_13203": {"value": form_data['meetingType']},  
+                "summary": form_data['summary']  
+            }
+        }
+
+        if form_data['staff'][0]['value']:
+                ticket_data["fields"]["assignee"] = {"name": form_data['staff'][0]['value']}
+
+        if form_data['computePlatform1'] != "none":
+                ticket_data["fields"]["customfield_13189"] = {
+                    "value": form_data['computePlatform1'],
+                    "child": {"value": form_data['computePlatform2']}
+                }
+
+        if form_data['storagePlatform1'] != "none":
+            ticket_data["fields"]["customfield_13195"] = {
+                "value": form_data['storagePlatform1'],
+                "child": {"value": form_data['storagePlatform2']}
+            }
+        headers = {
+                "Content-Type": "application/json",
+                "X-ExperimentalApi": "opt-in"
+            }
+        response = requests.post(
+                f"{self._connect_host_url}api/2/issue", 
+                headers=headers, 
+                data=json.dumps(ticket_data), 
+                auth=self._auth
+            )
+        if response.status_code == 201:
+                jira_issue_key = response.json().get('key')
+                staff_ids = [obj['value'] for obj in form_data['staff'][1:]]  
+
+                if staff_ids:
+                    servicedesk_config = {
+                        "usernames": staff_ids
+                    }
+                    servicedesk_res = requests.post(
+                        f"{self._connect_host_url}servicedeskapi/request/{jira_issue_key}/participant",
+                        headers=headers,
+                        data=json.dumps(servicedesk_config)
+                    )
+                    return servicedesk_res.json(), 200
+                return response.json(), 200
+        else:
+            return {"error": "Failed to create JIRA ticket"}, 500
+
 
     def add_ticket_comment(self, ticket_id, comment):
         headers = {
