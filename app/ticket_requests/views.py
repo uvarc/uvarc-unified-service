@@ -6,7 +6,7 @@ from flask_restful import reqparse
 from app import app
 from . import ticket_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.ticket_requests.endpoints import CreateTicketEndpoint
+from app.ticket_requests.endpoints import UVARCUserOfficeHoursEndpoint, UVARCUsersOfficeHoursEndpoint
 
 
 api = UVARCUnifiedApi(ticket_requests)
@@ -15,7 +15,8 @@ parser = flask_restful.reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
-    (CreateTicketEndpoint, '/create_ticket'),
+    (UVARCUserOfficeHoursEndpoint, '/officehours/get_user_details'),
+    (UVARCUsersOfficeHoursEndpoint, '/officehours/get_multiuser_details'),
 ]
 
 
