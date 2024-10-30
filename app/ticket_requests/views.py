@@ -16,7 +16,7 @@ parser.add_argument('resource')
 
 endpoints = [
     (UVARCUserOfficeHoursEndpoint, '/officehours/get_user_details'),
-    (UVARCUsersOfficeHoursEndpoint, '/officehours/get_multiuser_details'),
+    (UVARCUsersOfficeHoursEndpoint, '/officehours/get_users_details'),
 ]
 
 
