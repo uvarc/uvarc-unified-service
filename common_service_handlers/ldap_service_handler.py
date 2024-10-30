@@ -5,7 +5,7 @@ from ldap3.core.exceptions import LDAPSocketReceiveError
 class PrivateLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.private_ldap_url = f"ldap://{app.config["ESERVICES_LDAP_HOST"]}:{
+        self.private_ldap_url = f"ldaps://{app.config["ESERVICES_LDAP_HOST"]}:{
             app.config["ESERVICES_LDAP_PORT"]}"
         self.private_ldap_bind_user = f"{
             app.config["ESERVICES_LDAP_CLIENT_ID"]}@{app.config["ESERVICES_LDAP_HOST"]}"
@@ -47,7 +47,7 @@ class PrivateLDAPServiceHandler:
 
     def get_group_users(self, group_name):
         try:
-            filter_string = "(|(memberOf=CN={group_name},OU=MyGroups,DC=eservices,DC=virginia,DC=edu)(memberOf=CN={group_name},OU=Automated,OU=Groups,DC=eservices,DC=virginia,DC=edu))".format(group_name=group_name)
+            filter_string = "(|(memberOf=CN={group_name},OU=MyGroups,DC=eservices,DC=virginia,DC=edu)(memberOf=CN={group_name},OU=Personal,OU=Groups,DC=eservices,DC=virginia,DC=edu))".format(group_name=group_name)
             self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
                         search_scope="SUBTREE", attributes=['sAMAccountName'])
         except LDAPSocketReceiveError:

@@ -5,7 +5,7 @@ from app import mongo_service
 from app.account_requests.business import UVARCUsersDataManager
 
 
-class UVARCUserEndpoint(Resource):
+class UVARCUserOfficeHoursEndpoint(Resource):
     def get(self):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
@@ -31,7 +31,7 @@ class UVARCUserEndpoint(Resource):
         return {"data": get_info_helper.get_user_info(id)}, 200
 
 
-class UVARCUsersEndpoint(Resource):
+class UVARCUsersOfficeHoursEndpoint(Resource):
     def get(self):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500

@@ -11,8 +11,8 @@ from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandl
 from common_utils import synchronized
 
 
-class UVARCUsersDataManager:
-    def __init__(self):
+class UVARCUsersOfficeHoursDataManager:
+    def __init__(self, uid):
         self.__correlations = {
             "AS": "CLAS",
             "BA": "BATT",
@@ -29,7 +29,7 @@ class UVARCUsersDataManager:
             "RC": "ITS/RC",
             "RS": "RESEARCH",
         }
-
+        
     def __school_conversion(self, user):
         prev_school = user["school"]
         if prev_school != "":
@@ -44,7 +44,7 @@ class UVARCUsersDataManager:
     def __format_dates_for_output(self, user):
         user["date_of_query"] = pytz.utc.localize(user["date_of_query"]).astimezone(
             pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
-        user["date_modified"] = pytz.utc.localize(user["date_modified"]).astimezone(
+        user["update_time"] = pytz.utc.localize(user["update_time"]).astimezone(
             pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
         if user["pwdLastSet"] != "":
             user["pwdLastSet"] = pytz.utc.localize(user["pwdLastSet"]).astimezone(
@@ -57,8 +57,8 @@ class UVARCUsersDataManager:
             self.__format_dates_for_output(user)
         )
 
-    def get_user_info(self, id):
-        user = mongo_service.db.uvarc_users.find_one({"uid": id})
+    def get_user_info(self, uid):
+        user = mongo_service.db.uvarc_users.find_one({"uid": uid})
         if user and 'ldap_info_log' in user:
             del user['ldap_info_log']
             del user['_id']
@@ -69,8 +69,8 @@ class UVARCUsersDataManager:
         else:
             return None
 
-    def get_user_hist_info(self, id, time):
-        user = mongo_service.db.uvarc_users.find_one({"uid": id})
+    def get_user_hist_info(self, uid, time):
+        user = mongo_service.db.uvarc_users.find_one({"uid": uid})
 
         if user:
             recent_record = None
@@ -92,6 +92,34 @@ class UVARCUsersDataManager:
         else:
             return None
 
+
+class UVARCUsersDataManager:
+    def __init__(self, uid):
+        self.__update_user_all_info(uid)
+        self.__user = self.__fetch_user_all_info(uid)
+        if self.__user is None:
+            raise Exception('User with uid {} not found'.format(uid))
+
+    def __update_user_all_info(self, uid):
+        user = mongo_service.db.uvarc_users.find_one({"uid": uid})
+        if user:
+            UVARCUsersSyncManager().sync_user_info(user)
+        else:
+            raise Exception('User with uid {} not found'.format(uid))
+        
+    def __fetch_user_all_info(self, uid):
+        user = mongo_service.db.uvarc_users.find_one({"uid": uid})
+        if user is None:
+            raise Exception('User with uid {} not found'.format(uid))
+ 
+    def is_user_resource_request_elligible(self):
+        if 'member_groups' in self.__user and 'research-infrastructure-users' in self.__user['member_groups']:
+            return True
+        else:
+            return False
+
+    def get_member_groups(self):
+        return user['member_groups']
 
 class UVARCUsersSyncManager:
     def __init__(self):
@@ -190,7 +218,7 @@ class UVARCUsersSyncManager:
         member_groups = []
         if 'memberOf' in complete_ldap_entry:
             for group in  complete_ldap_entry['memberOf']:
-                if ('OU=Automated,OU=Groups,DC=eservices,DC=virginia,DC=edu'.lower() in group.lower() or
+                if ('OU=Personal,OU=Groups,DC=eservices,DC=virginia,DC=edu'.lower() in group.lower() or
                     'OU=MyGroups,DC=eservices,DC=virginia,DC=edu'.lower() in group.lower()) and 'OU=IAM'.lower() not in group.lower():
                     member_groups.append(group.split(',')[0][3:])
         del complete_ldap_entry["sAMAccountName"]
@@ -227,7 +255,7 @@ class UVARCUsersSyncManager:
 
     def __build_user_info(self, user_info_dict, user_hist_info_dict, comment):
         user_info_dict["ldap_info_log"] = user_hist_info_dict
-        user_info_dict["date_modified"] = datetime.now(timezone.utc)
+        user_info_dict["update_time"] = datetime.now(timezone.utc)
         user_info_dict["comment"] = comment
         return user_info_dict
 
@@ -343,9 +371,9 @@ class UVARCUsersSyncManager:
                 user_all_info)
             if user:
                 # if no changes, then no dictionary is sent back
-                date_modified_current = user["date_modified"]
+                update_time_current = user["update_time"]
                 comment_current = user["comment"]
-                del user["date_modified"]
+                del user["update_time"]
                 del user["comment"]
                 
                 if 'member_groups' not in user:
@@ -354,10 +382,10 @@ class UVARCUsersSyncManager:
                 changed_fields = DeepDiff(
                     user, user_all_info, exclude_paths="root['date_of_query']")
 
-                user["date_modified"] = date_modified_current
+                user["update_time"] = update_time_current
                 user["comment"] = comment_current
                 if (changed_fields and 'values_changed' in changed_fields) or (sorted(user['member_groups']) != sorted(user_all_group_info)):
-                    app.logger.info('{} changes detected'.format(user['uid']))
+                    app.logger.info('{} user changes detected'.format(user['uid']))
                     change_comment = "User info changes: "+ (str(changed_fields["values_changed"]) if 'values_changed' in changed_fields else "None") + " - "
                     change_comment = change_comment + "Group info changes: " + str(sorted(user_all_group_info)) if sorted(user['member_groups']) != sorted(user_all_group_info) else "None"
                     user_all_info['member_groups'] = sorted(user_all_group_info)
@@ -391,14 +419,29 @@ class UVARCUsersSyncManager:
                 app.logger.error('{} group sync failed: {}'.format(group['group_name'], ex))
 
     def sync_group_info(self, group):
-        group['group_members'] = self.fetch_group_users(group['group_name'])
+        group_members_ldap = self.fetch_group_users(group['group_name'])
         if group:
-            for uid in group['group_members']:
+            for uid in group_members_ldap:
                 if mongo_service.db.uvarc_users.count_documents({'uid': uid}) == 0:
                     self.create_user_info({'uid': uid})
-
-            mongo_service.db.uvarc_groups.update_one(
-                {"group_name": group['group_name']},
-                {"$set": group},
-                False
-            )
+            if 'group_members' not in group:
+                group['group_members'] = []
+            if sorted(group_members_ldap) != group['group_members'] or (len(group['group_members']) == 0 and 'group_members_hist' not in group):
+                app.logger.info('{} group changes detected'.format(group['group_name']))
+                if 'group_members_hist' in group:
+                    group_members_hist = group['group_members_hist']
+                else:
+                    group_members_hist = []
+                if len(group['group_members']) > 0:
+                    group_members_hist.append(group['group_members'])
+                mongo_service.db.uvarc_groups.update_one(
+                    {"group_name": group['group_name']},
+                    {
+                        "$set": {
+                            "group_members": sorted(group_members_ldap),
+                            "group_members_hist": group_members_hist,
+                            "group_members_update_time": datetime.now(timezone.utc)
+                        }
+                    },
+                    False
+                )
