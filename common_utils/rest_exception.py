@@ -1,10 +1,11 @@
-import flask_restful
+from flask_restful import Api
+# from flask_restx import Api
 from flask import Blueprint, g, jsonify
-from flask_restful import reqparse
+# from flask_restful import reqparse
 from flask.helpers import make_response
 
 
-class UVARCUnifiedApi(flask_restful.Api):
+class UVARCUnifiedApi(Api):
     # Define a custom error handler for all rest endpoints that
     # properly handles the RestException status.
     def handle_error(self, e):

@@ -6,37 +6,46 @@ import pandas as pd
 from deepdiff import DeepDiff
 from app import app, mongo_service
 from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandler, PublicLDAPServiceHandler
-
 from common_utils import synchronized
 
 
 class UVARCUsersDataManager:
-    def __init__(self, uid):
-        self.__update_user_all_info(uid)
-        self.__user = self.__fetch_user_all_info(uid)
+    def __init__(self, uid, upsert=True, refresh=False):
+        if uid is None:
+            raise Exception('User uid provided cannot be {}'.format(uid))
+        self.__user = self.__get_user_all_info(uid, upsert, refresh)
         if self.__user is None:
             raise Exception('User with uid {} not found'.format(uid))
 
-    def __update_user_all_info(self, uid):
+    def __refresh_user_all_info(self, uid):
         user = mongo_service.db.uvarc_users.find_one({"uid": uid})
         if user:
             UVARCUsersSyncManager().sync_user_info(user)
         else:
             raise Exception('User with uid {} not found'.format(uid))
-        
-    def __fetch_user_all_info(self, uid):
+
+    def __get_user_all_info(self, uid, upsert=True, refresh=False):
+        if upsert and mongo_service.db.uvarc_users.count_documents({'uid': uid}) == 0:
+            UVARCUsersSyncManager().create_user_info({'uid': uid})
+        elif refresh:
+            self.__refresh_user_all_info(uid)
         user = mongo_service.db.uvarc_users.find_one({"uid": uid})
-        if user is None:
-            raise Exception('User with uid {} not found'.format(uid))
- 
+        return user
+
     def is_user_resource_request_elligible(self):
         if 'member_groups' in self.__user and 'research-infrastructure-users' in self.__user['member_groups']:
             return True
         else:
             return False
 
-    def get_member_groups(self):
-        return self.__user['member_groups']
+    def get_user_info(self):
+        return self.__user
+
+    def get_user_groups_info(self):
+        member_groups = list(self.__user['member_groups'])
+        if 'research-infrastructure-users' in member_groups:
+            member_groups.remove('research-infrastructure-users')
+        return member_groups
 
 
 class UVARCUsersSyncManager:

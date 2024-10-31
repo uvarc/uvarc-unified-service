@@ -4,6 +4,7 @@ from datetime import datetime
 from app import mongo_service
 from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager
 
+
 class UVARCUserOfficeHoursEndpoint(Resource):
     def get(self):
         if mongo_service is None:

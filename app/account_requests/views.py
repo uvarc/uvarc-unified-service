@@ -13,7 +13,6 @@ parser = flask_restful.reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
-
 ]
 
 

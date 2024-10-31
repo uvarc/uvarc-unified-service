@@ -27,7 +27,7 @@ template = {
     "swagger": "2.0",
     "info": {
         "title": "UVARC Unified services APIs",
-        "description": "This API was developed using Python Flask, which provides an unified set of endpoints to support Research Computing automation needs.",
+        "description": "This API provides an unified set of endpoints to support Research Computing automation needs.",
         "version": "1.0"
     }
 }
@@ -48,8 +48,9 @@ logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_lev
 
 # Enable CORS
 if (app.config['CORS_ENABLED']):
-    cors = CORS(app, resources={r"*": {"origins": "*"}})
-
+    cors = CORS(app, origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS'])
+else:
+    cors = CORS(app)
 
 # Flask-Marshmallow provides HATEOAS links
 ma = Marshmallow(app)
@@ -92,6 +93,7 @@ app.config['SWAGGER'] = {
     'template': './resources/flasgger/swagger_ui.html'
 }
 swagger = Swagger(app, template=template)
+
 
 def handler(error, endpoint, values=''):
     print('URL Build error:' + str(error))
