@@ -80,7 +80,7 @@ CELERY_BACKEND_SETTINGS = {
 CELERY_BEAT_SCHEDULE = {
     'sync_ldap_data_task-interval': {
         'task': 'ldap_requests_sync_ldap_data_task',
-        'schedule': timedelta(seconds=10)
+        'schedule': timedelta(minutes=30)
     },
 }
 
