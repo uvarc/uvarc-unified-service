@@ -268,7 +268,9 @@ class UVARCUsersSyncManager:
                     mongo_service.db.uvarc_groups.insert_one(group_info)
 
     def create_user_info(self, user):
+        app.logger.info('Creating new user with UID: {} '.format(user['uid']))
         user_all_info, user_all_group_info = self.fetch_user_all_info(user['uid'])
+        app.logger.info('LDAP Data Fetched USER INFO: {} - Group INFO:  {}'.format(user_all_info, user_all_group_info))
         if user_all_info:
             user_all_info['member_groups'] = sorted(user_all_group_info)
             mongo_service.db.uvarc_users.insert_one(
