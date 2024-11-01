@@ -27,12 +27,15 @@ spec:
         imagePullPolicy: "Always"
         command:
         - /usr/bin/supervisord
+        args:
+        - "-c"
+        - "/etc/supervisor/supervisord.conf"
         securityContext:
           runAsUser: 1000  # Specify the UID of the non-root user
 
         volumeMounts:
         - name: uvarc-unified-service-ceph-data
-          mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
+          mountPath: /opt/local/non_root_user/uvarc_unified_service/data
 
         resources:
           requests:
