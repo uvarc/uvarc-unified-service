@@ -27,6 +27,8 @@ spec:
         imagePullPolicy: "Always"
         command:
         - /usr/bin/supervisord
+        securityContext:
+          runAsUser: 1000  # Specify the UID of the non-root user
 
         volumeMounts:
         - name: uvarc-unified-service-ceph-data
