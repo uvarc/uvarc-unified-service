@@ -15,6 +15,11 @@ spec:
       labels:
         app: uvarc-unified-service
     spec:
+      volumes:
+      - name: uvarc-unified-service-ceph-data
+        persistentVolumeClaim:
+          claimName: uvarc-unified-service-ceph-pvc-data
+
       containers:
       - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
       #- image: "quay.io/accord/accord-service:develop"
@@ -22,6 +27,11 @@ spec:
         imagePullPolicy: "Always"
         command:
         - /usr/bin/supervisord
+
+        volumeMounts:
+        - name: uvarc-unified-service-ceph-data
+          mountPath: /opt/local/non_root_user/uvarc_unified_service/
+
         resources:
           requests:
             memory: "1524Mi"
