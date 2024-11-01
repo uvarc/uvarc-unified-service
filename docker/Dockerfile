@@ -51,5 +51,5 @@ RUN chgrp -R nonroot /var/log/ && chown -R $NON_ROOT_USER /var/log/
 RUN cp nginx.conf /etc/nginx/nginx.conf && chmod -R g+wx /etc/nginx/
 RUN rm -rf /usr/bin/python2
 EXPOSE 5000
-# USER $NON_ROOT_USER
+USER $NON_ROOT_USER
 CMD ["supervisord"]
