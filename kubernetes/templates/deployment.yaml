@@ -15,6 +15,8 @@ spec:
       labels:
         app: uvarc-unified-service
     spec:
+      securityContext:
+        fsGroup: 1000  # Ensure volume is writable by non-root group
       volumes:
       - name: uvarc-unified-service-ceph-data
         persistentVolumeClaim:
@@ -22,20 +24,19 @@ spec:
 
       containers:
       - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
-      #- image: "quay.io/accord/accord-service:develop"
         name: uvarc-unified-service
         imagePullPolicy: "Always"
         command:
         - /usr/bin/supervisord
-        args:
-        - "-c"
-        - "/etc/supervisor/supervisord.conf"
+
         securityContext:
-          runAsUser: 1000  # Specify the UID of the non-root user
+          runAsUser: 1000           # Run container as non-root user
+          runAsGroup: 1000          # Set non-root group
+          allowPrivilegeEscalation: false  # Prevent privilege escalation
 
         volumeMounts:
         - name: uvarc-unified-service-ceph-data
-          mountPath: /opt/local/non_root_user/uvarc_unified_service/data
+          mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
 
         resources:
           requests:
@@ -132,3 +133,4 @@ spec:
               name: uvarc-unified-service-secret
               key: HPC_API_CLIENT_SECRET
 
+              
