@@ -30,7 +30,7 @@ spec:
 
         volumeMounts:
         - name: uvarc-unified-service-ceph-data
-          mountPath: /opt/local/non_root_user/uvarc_unified_service/
+          mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
 
         resources:
           requests:
