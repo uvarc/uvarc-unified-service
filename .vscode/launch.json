@@ -81,6 +81,8 @@
           "-A",
           "app.celery",
           "worker",
+          "-c",
+          "1",
           "-E",
           "-l",
           "info"

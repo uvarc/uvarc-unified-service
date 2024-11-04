@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: uvarc-unified-service
+  name: uvarc-unified-service-deployment
+  namespace: uvarc-unified-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uvarc-unified-service
+  template:
+    metadata:
+      labels:
+        app: uvarc-unified-service
+    spec:
+      volumes:
+      - name: uvarc-unified-service-ceph-data
+        persistentVolumeClaim:
+          claimName: uvarc-unified-service-ceph-pvc-data
+
+      containers:
+      - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
+      #- image: "quay.io/accord/accord-service:develop"
+        name: uvarc-unified-service
+        imagePullPolicy: "Always"
+        command:
+        - /usr/bin/supervisord
+
+        volumeMounts:
+        - name: uvarc-unified-service-ceph-data
+          mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
+
+        resources:
+          requests:
+            memory: "1524Mi"
+            cpu: "1000m"
+          limits:
+            memory: "2024Mi"
+            cpu: "1500m"
+        envFrom:
+        - configMapRef:
+            name: uvarc-unified-service-configmap
+        env:
+        - name: JIRA_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: JIRA_CLIENT_ID
+
+        - name: JIRA_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: JIRA_CLIENT_SECRET
+
+        - name: SMTP_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: SMTP_CLIENT_ID
+
+        - name: SMTP_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: SMTP_CLIENT_SECRET
+
+        - name: AWS_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: AWS_CLIENT_ID
+
+        - name: AWS_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: AWS_CLIENT_SECRET
+
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: MONGO_USER
+
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: MONGO_PASSWORD
+
+        - name: LDAP_PUBLIC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: LDAP_PUBLIC_CLIENT_ID
+
+        - name: LDAP_PUBLIC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: LDAP_PUBLIC_CLIENT_SECRET
+
+        - name: LDAP_PRIVATE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: LDAP_PRIVATE_CLIENT_ID
+
+        - name: LDAP_PRIVATE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: LDAP_PRIVATE_CLIENT_SECRET
+
+        - name: HPC_API_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: HPC_API_CLIENT_ID
+
+        - name: HPC_API_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uvarc-unified-service-secret
+              key: HPC_API_CLIENT_SECRET
+

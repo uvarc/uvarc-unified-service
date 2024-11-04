@@ -1,11 +1,12 @@
 from ldap3 import Server, Connection, ALL
+from ldap3.core.exceptions import LDAPSocketReceiveError
 
 
 class PrivateLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.private_ldap_url = f"ldap://{app.config["PRIVATE_LDAP_HOST"]}:{
-            app.config["PRIVATE_LDAP_PORT"]}"
+        self.private_ldap_url = f"ldaps://{app.config["ESERVICES_LDAP_HOST"]}:{
+            app.config["ESERVICES_LDAP_PORT"]}"
         self.private_ldap_bind_user = f"{
             app.config["PRIVATE_LDAP_CLIENT_ID"]}@{app.config["PRIVATE_LDAP_HOST"]}"
         self.private_ldap_bind_pass = app.config['PRIVATE_LDAP_CLIENT_SECRET']
@@ -21,9 +22,9 @@ class PrivateLDAPServiceHandler:
             "primaryGroupID"
         ]
         self.__private_ldap_connection = None
-        self.__private_ldap_connection = self.connect()
+        self.__private_ldap_connection = self.__connect()
 
-    def connect(self):
+    def __connect(self):
         """Create a connection to the specified LDAP server."""
         try:
             return Connection(
@@ -40,17 +41,66 @@ class PrivateLDAPServiceHandler:
     def close(self):
         if self.__private_ldap_connection:
             self.__private_ldap_connection.unbind()
-    
+
     def __del__(self):
         self.close()
         self.__private_ldap_connection = None
 
+    def get_group_users(self, group_name):
+        try:
+            filter_string = "(|(memberOf=CN={group_name},OU=MyGroups,DC=eservices,DC=virginia,DC=edu)(memberOf=CN={group_name},OU=Personal,OU=Groups,DC=eservices,DC=virginia,DC=edu))".format(group_name=group_name)
+            self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
+                        search_scope="SUBTREE", attributes=['sAMAccountName'])
+        except LDAPSocketReceiveError:
+            self.app.logger.warn("LDAPSocketReceiveError occurred while searching private LDAP: retrying")
+            self.__private_ldap_connection = None
+            self.__private_ldap_connection = self.__connect()
+            try:
+                self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
+                        search_scope="SUBTREE", attributes=['sAMAccountName'])
+            except LDAPSocketReceiveError as ex:
+                self.app.logger.error(
+                    f"Error occured while searching private LDAP: {ex}")
+                raise ex
+        except Exception as ex:
+            self.app.logger.error(ex)
+            raise ex
+
+        if not self.__private_ldap_connection.entries:
+            # self.app.logger.error(f"uid produced no values: {uid}")
+            return []
+
+        group_members_list = []
+        for user_dict in self.__private_ldap_connection.entries:
+            user_info_dict = {}
+            for key, value in user_dict.entry_attributes_as_dict.items():
+                if key == 'sAMAccountName':
+                    key = 'uid'
+                if isinstance(value, list) and len(value) == 1:
+                    user_info_dict[key] = value[0]
+                if isinstance(value, list) and len(value) == 0:
+                    user_info_dict[key] = ""
+                if key == 'uid':
+                    group_members_list.append(user_info_dict[key])
+        return group_members_list
+
     def get_private_ldap_info(self, uid):
         filter_string = f"(sAMAccountName={uid})"
-        self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
-                    search_scope="SUBTREE", attributes=self.__private_ldap_attribute_list)
-
-        # Invalid uid
+        try:
+            self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
+                        search_scope="SUBTREE", attributes=self.__private_ldap_attribute_list)
+        except LDAPSocketReceiveError:
+            self.app.logger.warn("LDAPSocketReceiveError occurred while searching private LDAP: retrying")
+            self.__private_ldap_connection = None
+            self.__private_ldap_connection = self.__connect()
+            try:
+                self.__private_ldap_connection.search(search_base="CN=Users,dc=eservices,dc=virginia,dc=edu", search_filter=filter_string,
+                            search_scope="SUBTREE", attributes=self.__private_ldap_attribute_list)
+            except LDAPSocketReceiveError as ex:
+                self.app.logger.error(
+                    f"Error occured while searching private LDAP: {ex}")
+                raise ex
+        # Invalid uid       
         if not self.__private_ldap_connection.entries:
             # self.app.logger.error(f"uid produced no values: {uid}")
             return None
@@ -136,7 +186,8 @@ class PublicLDAPServiceHandler:
         self.public_ldap_url = f"ldap://{app.config["PUBLIC_LDAP_HOST"]}:{
             app.config["PUBLIC_LDAP_PORT"]}"
         self.__public_ldap_query_attribute_list = [
-            "uid", "description", "uvaDisplayDepartment"]
+            "uid", "description", "uvaDisplayDepartment"
+        ]
         self.__public_ldap_conn = None
         self.__public_ldap_conn = self.__connect()
 
@@ -169,12 +220,29 @@ class PublicLDAPServiceHandler:
 
     def get_public_ldap_info(self, uid):
         filter_string = f"(uid={uid})"
-        self.__public_ldap_conn.search(
-            search_base="ou=People,o=University of Virginia,c=US", 
-            search_filter=filter_string,
-            search_scope="SUBTREE", 
-            attributes=self.__public_ldap_query_attribute_list
-        )
+        try:
+            self.__public_ldap_conn.search(
+                search_base="ou=People,o=University of Virginia,c=US", 
+                search_filter=filter_string,
+                search_scope="SUBTREE", 
+                attributes=self.__public_ldap_query_attribute_list
+            )
+        except LDAPSocketReceiveError:
+            self.app.logger.warn("LDAPSocketReceiveError occurred while searching public LDAP: retrying")
+            self.__public_ldap_conn = None
+            self.__public_ldap_conn = self.__connect()
+            try:
+                self.__public_ldap_conn.search(
+                    search_base="ou=People,o=University of Virginia,c=US", 
+                    search_filter=filter_string,
+                    search_scope="SUBTREE", 
+                    attributes=self.__public_ldap_query_attribute_list
+                )
+            except LDAPSocketReceiveError as ex:
+                self.app.logger.error(
+                    f"Error occured while searching public LDAP: {ex}")
+                raise ex
+
         if not self.__public_ldap_conn.entries:
             return None
 

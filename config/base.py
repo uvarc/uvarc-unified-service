@@ -61,11 +61,11 @@ AWS_CONN_INFO = {
 
 ENV_NAME = settings_info['ENV']
 if ENV_NAME == 'prod':
-    pass
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu']
 elif ENV_NAME == 'test':
-    pass
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu']
 else:
-    pass
+    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000']
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
@@ -80,16 +80,15 @@ CELERY_BACKEND_SETTINGS = {
 CELERY_BEAT_SCHEDULE = {
     'sync_ldap_data_task-interval': {
         'task': 'ldap_requests_sync_ldap_data_task',
-        'schedule': timedelta(seconds=10)
+        'schedule': timedelta(minutes=30)
     },
 }
 
-ENV_NAME = settings_info['ENV']
+
 ENV_BOOL_FLAGS_TUPLE = (ENV_NAME in (
     'local', 'dev'), ENV_NAME == 'prod')
 
 DEVELOPMENT, PRODUCTION = ENV_BOOL_FLAGS_TUPLE
-CORS_ENABLED = False
 
 JIRA_CONN_INFO = {
     'HOST': settings_info['JIRA']['HOSTS'][0],
@@ -163,7 +162,6 @@ MAIL_TIMEOUT = 10
 MAIL_SECRET_KEY = settings_info["SMTP"]["SECURE_KEY"]
 
 if DEVELOPMENT:
-    DEBUG = True
     ALLOCATION_SPONSOR_EMAIL_LOOKUP = {
         'cas': 'rkc7h@virginia.edu',
         'seas': 'rkc7h@virginia.edu',
@@ -180,7 +178,6 @@ if DEVELOPMENT:
     KONAMI_ENPOINT_DEFAULT_RECEIVER = 'rkc7h@virginia.edu'
 
 elif PRODUCTION:
-    DEBUG = False
     ALLOCATION_SPONSOR_EMAIL_LOOKUP = {
         'cas': 'lg8b@virginia.edu',
         'seas': 'wbk3a@virginia.edu',
