@@ -1,7 +1,6 @@
 from flask_restful import Resource
 from flask import request, make_response, jsonify
-from app.ticket_requests.business import TicketBusinessLogic
-
+from app.ticket_requests.business import CreateTicketBusinessLogic
 
 # class CreateTicketEndpoint(flask_restful.Resource):
 #     def get(self):
@@ -22,7 +21,7 @@ class CreateTicketEndpoint(Resource):
             if not form_data:
                 return {"error": "No data provided"}, 400
             
-            ticket_logic = TicketBusinessLogic()
+            ticket_logic = CreateTicketBusinessLogic()
             ticket_data = ticket_logic.create_ticket(form_data)
             
             return {"data": ticket_data}, 200  #####

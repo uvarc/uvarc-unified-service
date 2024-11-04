@@ -1,9 +1,8 @@
-#from app import jira_service
-from app.ldap_requests.business import GetDBInfoBusinessLogic
-from common_service_handlers.jira_service_handler import JiraServiceHandler
+from app import jira_service
+from app.account_requests.business import UVARCUsersDataManager
 from datetime import datetime
 
-class CreateTicketBussinessLogic:
+class CreateTicketBusinessLogic:
     def __init__(self):
         # set constant
         self.issue_type_id = "10700"  
@@ -11,22 +10,21 @@ class CreateTicketBussinessLogic:
 
     def create_officehour_ticket(self,form_data):
 
-        ldap_helper = GetDBInfoBusinessLogic()
-        ldap_info = ldap_helper.user_db_call(form_data['userID'])
+        ldap_helper = UVARCUsersDataManager()
+        ldap_info = ldap_helper.get_user_info(form_data['userID'])
         if not ldap_info:
             return {"error": "LDAP user not found"}, 400
         #print(ldap_info)
 
-        jira_handler = JiraServiceHandler()
         customer_data = {
             "name": form_data['userID'],
             "email": f"{form_data['userID']}@virginia.edu",
         }
 
-        customer_id = jira_handler.get_customer_by_email(customer_data['email'])
+        customer_id = jira_service.get_customer_by_email(customer_data['email'])
 
         if not customer_id:
-            customer_id = jira_handler.create_new_customer(customer_data['name'], customer_data['email'])
+            customer_id = jira_service.create_new_customer(customer_data['name'], customer_data['email'])
 
 
 
@@ -70,3 +68,6 @@ class CreateTicketBussinessLogic:
         ## New method
         # jira_response=jira_handler.create_new_officehour_ticket(customer_id,form_data,ldap_info):
         #     return jira_response, 200
+
+
+print(jira_service._connect_host_url)

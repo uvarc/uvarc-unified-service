@@ -1,7 +1,6 @@
 import json
 import requests
 
-
 class JiraServiceHandler:
     def __init__(self, app):
         self._connect_host_url, self._auth = self.__get_jira_host_info(
@@ -99,7 +98,7 @@ class JiraServiceHandler:
             )
             return r.text
         except Exception as ex:
-            print("Couldn't create customer {} in JIRA: {}".format(name, str(ex)))
+            print("Couldn't create customer {} in JIRA: {}".format(account_id, str(ex)))
 ##            
     def get_customer_by_email(self,email):
         try:
@@ -115,7 +114,7 @@ class JiraServiceHandler:
             )
             return r.text
         except Exception as ex:
-            print("Couldn't create customer {} in JIRA: {}".format(name, str(ex)))
+            print("Couldn't create customer {} in JIRA: {}".format(email, str(ex)))
             
     def create_new_ticket(
         self,

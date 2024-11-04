@@ -18,8 +18,6 @@ from flask_sso import SSO
 # from common_service_handlers.aws_service_handler import AWSServiceHandler
 # from common_service_handlers.kube_service_handler import KubeService
 # from common_service_handlers.email_service_handler import EmailService
-from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandler, PublicLDAPServiceHandler
-# from app.ldap_requests.business import LDAPSyncJobBusinessLogic
 from common_service_handlers.jira_service_handler import JiraServiceHandler
 from common_utils.rest_exception import RestException
 

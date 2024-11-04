@@ -7,40 +7,103 @@ from app.account_requests.business import UVARCUsersDataManager
 
 class UVARCUserEndpoint(Resource):
     def get(self):
+        """
+        This endpoint retrieves user information based on the provided user ID and optional time.
+        ---
+        parameters:
+            - name: id
+              in: query
+              type: string
+              required: true
+              description: The ID of the user to retrieve information for.
+            - name: time
+              in: query
+              type: string
+              required: false
+              description: An optional timestamp in ISO format (YYYY-MM-DD) to get historical information.
+
+        responses:
+            200:
+                description: A successful response containing user information.
+                examples:
+                    application/json: {"data": {"user_info_key": "user_info_value"}}
+            400:
+                description: Error due to missing ID or invalid time format.
+                examples:
+                    application/json: {"error": "No query parameter 'id' found"}
+                    application/json: {"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}
+            500:
+                description: Error due to MongoDB connection failure.
+                examples:
+                    application/json: {"error": "MongoDB connection failed"}
+        """
         if mongo_service is None:
-            return {"error": "MongoDB connection failed"}, 500
+            return make_response(jsonify({"error": "MongoDB connection failed"}), 500)
 
         get_info_helper = UVARCUsersDataManager()
 
         id = request.args.get("id")
         if not id:
-            return {"error": "No query parameter 'id' found"}, 400
+            return make_response(jsonify({"error": "No query parameter 'id' found"}), 400)
 
         time = request.args.get("time")
+        print(id)
 
         # Logic for grabbing recent time if included as query parameter
         if time:
             try:
                 query_time = datetime.fromisoformat(time)
             except ValueError:
-                return {"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}, 400
+                return make_response(jsonify({"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}), 400)
 
-            return {"data": get_info_helper.get_user_hist_info(id, query_time)}, 200
+            response_data = get_info_helper.get_user_hist_info(id, query_time)
+            return make_response(jsonify({"data": response_data}), 200)
 
-        # default approach
-        return {"data": get_info_helper.get_user_info(id)}, 200
+        # Default approach
+        response_data = get_info_helper.get_user_info(id)
+        return make_response(jsonify({"data": response_data}), 200)
 
 
 class UVARCUsersEndpoint(Resource):
     def get(self):
+        """
+        This endpoint retrieves information for multiple users based on provided IDs and optional time.
+        ---
+        parameters:
+            - name: ids
+              in: query
+              type: string
+              required: true
+              description: Comma-separated list of user IDs to retrieve information for.
+            - name: time
+              in: query
+              type: string
+              required: false
+              description: An optional timestamp in ISO format (YYYY-MM-DD) to get historical information for each user.
+
+        responses:
+            200:
+                description: A successful response containing a list of user information for each ID provided.
+                examples:
+                    application/json: {"data": [{"user_info_key": "user_info_value"}, {"user_info_key": "user_info_value"}]}
+            400:
+                description: Error due to missing IDs or invalid time format.
+                examples:
+                    application/json: {"error": "No query parameter 'ids' found"}
+                    application/json: {"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}
+            500:
+                description: Error due to MongoDB connection failure.
+                examples:
+                    application/json: {"error": "MongoDB connection failed"}
+        """
         if mongo_service is None:
-            return {"error": "MongoDB connection failed"}, 500
+            return make_response({"error": "MongoDB connection failed"}, 500)
 
         get_info_helper = UVARCUsersDataManager()
 
         ids = request.args.get("ids")
         if not ids:
-            return {"error": "No query parameter 'id' found"}, 400
+            return make_response({"error": "No query parameter 'id' found"}, 400)
 
         time = request.args.get("time")
         list_of_ids = ids.split(',')
@@ -50,19 +113,19 @@ class UVARCUsersEndpoint(Resource):
             try:
                 query_time = datetime.fromisoformat(time)
             except ValueError:
-                return {"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}, 400
+                return make_response({"error": "Invalid time format. Use ISO format: YYYY-MM-DD"}, 400)
 
             response_data = []
             for id in list_of_ids:
                 response_data.append(
                     get_info_helper.get_user_hist_info(id, query_time))
-            return {"data": response_data}, 200
+            return make_response({"data": response_data}, 200)
 
         response_data = []
         for id in list_of_ids:
             response_data.append(get_info_helper.get_user_info(id))
 
-        return {"data": response_data}, 200
+        return make_response({"data": response_data}, 200)
 
 
 # class GetLDAPUserInfoEndpoint(Resource):

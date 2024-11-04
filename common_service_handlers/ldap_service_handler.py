@@ -4,11 +4,11 @@ from ldap3 import Server, Connection, ALL
 class PrivateLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.private_ldap_url = f"ldap://{app.config["ESERVICES_LDAP_HOST"]}:{
-            app.config["ESERVICES_LDAP_PORT"]}"
+        self.private_ldap_url = f"ldap://{app.config["PRIVATE_LDAP_HOST"]}:{
+            app.config["PRIVATE_LDAP_PORT"]}"
         self.private_ldap_bind_user = f"{
-            app.config["ESERVICES_LDAP_CLIENT_ID"]}@{app.config["ESERVICES_LDAP_HOST"]}"
-        self.private_ldap_bind_pass = app.config['ESERVICES_LDAP_CLIENT_SECRET']
+            app.config["PRIVATE_LDAP_CLIENT_ID"]}@{app.config["PRIVATE_LDAP_HOST"]}"
+        self.private_ldap_bind_pass = app.config['PRIVATE_LDAP_CLIENT_SECRET']
         self.__private_ldap_attribute_list = [
             "sAMAccountName",
             "displayName",
@@ -29,7 +29,8 @@ class PrivateLDAPServiceHandler:
             return Connection(
                 Server(self.private_ldap_url, get_info=ALL, connect_timeout=10),
                 user=self.private_ldap_bind_user,
-                password=self.private_ldap_bind_pass, auto_bind=True
+                password=self.private_ldap_bind_pass, auto_bind=True,
+                receive_timeout=60
             )
         except Exception as ex:
             self.app.logger.error(

@@ -43,6 +43,9 @@ class UVARCUsersDataManager:
 
         user["date_of_query"] = pytz.utc.localize(user["date_of_query"]).astimezone(
             pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
+        
+        user["date_modified"] = pytz.utc.localize(user["date_modified"]).astimezone(
+            pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
         if user["pwdLastSet"] != "":
             user["pwdLastSet"] = pytz.utc.localize(user["pwdLastSet"]).astimezone(
@@ -56,18 +59,20 @@ class UVARCUsersDataManager:
         )
 
     def get_user_info(self, id):
-        user = mongo_service.db.uvarc_users.find_one({"UserID": id})
-        del user['ldap_info_log']
+        user = mongo_service.db.uvarc_users.find_one({"uid": id})
         response = None
-        if user:
+        if user and user['ldap_info_log']:
+            del user['ldap_info_log']
+            del user['_id']
             user = self.__format_user_info(user)
+            print(user)
             response = {key: user[key] for key in user}
             return response
         else:
             return None
 
     def get_user_hist_info(self, id, time):
-        user = mongo_service.db.uvarc_users.find_one({"UserID": id})
+        user = mongo_service.db.uvarc_users.find_one({"uid": id})
 
         if user:
             recent_record = None
