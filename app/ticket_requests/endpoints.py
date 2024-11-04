@@ -158,10 +158,6 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
 #                 }
 #             ), 400)
 
-from flask_restful import Resource
-from flask import request, make_response, jsonify
-from app.ticket_requests.business import CreateTicketBusinessLogic
-
 # class CreateTicketEndpoint(flask_restful.Resource):
 #     def get(self):
 #         try:
