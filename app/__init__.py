@@ -3,7 +3,7 @@ import os
 import signal
 
 from datetime import timedelta
-from flask import Flask, jsonify
+from flask import Flask, abort, jsonify, request
 from celery import Celery
 from flasgger import Swagger
 from celery.schedules import crontab
@@ -98,9 +98,17 @@ swagger = Swagger(app, template=template)
 def handler(error, endpoint, values=''):
     print('URL Build error:' + str(error))
     return ''
-
-
 app.url_build_error_handlers.append(handler)
+
+
+@app.before_request
+def before_request():
+    abort_flag = True
+    for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
+        if allowed_url in request.host_url:
+            abort_flag = False
+    if abort_flag:
+        abort(401)
 
 # Handle errors consistently
 @app.errorhandler(RestException)
