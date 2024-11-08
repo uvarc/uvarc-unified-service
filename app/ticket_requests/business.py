@@ -1,5 +1,6 @@
 from app import app,jira_service,mongo_service
 import pytz
+import requests
 
 
 class CreateTicketBusinessLogic:
@@ -63,14 +64,27 @@ class CreateTicketBusinessLogic:
                 "child": {"value": form_data['storagePlatform2']}
             }
 
-        
+# def test_function():
+#     print(jira_service._connect_host_url)
+#     headers = {
+#                 "Content-Type": "application/json"}
+#     r = requests.get(
+#         ''.join([jira_service._connect_host_url,
+#                     'servicedeskapi/servicedesk']),
+#         headers=headers,
+#         auth=jira_service._auth
+#     )
+    
+#     print(r)
 
+# print("yo")   
+# test_function()
+# print("yo")
         ## New method
         # jira_response=jira_handler.create_new_officehour_ticket(customer_id,form_data,ldap_info):
         #     return jira_response, 200
 
 
-print(jira_service._connect_host_url)
 
 
 class UVARCUsersOfficeHoursDataManager:
