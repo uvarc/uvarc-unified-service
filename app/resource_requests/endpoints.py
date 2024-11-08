@@ -48,6 +48,24 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 }
             ), 400)
 
+    def options(self, uid=None):
+        """
+        This is a resource request form endpoint that returns all data required for display and processing the form request!'
+        ---
+        responses:
+            200:
+                description: Returns 200 for a preflight options call
+        """
+        try:
+            return '', 200
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
 
 class StorageRequestEndpoint(Resource):
     def get(self):
