@@ -66,6 +66,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
                 response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
             return response
         except Exception as ex:
             return make_response(jsonify(
