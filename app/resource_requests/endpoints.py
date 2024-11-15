@@ -3,7 +3,7 @@ from flask import abort, g, request, make_response, jsonify
 from datetime import datetime
 from app import app
 from app.resource_requests.business import UVARCResourcRequestFormInfoDataManager
-
+from common_utils import cors_check
 
 class UVARCResourcRequestFormInfoEndpoint(Resource):
     # @api.param('uid', 'The user ID')
@@ -31,12 +31,15 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     application/json: "error!"
         """
         try:
-            return make_response(
-                jsonify(
-                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(request),
-                    200
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                return make_response(
+                    jsonify(
+                        UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
+                        200
+                    )
                 )
-            )
         except Exception as ex:
             return make_response(jsonify(
                 {
@@ -53,17 +56,15 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
             200:
                 description: Returns 200 for a preflight options call
         """
-        try:         
-            abort_flag = True
-            for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
-                if allowed_url in request.headers.get('Origin'):
-                    abort_flag = False
-            if abort_flag:
+        try:
+
+            if cors_check(app, request.headers.get('Origin')):
                 abort(401)
             else:
                 response = jsonify({})
+                response.headers.add('Origin', request.host_url)
                 response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
-                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             return response
         except Exception as ex:

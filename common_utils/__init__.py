@@ -13,3 +13,12 @@ def synchronized(f):
         with self._lock:
             return f(self, *args, **kwargs)
     return wrapper
+
+
+def cors_check(app, origin):
+    abort_flag = True
+    if origin:
+        for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
+            if allowed_url in origin:
+                abort_flag = False
+    return abort_flag
