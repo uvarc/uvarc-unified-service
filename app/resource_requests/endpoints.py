@@ -32,7 +32,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
         try:
             return make_response(
                 jsonify(
-                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
+                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(request),
                     200
                 )
             )

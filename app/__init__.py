@@ -53,8 +53,8 @@ if app.config['CORS_ENABLED']:
         origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS']
         # supports_credentials=False
     )
-# else:
-#     cors = CORS(app=app)
+else:
+    cors = CORS(app=app)
 
 # Flask-Marshmallow provides HATEOAS links
 ma = Marshmallow(app)
