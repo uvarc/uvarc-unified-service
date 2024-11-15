@@ -30,16 +30,12 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     application/json: "error!"
         """
         try:
-            if request.method == 'OPTIONS':
-                # Handle preflight request
-                return '', 200
-            else:
-                return make_response(
-                    jsonify(
-                        UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
-                        200
-                    )
+            return make_response(
+                jsonify(
+                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
+                    200
                 )
+            )
         except Exception as ex:
             return make_response(jsonify(
                 {
