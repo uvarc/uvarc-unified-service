@@ -63,7 +63,7 @@ ENV_NAME = settings_info['ENV']
 if ENV_NAME == 'prod':
     CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu']
 elif ENV_NAME == 'test':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'http://localhost:5000']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'http://localhost']
 else:
     CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000']
 
