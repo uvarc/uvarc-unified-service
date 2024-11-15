@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from flask import g, request, make_response, jsonify
+from flask import abort, g, request, make_response, jsonify
 from datetime import datetime
 from app import app
 from app.resource_requests.business import UVARCResourcRequestFormInfoDataManager
@@ -53,11 +53,18 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
             200:
                 description: Returns 200 for a preflight options call
         """
-        try:
-            response = jsonify({})
-            response.headers.add('Access-Control-Allow-Origin', app.config['CORS_ENABLED_ALLOWED_ORIGINS'][0])
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        try:         
+            abort_flag = True
+            for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
+                if allowed_url in request.headers.get('Origin'):
+                    abort_flag = False
+            if abort_flag:
+                abort(401)
+            else:
+                response = jsonify({})
+                response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             return response
         except Exception as ex:
             return make_response(jsonify(
