@@ -109,7 +109,7 @@ app.url_build_error_handlers.append(handler)
 # def before_request():
 #     abort_flag = True
 #     for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
-#         if allowed_url in request.host_url:
+#         if allowed_url in request.headers.get('Origin'):
 #             abort_flag = False
 #     if abort_flag:
 #         abort(401)

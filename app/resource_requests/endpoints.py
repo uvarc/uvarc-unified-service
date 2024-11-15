@@ -54,7 +54,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
         """
         try:
             response = jsonify({})
-            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Origin', app.config['CORS_ENABLED_ALLOWED_ORIGINS'][0])
             response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
             response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             return response
@@ -64,7 +64,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     "status": "error",
                     "message": str(ex)
                 }
-            ), 200)
+            ), 400)
 
 
 class StorageRequestEndpoint(Resource):

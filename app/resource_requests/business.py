@@ -8,7 +8,7 @@ class UVARCResourcRequestFormInfoDataManager():
 
     def get_resource_request_from_info(self, request):
         return {
-            'request_base_url': str(request.environ),
+            'origin_url': request.headers.get('Origin'),
             'is_user_resource_request_elligible':  self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
             'user_groups': self.__uvarc_user_data_manager.get_user_groups_info()
         }
