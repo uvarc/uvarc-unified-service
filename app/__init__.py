@@ -50,8 +50,7 @@ logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_lev
 if app.config['CORS_ENABLED']:
     cors = CORS(
         app=app,
-        origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS'],
-        # resources={r"*": {"origins": "*"}},
+        origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS']
         # supports_credentials=False
     )
 # else:
