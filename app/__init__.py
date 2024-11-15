@@ -47,14 +47,14 @@ logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_lev
                     format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 # Enable CORS
-# if (app.config['CORS_ENABLED']):
-#     cors = CORS(
-#         app=app, 
-#         origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS'], 
-#         supports_credentials=True
-#     )
-# else:
-#     cors = CORS(app=app)
+if (app.config['CORS_ENABLED']):
+    cors = CORS(
+        app=app, 
+        origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS'], 
+        supports_credentials=True
+    )
+else:
+    cors = CORS(app=app)
 
 # Flask-Marshmallow provides HATEOAS links
 ma = Marshmallow(app)
