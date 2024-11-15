@@ -34,11 +34,14 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
             if cors_check(app, request.headers.get('Origin')):
                 abort(401)
             else:
+                
+                response = jsonify(
+                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
+                    200
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return make_response(
-                    jsonify(
-                        UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
-                        200
-                    )
+                    response
                 )
         except Exception as ex:
             return make_response(jsonify(
