@@ -57,14 +57,18 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 description: Returns 200 for a preflight options call
         """
         try:
-            return '', 200
+            response = jsonify({})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            return response
         except Exception as ex:
             return make_response(jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
                 }
-            ), 400)
+            ), 200)
 
 
 class StorageRequestEndpoint(Resource):
