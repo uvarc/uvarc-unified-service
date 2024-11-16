@@ -3,7 +3,7 @@ import os
 import signal
 
 from datetime import timedelta
-from flask import Flask, jsonify
+from flask import Flask, abort, jsonify, request
 from celery import Celery
 from flasgger import Swagger
 from celery.schedules import crontab
@@ -46,10 +46,14 @@ logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_lev
                     format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 # Enable CORS
-if (app.config['CORS_ENABLED']):
-    cors = CORS(app, origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS'])
+if app.config['CORS_ENABLED']:
+    cors = CORS(
+        app=app,
+        origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS']
+        # supports_credentials=False
+    )
 else:
-    cors = CORS(app)
+    cors = CORS(app=app)
 
 # Flask-Marshmallow provides HATEOAS links
 ma = Marshmallow(app)
@@ -97,9 +101,17 @@ swagger = Swagger(app, template=template)
 def handler(error, endpoint, values=''):
     print('URL Build error:' + str(error))
     return ''
-
-
 app.url_build_error_handlers.append(handler)
+
+
+# @app.before_request
+# def before_request():
+#     abort_flag = True
+#     for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
+#         if allowed_url in request.headers.get('Origin'):
+#             abort_flag = False
+#     if abort_flag:
+#         abort(401)
 
 # Handle errors consistently
 @app.errorhandler(RestException)
