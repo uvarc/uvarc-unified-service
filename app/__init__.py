@@ -42,8 +42,8 @@ if (app.config['DEBUG']):
 else:
     log_level = logging.INFO
 
-logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_level,
-                    format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+# logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_level,
+#                     format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 # Enable CORS
 if app.config['CORS_ENABLED']:

@@ -96,9 +96,14 @@ class JiraServiceHandler:
                 headers=headers,
                 auth=self._auth
             )
+            # Check if the response status code indicates an error
+            if r.status_code != 200:
+                print(f"Error fetching customer {account_id}: {r.status_code} - {r.text}")
+                return None
+            
             return r.text
         except Exception as ex:
-            print("Couldn't create customer {} in JIRA: {}".format(account_id, str(ex)))
+            print("Couldn't get customer {} in JIRA: {}".format(account_id, str(ex)))
 ##            
     def get_customer_by_email(self,email):
         try:
@@ -112,9 +117,14 @@ class JiraServiceHandler:
                 headers=headers,
                 auth=self._auth
             )
+
+            # Check if the response status code indicates an error
+            if r.status_code != 200:
+                print(f"Error fetching customer {email}: {r.status_code} - {r.text}")
+                return None
             return r.text
         except Exception as ex:
-            print("Couldn't create customer {} in JIRA: {}".format(email, str(ex)))
+            print("Couldn't get customer {} in JIRA: {}".format(email, str(ex)))
             
     def create_new_ticket(
         self,
@@ -168,23 +178,34 @@ class JiraServiceHandler:
         )
         return response.text
 
-##
-    def create_new_officehour_ticket(self, reporter,form_data,ldap_info):
+    def create_new_officehour_ticket(self, reporter_username,form_data,ldap_info):
+
+        # Returns appropriate fields for office hour ticket
+        # headers = {
+        #         "Content-Type": "application/json",
+        #         "X-ExperimentalApi": "opt-in"
+        #     }
+        # response = requests.get(
+        #         f"{self._connect_host_url}api/2/issue/createmeta/OH/issuetypes/10700", 
+        #         headers=headers, 
+        #         auth=self._auth
+        #     )
+
         mapped_details = [{'value': item['value']} for item in form_data['details']]
         ticket_data = {
             "fields": {
                 "project": {"key": "OH"},
-                "reporter": {"name": reporter},  
+                "reporter": {"name": reporter_username},  
                 "issuetype": {"id": '10700'},  
                 "description": form_data['comments'],  
-                "customfield_13184": {"value": form_data['requestType']}, 
+                "customfield_13084": {"value": form_data['requestType']}, 
                 "customfield_10972": "Office Hours Request",  
-                "customfield_13176": ldap_info['department'],  
-                "customfield_13196": ldap_info['school'],  
-                "customfield_13175": form_data['date'], 
-                "customfield_13190": form_data['discipline'],  
-                "customfield_13194": mapped_details,  
-                "customfield_13203": {"value": form_data['meetingType']},  
+                "customfield_13076": ldap_info['department'],  
+                "customfield_13096": ldap_info['school'],  
+                "customfield_13075": form_data['date'], 
+                "customfield_13090": form_data['discipline'],  
+                "customfield_13094": mapped_details,  
+                "customfield_13102": {"value": form_data['meetingType']},  
                 "summary": form_data['summary']  
             }
         }
@@ -193,16 +214,17 @@ class JiraServiceHandler:
                 ticket_data["fields"]["assignee"] = {"name": form_data['staff'][0]['value']}
 
         if form_data['computePlatform1'] != "none":
-                ticket_data["fields"]["customfield_13189"] = {
+                ticket_data["fields"]["customfield_13089"] = {
                     "value": form_data['computePlatform1'],
                     "child": {"value": form_data['computePlatform2']}
                 }
 
         if form_data['storagePlatform1'] != "none":
-            ticket_data["fields"]["customfield_13195"] = {
+            ticket_data["fields"]["customfield_13095"] = {
                 "value": form_data['storagePlatform1'],
                 "child": {"value": form_data['storagePlatform2']}
             }
+
         headers = {
                 "Content-Type": "application/json",
                 "X-ExperimentalApi": "opt-in"
@@ -213,6 +235,7 @@ class JiraServiceHandler:
                 data=json.dumps(ticket_data), 
                 auth=self._auth
             )
+        
         if response.status_code == 201:
                 jira_issue_key = response.json().get('key')
                 staff_ids = [obj['value'] for obj in form_data['staff'][1:]]  

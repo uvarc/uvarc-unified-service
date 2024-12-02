@@ -6,7 +6,107 @@ from .business import UVARCUsersOfficeHoursDataManager, CreateTicketBusinessLogi
 
 
 class UVARCUserOfficeHoursEndpoint(Resource):
+
     def get(self):
+        """
+        This endpoint retrieves detailed information for one user, including historical data if a specific time is provided.
+
+        ---
+        parameters:
+            - in: query
+            name: id
+            required: true
+            type: string
+            description: The unique identifier of the user whose data is being queried.
+            - in: query
+            name: time
+            required: false
+            type: string
+            format: date-time
+            description: A specific time in ISO format (YYYY-MM-DD) to filter historical data.
+
+        responses:
+            200:
+                description: Returns detailed user information.
+                schema:
+                    type: object
+                    properties:
+                        data:
+                            type: object
+                            properties:
+                                uid:
+                                    type: string
+                                    description: User's unique identifier.
+                                displayName:
+                                    type: string
+                                    description: Full display name of the user.
+                                title:
+                                    type: string
+                                    description: User's title or role.
+                                uvaDisplayDepartment:
+                                    type: array
+                                    items:
+                                        type: string
+                                    description: List of UVA department affiliations.
+                                department:
+                                    type: string
+                                    description: User's primary department.
+                                school:
+                                    type: string
+                                    description: User's school affiliation.
+                                description:
+                                    type: array
+                                    items:
+                                        type: string
+                                    description: List of user descriptions or roles.
+                                pwdLastSet:
+                                    type: string
+                                    format: date-time
+                                    description: Last password update time.
+                                userAccountControl:
+                                    type: string
+                                    description: User account status (e.g., "enabled").
+                                primaryGroupID:
+                                    type: string
+                                    description: User's primary group ID.
+                                Sponsored:
+                                    type: string
+                                    description: Whether the user is sponsored ("True" or "False").
+                                Rivanna_status:
+                                    type: string
+                                    description: Rivanna account status.
+                                date_of_query:
+                                    type: string
+                                    format: date-time
+                                    description: Timestamp when the query was performed.
+                                update_time:
+                                    type: string
+                                    format: date-time
+                                    description: Timestamp of the last update.
+                                comment:
+                                    type: string
+                                    description: Comments about user and group changes.
+                                Rivanna_Status:
+                                    type: string
+                                    description: User's Rivanna account activity status.
+                                member_groups:
+                                    type: array
+                                    items:
+                                        type: string
+                                    description: List of user group memberships.
+                                uidNumber:
+                                    type: string
+                                    description: User's unique numeric identifier.
+            400:
+                description: An error response due to a missing or invalid query parameter.
+                examples:
+                    application/json: {"error": "No query parameter 'id' found"}
+            500:
+                description: An error response indicating a failure in connecting to MongoDB.
+                examples:
+                    application/json: {"error": "MongoDB connection failed"}
+        """
+
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
@@ -32,6 +132,103 @@ class UVARCUserOfficeHoursEndpoint(Resource):
 
 
 class UVARCUsersOfficeHoursEndpoint(Resource):
+    """
+    This endpoint retrieves detailed user information, including historical data if a specific time is provided. Supports multiple user IDs as a comma-separated list.
+
+    ---
+    parameters:
+        - in: query
+        name: ids
+        required: true
+        type: string
+        description: A comma-separated list of unique identifiers for the users whose data is being queried.
+        - in: query
+        name: time
+        required: false
+        type: string
+        format: date-time
+        description: A specific time in ISO format (YYYY-MM-DD) to filter historical data.
+
+    responses:
+        200:
+            description: Returns detailed user information for the specified user IDs.
+            schema:
+                type: object
+                properties:
+                    data:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                uid:
+                                    type: string
+                                    description: User's unique identifier.
+                                displayName:
+                                    type: string
+                                    description: Full display name of the user.
+                                title:
+                                    type: string
+                                    description: User's title or role.
+                                uvaDisplayDepartment:
+                                    type: array
+                                    items:
+                                        type: string
+                                    description: List of UVA department affiliations.
+                                department:
+                                    type: string
+                                    description: User's primary department.
+                                school:
+                                    type: string
+                                    description: User's school affiliation.
+                                description:
+                                    type: array
+                                    items:
+                                        type: string
+                                    description: List of user descriptions or roles.
+                                pwdLastSet:
+                                    type: string
+                                    format: date-time
+                                    description: Last password update time.
+                                userAccountControl:
+                                    type: string
+                                    description: User account status (e.g., "enabled").
+                                primaryGroupID:
+                                    type: string
+                                    description: User's primary group ID.
+                                Sponsored:
+                                    type: string
+                                    description: Whether the user is sponsored ("True" or "False").
+                                Rivanna_status:
+                                    type: string
+                                    description: Rivanna account status.
+                                date_of_query:
+                                    type: string
+                                    format: date-time
+                                    description: Timestamp when the query was performed.
+                                update_time:
+                                    type: string
+                                    format: date-time
+                                    description: Timestamp of the last update.
+                                comment:
+                                    type: string
+                                    description: Comments about user and group changes.
+                                Rivanna_Status:
+                                    type: string
+                                    description: User's Rivanna account activity status.
+                                member_groups:
+                                    type: array
+                                    items:
+                                        type: string
+                                    description: List of user group memberships.
+                                uidNumber:
+                                    type: string
+                                    description: User's unique numeric identifier.
+        400:
+            description: An error response due to a missing or invalid query parameter.
+        500:
+            description: An error response indicating a failure in connecting to MongoDB.
+    """
+
     def get(self):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
@@ -63,6 +260,103 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
             response_data.append(get_info_helper.get_user_info(id))
 
         return {"data": response_data}, 200
+    
+class CreateTicketEndpoint(Resource):
+    """
+    This endpoint creates a ticket for office hours based on the provided form data.
+
+    ---
+    parameters:
+        - in: body
+        name: form_data
+        required: true
+        schema:
+            type: object
+            properties:
+                userID:
+                    type: string
+                    description: Unique identifier of the user submitting the ticket.
+                staff:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            value:
+                                type: string
+                                description: Unique identifier of the staff member.
+                            label:
+                                type: string
+                                description: Full name of the staff member.
+                meetingType:
+                    type: string
+                    description: The type of meeting being requested (e.g., "Office Hours").
+                comments:
+                    type: string
+                    description: Additional comments provided by the user.
+                summary:
+                    type: string
+                    description: A brief summary of the ticket.
+                date:
+                    type: string
+                    format: date
+                    description: The date of the request in YYYY-MM-DD format.
+                details:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            value:
+                                type: string
+                                description: Detail value (e.g., "Language: Python").
+                            label:
+                                type: string
+                                description: Detail label (e.g., "Language: Python").
+                storagePlatform1:
+                    type: string
+                    description: The first selected storage platform.
+                storagePlatform2:
+                    type: string
+                    description: The second selected storage platform.
+                computePlatform1:
+                    type: string
+                    description: The first selected compute platform.
+                computePlatform2:
+                    type: string
+                    description: The second selected compute platform.
+                discipline:
+                    type: string
+                    description: The user's academic discipline.
+                requestType:
+                    type: string
+                    description: The type of request being submitted.
+
+    responses:
+        200:
+            description: Returns the created ticket data.
+            schema:
+                type: object
+                properties:
+                    data:
+                        type: object
+                        description: The details of the successfully created ticket.
+        400:
+            description: An error response due to invalid input or missing data.
+        500:
+            description: An internal server error response.
+    """
+    def post(self):
+        try:
+            form_data = request.json
+            if not form_data:
+                return {"error": "No data provided"}, 400
+            
+            ticket_logic = CreateTicketBusinessLogic()
+            ticket_data = ticket_logic.create_officehour_ticket(form_data)
+            
+            return {"data": ticket_data}, 200  
+
+        except Exception as ex:
+            return make_response(jsonify({"status": "error", "message": str(ex)}), 400)
 
 
 # class GetLDAPUserInfoEndpoint(Resource):
@@ -169,19 +463,3 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
 #                     "message": str(ex)
 #                 }
 #             ), 400)
-
-class CreateTicketEndpoint(Resource):
-    def post(self):
-        try:
-            # form_data = request.json
-            # if not form_data:
-            #     return {"error": "No data provided"}, 400
-            
-            # ticket_logic = CreateTicketBusinessLogic()
-            test_function()
-            # ticket_data = ticket_logic.create_ticket(form_data)
-            
-            # return {"data": ticket_data}, 200  #####
-
-        except Exception as ex:
-            return make_response(jsonify({"status": "error", "message": str(ex)}), 400)
