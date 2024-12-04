@@ -5,7 +5,27 @@ from app import app
 from app.resource_requests.business import UVARCResourcRequestFormInfoDataManager
 from common_utils import cors_check
 
+
 class UVARCResourcRequestFormInfoEndpoint(Resource):
+    def post(self, uid=None):
+        try:
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                resource_requests = request.get_json()
+                app.logger.info("Form data created resource received: {resource_requests}".format(resource_requests=resource_requests))
+                if resource_requests and len(resource_requests) >0:
+                    for resource_request in resource_requests:
+                        if 'resources' in resource_request and 'hpc_service_units' in resource_request['resources']:
+                            print (resource_request['resources']['hpc_service_units'])
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
     # @api.param('uid', 'The user ID')
     def get(self, uid=None):
         """
@@ -36,7 +56,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
             else:
                 
                 response = jsonify(
-                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
+                    UVARCResourcRequestFormInfoDataManager(uid).get_user_resource_request_info(),
                     200
                 )
                 response.headers.add('Access-Control-Allow-Credentials', 'true')

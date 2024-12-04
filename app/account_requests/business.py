@@ -20,13 +20,13 @@ class UVARCUsersDataManager:
     def __refresh_user_all_info(self, uid):
         user = mongo_service.db.uvarc_users.find_one({"uid": uid})
         if user:
-            UVARCUsersSyncManager().sync_user_info(user)
+            UVARCUsersGroupsSyncManager().sync_user_info(user)
         else:
             raise Exception('User with uid {} not found'.format(uid))
 
     def __get_user_all_info(self, uid, upsert=True, refresh=False):
         if upsert and mongo_service.db.uvarc_users.count_documents({'uid': uid}) == 0:
-            UVARCUsersSyncManager().create_user_info({'uid': uid})
+            UVARCUsersGroupsSyncManager().create_user_info({'uid': uid})
         elif refresh:
             self.__refresh_user_all_info(uid)
         user = mongo_service.db.uvarc_users.find_one({"uid": uid})
@@ -48,7 +48,34 @@ class UVARCUsersDataManager:
         return member_groups
 
 
-class UVARCUsersSyncManager:
+class UVARCGroupsDataManager:
+    def __init__(self, group_name, upsert=True, refresh=False):
+        if group_name is None:
+            raise Exception('Group Name provided cannot be {}'.format(uid))
+        self.__group = self.__get_group_all_info(group_name, upsert, refresh)
+        if self.__group is None:
+            raise Exception('Group with group_name {} not found'.format(group_name))
+ 
+    def __refresh_group_all_info(self, group_name):
+        group = mongo_service.db.uvarc_groups.find_one({"group_name": group_name})
+        if group:
+            UVARCUsersGroupsSyncManager().sync_group_info(group)
+        else:
+            raise Exception('Group with group_name {} not found'.format(group_name))
+
+    def __get_group_all_info(self, group_name, upsert=True, refresh=False):
+        if upsert and mongo_service.db.uvarc_groups.count_documents({'group_name': group_name}) == 0:
+            UVARCUsersGroupsSyncManager().create_group_info({'group_name': group_name})
+        elif refresh:
+            self.__refresh_group_all_info(group_name)
+        group = mongo_service.db.uvarc_groups.find_one({"group_name": group_name})
+        return group
+
+    def get_group_info(self):
+        return self.__group
+
+
+class UVARCUsersGroupsSyncManager:
     def __init__(self):
         self.__private_ldap_service_handler = None
         self.__public_ldap_service_handler = None
@@ -265,7 +292,7 @@ class UVARCUsersSyncManager:
             with open('data/backfill/groups_info.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for group_info in csv_reader:
-                    mongo_service.db.uvarc_groups.insert_one(group_info)
+                    self.create_group_info(group_info)
 
     def create_user_info(self, user):
         app.logger.info('Creating new user with UID: {} '.format(user['uid']))
@@ -280,6 +307,36 @@ class UVARCUsersSyncManager:
                     comment="creating mew uvarc user"
                 )
             )
+
+    def create_group_info(self, group):
+        app.logger.info('Creating new group with group name : {} '.format(group['group_name']))
+        if 'uvarc_groups' not in mongo_service.db.list_collection_names() or mongo_service.db.uvarc_groups.count_documents({'group_name': group['group_name']}) == 0:
+            group_members_ldap = self.fetch_group_users(group['group_name'])
+            if group_members_ldap:
+                for uid in group_members_ldap:
+                    if mongo_service.db.uvarc_users.count_documents({'uid': uid}) == 0:
+                        self.create_user_info({'uid': uid})
+
+                group['group_members'] = group_members_ldap
+                group_members_hist = []
+                mongo_service.db.uvarc_groups.insert_one(
+                    {
+                        "group_name": group['group_name'],
+                        "group_members": sorted(group_members_ldap),
+                        "group_members_hist": group_members_hist,
+                        "group_members_update_time": datetime.now(timezone.utc),
+                        "group_id": "",
+                        "project_name": "",
+                        "project_desc": "",
+                        "data_agreement_signed": False,
+                        "pi_uid":  "",
+                        "delegates_uid": [],
+                        "resources": {
+                            "hpc_service_units": {},
+                            "storage": {}
+                        }
+                    }
+                )
 
     @synchronized
     def sync_users_info(self):
@@ -336,8 +393,8 @@ class UVARCUsersSyncManager:
                                 comment=change_comment
                             )
                         }
-                    )
-
+                    )        
+    
     def sync_groups_info(self):
         for group in mongo_service.db.uvarc_groups.find({}).sort("group_name", pymongo.ASCENDING):
             try:
