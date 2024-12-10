@@ -74,6 +74,10 @@ class UVARCGroupsDataManager:
     def get_group_info(self):
         return self.__group
 
+    def set_grouo_info(self, group_info):
+        UVARCUsersGroupsSyncManager().update_group_resource_info(group_info)
+        
+        
 
 class UVARCUsersGroupsSyncManager:
     def __init__(self):
@@ -338,6 +342,15 @@ class UVARCUsersGroupsSyncManager:
                     }
                 )
 
+    def update_group_resource_info(self, group):
+        mongo_service.db.uvarc_groups.update_one(
+            {'group_name': group['group_name']},
+            {
+                "$set": group
+            },
+            False
+        )
+
     @synchronized
     def sync_users_info(self):
         self.sync_groups_info()
@@ -394,7 +407,7 @@ class UVARCUsersGroupsSyncManager:
                             )
                         }
                     )        
-    
+
     def sync_groups_info(self):
         for group in mongo_service.db.uvarc_groups.find({}).sort("group_name", pymongo.ASCENDING):
             try:
