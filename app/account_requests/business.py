@@ -16,6 +16,7 @@ class UVARCUsersDataManager:
         self.__user = self.__get_user_all_info(uid, upsert, refresh)
         if self.__user is None:
             raise Exception('User with uid {} not found'.format(uid))
+        self.__user_resources = self.__get_user_all_resources_info(uid)
 
     def __refresh_user_all_info(self, uid):
         user = mongo_service.db.uvarc_users.find_one({"uid": uid})
@@ -32,6 +33,9 @@ class UVARCUsersDataManager:
         user = mongo_service.db.uvarc_users.find_one({"uid": uid})
         return user
 
+    def __get_user_all_resources_info(self, uid):
+        return mongo_service.db.uvarc_groups.find({"pi_uid": uid})
+
     def is_user_resource_request_elligible(self):
         if 'member_groups' in self.__user and 'research-infrastructure-users' in self.__user['member_groups']:
             return True
@@ -46,6 +50,9 @@ class UVARCUsersDataManager:
         if 'research-infrastructure-users' in member_groups:
             member_groups.remove('research-infrastructure-users')
         return member_groups
+
+    def get_user_resources_info(self):
+        return self.__user_resources
 
 
 class UVARCGroupsDataManager:
@@ -76,8 +83,7 @@ class UVARCGroupsDataManager:
 
     def set_grouo_info(self, group_info):
         UVARCUsersGroupsSyncManager().update_group_resource_info(group_info)
-        
-        
+
 
 class UVARCUsersGroupsSyncManager:
     def __init__(self):

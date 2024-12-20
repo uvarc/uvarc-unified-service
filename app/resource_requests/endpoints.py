@@ -24,6 +24,16 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                             elif 'storage' in resource_request_info['resources']:
                                 print(resource_request_info['resources']['storage'])
                                 uvarc_resource_request_manager.create_user_resource_storage_request_info(resource_request_info)
+                response = jsonify(
+                    {
+                        "status": "success",
+                        "message": 'Request submitted successfully'
+                    }
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response
+                )
         except Exception as ex:
             return make_response(jsonify(
                 {
