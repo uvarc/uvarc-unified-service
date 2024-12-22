@@ -26,8 +26,10 @@ class CreateTicketBusinessLogic:
 
         reporter = self.__get_reporter_username(customer_id)
         reporter_username = reporter.get("displayName", "")
+        print(form_data)
 
-        return jira_service.create_new_officehour_ticket(reporter_username, form_data, ldap_info)
+        # return jira_service.create_new_officehour_ticket(reporter_username, form_data, ldap_info)
+        return jira_service.create_new_ticket(reporter=reporter_username, project_name="CONSULTATIONS & OUTREACH", request_type="IT_HELP", department=ldap_info["department"], school=ldap_info["school"], additional_data = form_data)
         #  mapped_details = [{'value': item['value']} for item in form_data['details']]
         # ticket_data = {
         #     "fields": {

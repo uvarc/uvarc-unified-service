@@ -65,7 +65,7 @@ if ENV_NAME == 'prod':
 elif ENV_NAME == 'test':
     CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu']
 else:
-    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000','http://localhost:3000','http://127.0.0.1:5000','http://127.0.0.1:3000']
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
@@ -98,7 +98,7 @@ JIRA_CONN_INFO = {
 }
 
 JIRA_PROJECTS = ('RIVANNA', 'IVY', 'GENERAL_SUPPORT',
-                 'SENTINEL', 'CHASE', 'ACCORD_SUPPORT', 'UVA_RESEARCH_CONCIERGE_SERVICES')
+                 'SENTINEL', 'CHASE', 'ACCORD_SUPPORT', 'UVA_RESEARCH_CONCIERGE_SERVICES','CONSULTATIONS & OUTREACH')
 
 JIRA_PROJECT_REQUEST_TYPES = (
     'RIVANNA_GET_IT_HELP',
@@ -109,6 +109,7 @@ JIRA_PROJECT_REQUEST_TYPES = (
     'ACCORD_SUPPORT_TECHNICAL_SUPPORT',
     'DATA_ANALYTICS_CONSULTING',
     'ITHRIV_CONCIERGE_INQUIRY',
+    'IT_HELP'
 )
 
 JIRA_PROJECT_INFO_LOOKUP = {
@@ -118,6 +119,7 @@ JIRA_PROJECT_INFO_LOOKUP = {
     JIRA_PROJECTS[3]: 36,
     JIRA_PROJECTS[4]: 12,
     JIRA_PROJECTS[5]: 47,
+    JIRA_PROJECTS[7]: 34
 }
 
 JIRA_PROJECT_REQUEST_TYPE_LOOKUP = {
@@ -128,6 +130,7 @@ JIRA_PROJECT_REQUEST_TYPE_LOOKUP = {
     JIRA_PROJECT_REQUEST_TYPES[4]: 106,
     JIRA_PROJECT_REQUEST_TYPES[5]: 387,
     JIRA_PROJECT_REQUEST_TYPES[6]: 401,
+    JIRA_PROJECT_REQUEST_TYPES[8]: 254
 }
 
 JIRA_CATEGORY_PROJECT_ROUTE_DICT = {
@@ -150,6 +153,33 @@ JIRA_CATEGORY_PROJECT_ROUTE_DICT = {
     'Data Analytics': (JIRA_PROJECTS[2], JIRA_PROJECT_REQUEST_TYPES[6]),
     'Container': (JIRA_PROJECTS[2], JIRA_PROJECT_REQUEST_TYPES[2]),
 }
+
+# JIRA Custom Fields
+if DEVELOPMENT:
+    JIRA_CUSTOM_FIELDS = {
+        "custom_field_request_type": "customfield_13084",
+        "custom_field_department": "customfield_13076",
+        "custom_field_school": "customfield_13096",
+        "custom_field_date": "customfield_13075",
+        "custom_field_discipline": "customfield_13090",
+        "custom_field_details": "customfield_13094",
+        "custom_field_meeting_type": "customfield_13102",
+        "custom_field_compute_platform": "customfield_13089",
+        "custom_field_storage_platform": "customfield_13095"
+    }
+
+elif PRODUCTION:
+    JIRA_CUSTOM_FIELDS = {
+        "custom_field_request_type": "customfield_13184",
+        "custom_field_department": "customfield_13176",
+        "custom_field_school": "customfield_13196",
+        "custom_field_date": "customfield_13175",
+        "custom_field_discipline": "customfield_13190",
+        "custom_field_details": "customfield_13194",
+        "custom_field_meeting_type": "customfield_13203",
+        "custom_field_compute_platform": "customfield_13189",
+        "custom_field_storage_platform": "customfield_13195"
+    }
 
 # SMTP Email Settings
 MAIL_SERVER = settings_info["SMTP"]["HOSTS"][0]
@@ -176,6 +206,7 @@ if DEVELOPMENT:
 
     KONAMI_ENPOINT_DEFAULT_SENDER = 'rkc7h@virginia.edu'
     KONAMI_ENPOINT_DEFAULT_RECEIVER = 'rkc7h@virginia.edu'
+    
 
 elif PRODUCTION:
     ALLOCATION_SPONSOR_EMAIL_LOOKUP = {
