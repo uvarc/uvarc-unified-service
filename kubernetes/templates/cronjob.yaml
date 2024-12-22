@@ -9,7 +9,7 @@ spec:
       template:
         spec:
           containers:
-          - name: sqs-message-processor
+          - name: sqs-reader
             image: ghcr.io/uvarc/uvarc-unified-service:develop
             imagePullPolicy: Always
             command:
