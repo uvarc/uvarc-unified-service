@@ -5,7 +5,68 @@ from app import app
 from app.resource_requests.business import UVARCResourcRequestFormInfoDataManager
 from common_utils import cors_check
 
+
 class UVARCResourcRequestFormInfoEndpoint(Resource):
+    def post(self, uid=None):
+        try:
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                resource_requests_info = request.get_json()
+                app.logger.info("Form data created resource received: {resource_requests_info}".format(resource_requests_info=resource_requests_info))
+                if resource_requests_info and len(resource_requests_info) >0:
+                    for resource_request_info in resource_requests_info:
+                        uvarc_resource_request_manager = UVARCResourcRequestFormInfoDataManager(uid)
+                        if 'resources' in resource_request_info:
+                            if 'hpc_service_units' in resource_request_info['resources']:
+                                print(resource_request_info['resources']['hpc_service_units'])
+                                uvarc_resource_request_manager.create_user_resource_su_request_info(resource_request_info)
+                            elif 'storage' in resource_request_info['resources']:
+                                print(resource_request_info['resources']['storage'])
+                                uvarc_resource_request_manager.create_user_resource_storage_request_info(resource_request_info)
+                response = jsonify(
+                    {
+                        "status": "success",
+                        "message": 'Request submitted successfully'
+                    }
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response
+                )
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
+    def put(self, uid=None):
+        try:
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                resource_requests_info = request.get_json()
+                app.logger.info("Form data created resource received: {resource_request_info}".format(resource_request_info=resource_request_info))
+                if resource_requests_info and len(resource_requests_info) >0:
+                    for resource_request_info in resource_requests_info:
+                        uvarc_resource_request_manager = UVARCResourcRequestFormInfoDataManager(uid)
+                        if 'resources' in resource_request_info:
+                            if 'hpc_service_units' in resource_request_info['resources']:
+                                print(resource_request_info['resources']['hpc_service_units'])
+                                uvarc_resource_request_manager.update_user_resource_su_request_info(resource_request_info)
+                            elif 'storage' in resource_request_info['resources']:
+                                print(resource_request_info['resources']['storage'])
+                                uvarc_resource_request_manager.update_user_resource_storage_request_info(resource_request_info)
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
     # @api.param('uid', 'The user ID')
     def get(self, uid=None):
         """
@@ -36,7 +97,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
             else:
                 
                 response = jsonify(
-                    UVARCResourcRequestFormInfoDataManager(uid).get_resource_request_from_info(),
+                    UVARCResourcRequestFormInfoDataManager(uid).get_user_resource_request_info(),
                     200
                 )
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
