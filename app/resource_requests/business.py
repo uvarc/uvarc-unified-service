@@ -1,5 +1,6 @@
 import bson
 import bson.json_util
+from datetime import datetime, timezone
 from app import app, mongo_service
 from app.account_requests.business import UVARCUsersDataManager, UVARCGroupsDataManager
 from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS
@@ -42,6 +43,9 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['delegates_uid'] = group_info['delegates_uid'] if 'delegates_uid' in group_info else ''
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][group_info['group_name']]
+                group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
 
             return group_info_db
 
