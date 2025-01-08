@@ -3,7 +3,7 @@ import bson.json_util
 from datetime import datetime, timezone
 from app import app, mongo_service
 from app.account_requests.business import UVARCUsersDataManager, UVARCGroupsDataManager
-from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS
+from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
 
 class UVARCResourcRequestFormInfoDataManager():
@@ -11,12 +11,29 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uid = uid
 
     def get_user_resource_request_info(self):
-        self.__uvarc_user_data_manager = UVARCUsersDataManager(uid=self.__uid, upsert=True, refresh=True)
+        self.__uvarc_user_data_manager = UVARCUsersDataManager(uid=self.__uid, upsert=True, refresh=True)    
+
         return {
-            'is_user_resource_request_elligible':  self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
+            'is_user_resource_request_elligible': True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
             'user_groups': self.__uvarc_user_data_manager.get_user_groups_info(),
-            'user_resources':  bson.json_util.dumps(list(self.__uvarc_user_data_manager.get_user_resources_info()))
+            'user_resources': self.__transfer_db_data_to_user_resource_request_info(list(self.__uvarc_user_data_manager.get_user_resources_info()))
         }
+
+    def __transfer_db_data_to_user_resource_request_info(self, user_resources_info):
+        for user_resource_info in user_resources_info:
+            user_resource_info.pop('_id')
+            user_resource_info.pop('group_members')
+            user_resource_info.pop('group_members_hist')
+            user_resource_info.pop('group_members_update_time')
+            for resource_type in RESOURCE_TYPES:
+                if resource_type in user_resource_info['resources']:
+                    for user_resource_service_units in user_resource_info['resources'][resource_type]:
+                        for user_resource_service_unit_attrib in user_resource_info['resources'][resource_type][user_resource_service_units]:
+                            if user_resource_service_unit_attrib.find('date') > -1:
+                                user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib]=user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib].strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        # return bson.json_util.dumps(user_resources_info)
+        return user_resources_info
 
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
         if 'pi_uid' in group_info_db and group_info_db['pi_uid']!='' and group_info_db['pi_uid'] != group_info['pi_uid']:
@@ -43,7 +60,7 @@ class UVARCResourcRequestFormInfoDataManager():
 
         return True
 
-    def __transfer_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
+    def __transfer_user_resource_request_info_to_db(self, group_info, group_info_db, resource_request_type, request_type):
         if self.__validate_user_resource_request_info(group_info, group_info_db, resource_request_type, request_type):
             if request_type == 'CREATE':
                 group_info_db['pi_uid'] = group_info['pi_uid']
@@ -78,7 +95,7 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         self.__uvarc_group_data_manager.set_grouo_info(
-            self.__transfer_user_resource_request_info(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
     def update_user_resource_su_request_info(self, user_resource_request_info):
@@ -87,7 +104,7 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         self.__uvarc_group_data_manager.set_grouo_info(
-            self.__transfer_user_resource_request_info(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
     def create_user_resource_storage_request_info(self, user_resource_request_info):
@@ -96,7 +113,7 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         self.__uvarc_group_data_manager.set_grouo_info(
-            self.__transfer_user_resource_request_info(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
     def update_user_resource_storage_request_info(self, user_resource_request_info):
