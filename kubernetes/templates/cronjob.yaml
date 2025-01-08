@@ -32,10 +32,10 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: uvarc-unified-service-secret
-                  key: AWS_CLIENT_SECRET
+                  key: AWS_CLIENT_ID
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: uvarc-unified-service-secret
-                  key: AWS_CLIENT_ID
+                  key: AWS_CLIENT_SECRET
           restartPolicy: OnFailure
