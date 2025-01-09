@@ -25,17 +25,17 @@ spec:
                 cpu: "50m"
             env:
             - name: QUEUE_URL
-              value: "https://sqs.us-east-1.amazonaws.com/474683445819/praveen-test-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/474683445819/uvarc_unified_storage_request_queue_raji"
             - name: AWS_REGION
               value: "us-east-1"
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: uvarc-unified-service-secret
-                  key: AWS_CLIENT_SECRET
+                  key: AWS_CLIENT_ID
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: uvarc-unified-service-secret
-                  key: AWS_CLIENT_ID
+                  key: AWS_CLIENT_SECRET
           restartPolicy: OnFailure
