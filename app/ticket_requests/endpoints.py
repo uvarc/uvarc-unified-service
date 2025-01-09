@@ -1,8 +1,9 @@
 from flask_restful import Resource
-from flask import g, request, make_response, jsonify
+from flask import g, request, redirect, make_response, jsonify
 from datetime import datetime
 from app import mongo_service
 from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager
+from app.ticket_requests.business import GeneralSupportRequestManager
 
 
 class UVARCUserOfficeHoursEndpoint(Resource):
@@ -62,7 +63,39 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
         for id in list_of_ids:
             response_data.append(get_info_helper.get_user_info(id))
 
-        return {"data": response_data}, 200
+        return {"data": response_data}, 200 
+
+
+class GeneralSupportRequestEndPoint(Resource):
+    def post(version='v2'):
+        try:
+            response = GeneralSupportRequestManager().process_support_request(
+                request.form, request.host_url, version)
+            return response
+        except Exception as ex:
+            print(ex)
+
+
+class SendMesaageEndPoint(Resource):
+    def post(version='v2'):
+        data = request.get_json()
+        try:
+            response = GeneralSupportRequestManager().update_resource_request_status(data)
+            return response
+        except Exception as e:
+            # Handle AWS SQS errors
+            return jsonify({"error": str(e)}), 500
+        
+
+class ReceiveMesaageEndPoint(Resource):
+    def get(self):
+        try:
+            response = GeneralSupportRequestManager().receive_message()
+            return response
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
 
 
 # class GetLDAPUserInfoEndpoint(Resource):

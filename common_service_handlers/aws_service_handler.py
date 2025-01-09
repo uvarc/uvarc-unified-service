@@ -1,14 +1,25 @@
 import boto3
 import json
-from app.api import DecimalEncoder
 
 
 class AWSServiceHandler:
     def __init__(self, app):
-        self.app = app
-        self.aws_access_key_id = app.config['AWS_CONN_INFO']['CLIENT_ID']
-        self.aws_secret_access_key = app.config['AWS_CONN_INFO']['CLIENT_SECRET']
-
+        try:
+            self.app = app
+            self.aws_access_key_id = app.config['AWS_CONN_INFO']['CLIENT_ID']
+            self.aws_secret_access_key = app.config['AWS_CONN_INFO']['CLIENT_SECRET']
+            
+            self.aws_session = boto3.session.Session(
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                region_name='us-east-1'
+            )
+            self.print_all_queues()
+        except Exception as ex:
+            # self.app.log_exception(ex)
+            print(str(ex))
+            raise (ex)
+        
     def get_dynamodb_resource(self):
         try:
             return boto3.Session(
@@ -45,3 +56,21 @@ class AWSServiceHandler:
         except Exception as ex:
             self.app.log_exception(ex)
             print(str(ex))
+            
+    def get_session(self):
+        return self.aws_session
+    
+    def get_resource(self, resource_type):
+        return self.aws_session.resource(resource_type)
+
+    def print_all_queues(self):
+        try:
+            sqs = self.get_resource('sqs')
+            queue_iterator = sqs.queues.all()
+        
+            for queue in queue_iterator:
+                print(queue.url)
+        except Exception as ex:
+            self.app.log_exception(ex)
+            print(str(ex))
+            raise (ex)
