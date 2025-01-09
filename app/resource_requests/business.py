@@ -55,9 +55,8 @@ class UVARCResourcRequestFormInfoDataManager():
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
                 if resource_request_id not in group_info_db['resources'][resource_request_type]:
                     raise Exception('Cannot process the update resource request: The resource request with request name does not exists in system to update')
-                elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] not in ['pending', 'processing']:
+                elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['pending', 'processing']:
                     raise Exception('Cannot process the update resource request: The previous resource request caanot be pending/processing')
-
         return True
 
     def __transfer_user_resource_request_info_to_db(self, group_info, group_info_db, resource_request_type, request_type):
