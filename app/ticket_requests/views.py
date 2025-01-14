@@ -1,9 +1,10 @@
 import urllib
 import flask_restful
-from flask import jsonify, url_for
+from flask import jsonify, render_template, request, url_for
 from flask_restful import reqparse
 
 from app import app
+from app.ticket_requests.business import GeneralSupportRequestManager
 from . import ticket_requests
 from common_utils.rest_exception import UVARCUnifiedApi
 from app.ticket_requests.endpoints import UVARCUserOfficeHoursEndpoint, UVARCUsersOfficeHoursEndpoint
@@ -23,6 +24,28 @@ endpoints = [
     (SendMesaageEndPoint, '/officehours/send-message'),
     (ReceiveMesaageEndPoint, '/officehours/read-message')
 ]
+
+
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'], ticket_id='5000', request_type='270', group_name='test')
+
+
+@app.route('/error', methods=['GET'])
+def message():
+    return render_template('message.html', logo_url=app.config['RC_SMALL_LOGO_URL'], error_message="An error occurred while processing your request.")
+
+
+@app.route('/submit', methods=['POST'])
+def submit_form():
+    try:
+        response = GeneralSupportRequestManager().update_resource_request_status(request.form)
+        print(response)
+        return render_template('message.html', logo_url=app.config['RC_SMALL_LOGO_URL'], message="Message Sent Successfully!"), 200
+    except Exception as e:
+        print(e)
+            # Handle AWS SQS errors
+        return render_template('message.html', logo_url=RC_SMALL_LOGO_URL, message="An error occurred while sending the message"), 500
 
 
 @ticket_requests.route('/', methods=['GET'])

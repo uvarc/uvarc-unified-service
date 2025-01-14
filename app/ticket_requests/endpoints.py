@@ -1,9 +1,11 @@
+import json
 from flask_restful import Resource
-from flask import g, request, redirect, make_response, jsonify
+from flask import g, render_template, request, redirect, make_response, jsonify, url_for
 from datetime import datetime
 from app import mongo_service
 from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager
 from app.ticket_requests.business import GeneralSupportRequestManager
+RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 
 
 class UVARCUserOfficeHoursEndpoint(Resource):
@@ -69,13 +71,21 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
 class GeneralSupportRequestEndPoint(Resource):
     def post(version='v2'):
         try:
-            response = GeneralSupportRequestManager().process_support_request(
-                request.form, request.host_url, version)
-            return response
+            response = json.loads(GeneralSupportRequestManager().process_support_request(
+                request.form, request.host_url, version))
+            ticket_id = response['issueKey']
+            request_type = response['requestTypeId']
+            group_name = next((field['value'] for field in response['requestFieldValues'] if field['fieldId'] == 'summary'), None)
+            return render_template('index.html', logo_url=RC_SMALL_LOGO_URL, ticket_id=ticket_id, request_type=request_type, group_name=group_name)
         except Exception as ex:
             print(ex)
+            return render_template('message.html',
+                                   logo_url=RC_SMALL_LOGO_URL,
+                                   message="An error occurred while processing your request.")
 
+            
 
+ 
 class SendMesaageEndPoint(Resource):
     def post(version='v2'):
         data = request.get_json()
@@ -94,8 +104,6 @@ class ReceiveMesaageEndPoint(Resource):
             return response
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-
-
 
 
 # class GetLDAPUserInfoEndpoint(Resource):

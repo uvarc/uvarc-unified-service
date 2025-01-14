@@ -1,0 +1,26 @@
+{% extends "base.html" %} {% block content %}
+  
+<body>
+    <h2>Update Resource Request Status</h2>
+    <form action="/submit" method="POST">
+        <label for="ticket_id">Ticket ID:</label>
+        <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" required><br><br>
+
+        <label for="request_type">Request Type:</label>
+        <input type="text" id="request_type" name="request_type" value="{{ request_type }}" required><br><br>
+
+        <label for="group_name">Group Name:</label>
+        <input type="text" id="group_name" name="group_name" value="{{ group_name }}" required><br><br>
+
+        <label for="processing_status">Processing Status:</label>
+        <select id="processing_status" name="processing_status" required>
+            <option value="Active">Active</option>
+            <option value="Error">Error</option>
+        </select><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+{% endblock %}
+
+

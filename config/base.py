@@ -97,6 +97,8 @@ JIRA_CONN_INFO = {
     'PASSWORD': settings_info['JIRA']['CLIENT_SECRET']
 }
 
+RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
+
 JIRA_PROJECTS = ('RIVANNA', 'IVY', 'GENERAL_SUPPORT',
                  'SENTINEL', 'CHASE', 'ACCORD_SUPPORT', 'UVA_RESEARCH_CONCIERGE_SERVICES')
 

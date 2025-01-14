@@ -155,9 +155,10 @@ class GeneralSupportRequestManager:
         response = queue.send_message(
          MessageBody=json.dumps(
                         {
-                            "status": data['status'],
-                            "resource_request_id": data['resource_request_id'],
-                            'creation_timestamp': datetime.now().strftime("%A, %B %d, %Y - %H:%M:%S")
+                            "ticket_id": data['ticket_id'],
+                            "request_type": data['request_type'],
+                            "group_name": data['group_name'],
+                            "status": data['processing_status']
                         }
                     ))
         return response
