@@ -1,5 +1,37 @@
 {% extends "base.html" %} {% block content %}
-  
+<style>
+
+    label {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 6px;
+        display: block;
+        color: #555;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+
+    button {
+        background-color: #5c6bc0;
+        color: white;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+</style> 
 <body>
     <h2>Update Resource Request Status</h2>
     <form action="/submit" method="POST">

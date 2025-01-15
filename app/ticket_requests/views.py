@@ -31,7 +31,7 @@ def index():
     return render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'], ticket_id='5000', request_type='270', group_name='test')
 
 
-@app.route('/error', methods=['GET'])
+@app.route('/message', methods=['GET'])
 def message():
     return render_template('message.html', logo_url=app.config['RC_SMALL_LOGO_URL'], error_message="An error occurred while processing your request.")
 
