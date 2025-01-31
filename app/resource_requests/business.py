@@ -3,6 +3,7 @@ import bson.json_util
 from datetime import datetime, timezone
 from app import app, mongo_service
 from app.account_requests.business import UVARCUsersDataManager, UVARCGroupsDataManager
+from common_service_handlers.workday_service_handler import WorkdayServiceHandler
 from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
 
@@ -123,3 +124,12 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uvarc_group_data_manager.set_grouo_info(
             self.__transfer_user_resource_request_info(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
+
+
+class UVARCBillingInfoValidator():
+    def __init__(self, fdm_dict):
+        self.__fdm_dict = fdm_dict
+
+    def validate_fdm_info(self):
+        workday_service_handler = WorkdayServiceHandler(app)
+        return workday_service_handler.validate_fdm(self.__fdm_dict)

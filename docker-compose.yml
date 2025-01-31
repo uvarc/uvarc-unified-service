@@ -25,6 +25,7 @@ services:
       - 'SETTINGS_JSON={
         "ENV": "local",
         "JIRA": {"HOSTS":["jira-dev.admin.virginia.edu"], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "WORKDAY": {"HOSTS":["intsprodapi.aws.virginia.edu"], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "SMTP": {"HOSTS":["postfix"], "PORT":"25", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "AWS": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECREY":""},
         "MONGODB": {"HOSTS":["uvarc_unified_db"], "PORT":"27017", "CLIENT_ID":"", "CLIENT_SECREY":""},
@@ -36,6 +37,8 @@ services:
         }'
       - JIRA_CLIENT_ID=xyz
       - JIRA_CLIENT_SECRET=xyz
+      - WORKDAY_CLIENT_ID=xyz
+      - WORKDAY_CLIENT_SECRET=xyz
       - SMTP_CLIENT_ID=xyz
       - SMTP_CLIENT_SECRET=xyz
       - AWS_CLIENT_ID=xyz

@@ -92,12 +92,18 @@ class LegacyRCBillingHandler:
         print('Generating Standard Storage Billing: CEPH')
         print('------------------------------------')
         header_row = ('Date', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee', 'Internal Reference', 'Location', 'Loan', 'Region', 'Override Amt', 'Owner', 'Description')
+        header_row_not_found = ('PI', 'Share Name', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee')
         data_row = [''] * len(header_row)
+        data_row_not_found =  [''] * len(header_row_not_found)
         test_reporter_fp = open(
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-standard-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+        test_reporter_fp_not_found = open(
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-standard-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try: 
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
+            report_writer_not_found = csv.writer(test_reporter_fp_not_found, delimiter=',', quotechar='"')
+            report_writer_not_found.writerow(list(header_row_not_found))
             free_space_max =10
             free_space = free_space_max
             pi_share_list = []
@@ -124,7 +130,7 @@ class LegacyRCBillingHandler:
                             for pi_billing_row in pi_billing_row_list:
                                 # print(pi_billing_row)
                                 billing_row_disscount_size = free_space_max * self.__percent_share_ratio(int(pi_billing_row['Size']), int(billing_row['Project Name']))
-                                if pi_billing_row['Share Name'].strip().lower() in self.__all_fdm_lookup_dict['standard_storage_fdm_info']:
+                                if pi_billing_row['Share Name'].strip().lower() in self.__all_fdm_lookup_dict['standard_storage_fdm_info'] and len(self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()]) > 3:
                                     if free_space > 0:
                                         orginalsize = int(pi_billing_row['Size'])
                                         pi_billing_row['Size'] = int(pi_billing_row['Size']) - billing_row_disscount_size
@@ -136,9 +142,15 @@ class LegacyRCBillingHandler:
                                         description = "{pi}, {size} TB {project_name} /{share_name} research standard storage".format(pi=pi_billing_row['PI'], size=pi_billing_row['Size'], project_name=pi_billing_row['Project Name'], share_name=pi_billing_row['Share Name'])
                                     today = datetime.now()
                                     bill_date = (today - timedelta(days=today.day)).replace(day=1)
-                                    pi_share_list.append([bill_date.strftime("%d-%b-%y")] + self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()] + [int((float(pi_billing_row['Size']) * 4500)/12)] + [' > '.join(self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()])] + [description])
+                                    # print(self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()][2])
+                                    pi_share_list.append([bill_date.strftime("%d-%b-%y")] + self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()] + [int((float(pi_billing_row['Size']) * 4500)/12)] + [self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()][2]] + [description])
                                 else:
                                     print('{pi} FDM TAGS NOT FOUND FOR SHARE: {share_name}'.format(pi=pi_billing_row['PI'], share_name=pi_billing_row['Share Name']))
+                                    data_row_not_found[0] = pi_billing_row['PI']
+                                    data_row_not_found[1] = pi_billing_row['Share Name']
+                                    report_writer_not_found.writerow(data_row_not_found)
+                                    data_row_not_found =  [''] * len(header_row_not_found)
+                                    
                             # print(pi_share_list)
 
                             # print('{pi} FAILED TO APPLY DISSCOUNT'.format(pi=billing_row['PI']))
@@ -157,28 +169,40 @@ class LegacyRCBillingHandler:
         print('Generating Project Storage Billing: GPFS')
         print('------------------------------------')
         header_row = ('Date', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee', 'Internal Reference', 'Location', 'Loan', 'Region', 'Override Amt', 'Owner', 'Description')
+        header_row_not_found = ('PI', 'Share Name', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee')
         data_row = [''] * len(header_row)
+        data_row_not_found =  [''] * len(header_row_not_found)
         test_reporter_fp = open(
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-project-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+        test_reporter_fp_not_found = open(
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-project-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try: 
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
+            report_writer_not_found = csv.writer(test_reporter_fp_not_found, delimiter=',', quotechar='"')
+            report_writer_not_found.writerow(list(header_row_not_found))
             with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(f=csv_file, delimiter=':')
                 for billing_row in csv_reader:
                     # print(billing_row)
-                    if billing_row['vol name'].strip().lower() in self.__all_fdm_lookup_dict['project_storage_fdms_info']:
+                    if billing_row['vol name'].strip().lower() in self.__all_fdm_lookup_dict['project_storage_fdms_info'] and  len(self.__all_fdm_lookup_dict['project_storage_fdms_info'][billing_row['vol name'].lower()]) > 3:
                         size = billing_row['size'].split('TB')[0].strip()
                         description = "{pi}, {size} TB {project_name} /{share_name} research project storage".format(pi=billing_row['owner'], size=size, project_name=billing_row['group'], share_name=billing_row['vol name'])
                         today = datetime.now()
                         bill_date = (today - timedelta(days=today.day)).replace(day=1)
-                        report_writer.writerow([bill_date.strftime("%d-%b-%y")] + self.__all_fdm_lookup_dict['project_storage_fdms_info'][billing_row['vol name'].lower()] + [int((float(size) * 7000)/12)] + [' > '.join(self.__all_fdm_lookup_dict['project_storage_fdms_info'][billing_row['vol name'].lower()])] + [description])
+                        report_writer.writerow([bill_date.strftime("%d-%b-%y")] + self.__all_fdm_lookup_dict['project_storage_fdms_info'][billing_row['vol name'].lower()] + [int((float(size) * 7000)/12)] + [self.__all_fdm_lookup_dict['project_storage_fdms_info'][billing_row['vol name'].lower()][2]] + [description])
                         # print('found')
                     else:
                         print('{pi} FDM TAGS NOT FOUND FOR SHARE: {share_name}'.format(pi=billing_row['owner'], share_name=billing_row['vol name']))
+                        data_row_not_found[0] = billing_row['owner']
+                        data_row_not_found[1] = billing_row['vol name']
+                        report_writer_not_found.writerow(data_row_not_found)
+                        data_row_not_found =  [''] * len(header_row_not_found)
         finally:
             test_reporter_fp.close()
             print('------------------------------------')
+
+
 def main():
     try:
         legacyRCBillingHandler = LegacyRCBillingHandler()
