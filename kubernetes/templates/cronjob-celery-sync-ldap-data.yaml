@@ -39,6 +39,18 @@ spec:
                   secretKeyRef:
                     name: uvarc-unified-service-secret
                     key: JIRA_CLIENT_SECRET
+  
+              - name: WORKDAY_CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: uvarc-unified-service-secret
+                    key: WORKDAY_CLIENT_ID
+
+              - name: WORKDAY_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: uvarc-unified-service-secret
+                    key: WORKDAY_CLIENT_SECRET
 
               - name: SMTP_CLIENT_ID
                 valueFrom:
