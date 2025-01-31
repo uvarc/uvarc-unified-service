@@ -25,7 +25,7 @@ spec:
                 cpu: "50m"
             env:
             - name: QUEUE_URL
-              value: "https://sqs.us-east-1.amazonaws.com/474683445819/uvarc_unified_storage_request_queue_raji"
+              value: "https://sqs.us-east-1.amazonaws.com/474683445819/uvarc_unified_response_queue_dev"
             - name: AWS_REGION
               value: "us-east-1"
             - name: AWS_ACCESS_KEY_ID
