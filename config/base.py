@@ -72,7 +72,7 @@ else:
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
                      '@', settings_info["MONGODB"]["HOSTS"][0], ':', settings_info["MONGODB"]["PORT"],
-                     '/uvarc_unified_data'])
+                     '/uvarc_unified_data', '?retryWrites=true'])
 CELERY_BROKER_URL = MONGO_URI
 CELERY_BACKEND_SETTINGS = {
     "options": {
