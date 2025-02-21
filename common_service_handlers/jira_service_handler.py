@@ -145,7 +145,7 @@ class JiraServiceHandler:
         
         is_office_hours = False
         
-        if additional_data  and additional_data['meetingType'] == "Office Hours (walk-in)":
+        if additional_data and additional_data['meetingType'] == "Office Hours (walk-in)":
             is_office_hours = True
     
         # if is_office_hours and additional_data and department and school:
@@ -156,26 +156,6 @@ class JiraServiceHandler:
         # if(participants is None):
         #     participants = [reporter]
         headers = {'content-type': 'application/json'}
-
-        # Helper method to identify ServiceDeskID
-        # response = requests.get(
-        #     ''.join([self._connect_host_url, 'servicedeskapi/servicedesk']),
-        #     headers=headers,
-        #     auth=self._auth
-        # )
-        # json_data = response.json()  # Automatically parses JSON if content-type is application/json
-        # pretty_response = json.dumps(json_data, indent=4, sort_keys=True)
-        # print(pretty_response)
-
-        # Helper method to identify Request Type ID for Office Hours
-        response = requests.get(
-            ''.join([self._connect_host_url, 'servicedeskapi/servicedesk/34/requesttype/254/field']),
-            headers=headers,
-            auth=self._auth
-        )
-        json_data = response.json()  # Automatically parses JSON if content-type is application/json
-        pretty_response = json.dumps(json_data, indent=4, sort_keys=True)
-        print(pretty_response)
     
         jira_ticket_route_info = self.__get_jira_ticket_route_ids(
             project_name, request_type)
@@ -190,37 +170,36 @@ class JiraServiceHandler:
             "raiseOnBehalfOf": reporter
         }
 
-        # if (is_rc_project or is_office_hours) and (department!='' or school!=''):
-        #     payload["requestFieldValues"][custom_fields_dict["custom_field_department"]] = department
-        #     payload["requestFieldValues"][custom_fields_dict["custom_field_school"]] = school
-        # if (is_rc_project or is_office_hours) and discipline != '':
-        #     payload["requestFieldValues"][custom_fields_dict["custom_field_discipline"]] = discipline
+        if (is_rc_project or is_office_hours) and (department!='' or school!=''):
+            payload["requestFieldValues"][custom_fields_dict["custom_field_department"]] = department
+            payload["requestFieldValues"][custom_fields_dict["custom_field_school"]] = school
+        if (is_rc_project or is_office_hours) and discipline != '':
+            payload["requestFieldValues"][custom_fields_dict["custom_field_discipline"]] = discipline
 
         # Required changes from office hours once I get right Request Type
         if is_office_hours and additional_data:
-            # mapped_details = [{'value': item['value']} for item in additional_data['details']]
-            # payload["requestFieldValues"]["customfield_10972"] = "Office Hours Request"
+            mapped_details = [{'value': item['value']} for item in additional_data['details']]
             payload["requestFieldValues"]["description"] = additional_data["comments"]
             payload["requestFieldValues"]["summary"] = additional_data["summary"]
-            # payload["requestFieldValues"][custom_fields_dict["custom_field_request_type"]] = {"value": additional_data['requestType']}
-            # payload["requestFieldValues"][custom_fields_dict["custom_field_date"]] = additional_data["date"]
-            # payload["requestFieldValues"][custom_fields_dict["custom_field_details"]] = mapped_details
-            # payload["requestFieldValues"][custom_fields_dict["custom_field_meeting_type"]] = {"value": additional_data['meetingType']}
+            payload["requestFieldValues"][custom_fields_dict["custom_field_request_type"]] = {"value": additional_data['requestType']}
+            payload["requestFieldValues"][custom_fields_dict["custom_field_date"]] = additional_data["date"]
+            payload["requestFieldValues"][custom_fields_dict["custom_field_details"]] = mapped_details
+            payload["requestFieldValues"][custom_fields_dict["custom_field_meeting_type"]] = {"value": additional_data['meetingType']}
 
-            # if additional_data['staff'][0]['value']:
-            #     payload["requestFieldValues"]["assignee"] = {"name": additional_data['staff'][0]['value']}
+            if additional_data['staff'][0]['value']:
+                payload["requestFieldValues"]["assignee"] = {"name": additional_data['staff'][0]['value']}
 
-            # if additional_data['computePlatform1'] != "none":
-            #     payload["requestFieldValues"][custom_fields_dict["custom_field_compute_platform"]]= {
-            #         "value": additional_data['computePlatform1'],
-            #         "child": {"value": additional_data['computePlatform2']}
-            #     }
+            if additional_data['computePlatform1'] != "none":
+                payload["requestFieldValues"][custom_fields_dict["custom_field_compute_platform"]]= {
+                    "value": additional_data['computePlatform1'],
+                    "child": {"value": additional_data['computePlatform2']}
+                }
 
-            # if additional_data['storagePlatform1'] != "none":
-            #     payload["requestFieldValues"][custom_fields_dict["custom_field_storage_platform"]] = {
-            #         "value": additional_data['storagePlatform1'],
-            #         "child": {"value": additional_data['storagePlatform2']}
-            #     }
+            if additional_data['storagePlatform1'] != "none":
+                payload["requestFieldValues"][custom_fields_dict["custom_field_storage_platform"]] = {
+                    "value": additional_data['storagePlatform1'],
+                    "child": {"value": additional_data['storagePlatform2']}
+                }
 
 
 
@@ -236,71 +215,10 @@ class JiraServiceHandler:
             data=json.dumps(payload),
             auth=self._auth
         )
-        return response.text
 
-    def create_new_officehour_ticket(self, reporter_username,form_data,department, school):
-
-        # Returns appropriate fields for office hour ticket
-        headers = {
-                "Content-Type": "application/json",
-                "X-ExperimentalApi": "opt-in"
-            }
-        response = requests.get(
-                f"{self._connect_host_url}api/2/issue/createmeta/OH/issuetypes/10700", 
-                headers=headers, 
-                auth=self._auth
-            )
-        response_json = response.json()
-        print(json.dumps(response_json, indent=4))
-        custom_fields_dict = self._project_custom_fields_dict
-        mapped_details = [{'value': item['value']} for item in form_data['details']]
-        ticket_data = {
-            "fields": {
-                "project": {"key": "OH"},
-                "reporter": {"name": reporter_username},  
-                "issuetype": {"id": '10700'},  
-                "description": form_data['comments'],  
-                custom_fields_dict["custom_field_request_type"]: {"value": form_data['requestType']}, 
-                "customfield_10972": "Office Hours Request",  
-                custom_fields_dict["custom_field_department"]:department,  
-                custom_fields_dict["custom_field_school"]:school,  
-                custom_fields_dict["custom_field_date"]: form_data['date'], 
-                custom_fields_dict["custom_field_discipline"]: form_data['discipline'],  
-                custom_fields_dict["custom_field_details"]: mapped_details,  
-                custom_fields_dict["custom_field_meeting_type"]: {"value": form_data['meetingType']},  
-                "summary": form_data['summary']  
-            }
-        }
-
-        if form_data['staff'][0]['value']:
-                ticket_data["fields"]["assignee"] = {"name": form_data['staff'][0]['value']}
-
-        if form_data['computePlatform1'] != "none":
-                ticket_data["fields"][custom_fields_dict["custom_field_compute_platform"]]= {
-                    "value": form_data['computePlatform1'],
-                    "child": {"value": form_data['computePlatform2']}
-                }
-
-        if form_data['storagePlatform1'] != "none":
-            ticket_data["fields"][custom_fields_dict["custom_field_storage_platform"]] = {
-                "value": form_data['storagePlatform1'],
-                "child": {"value": form_data['storagePlatform2']}
-            }
-
-        headers = {
-                "Content-Type": "application/json",
-                "X-ExperimentalApi": "opt-in"
-            }
-        response = requests.post(
-                f"{self._connect_host_url}api/2/issue", 
-                headers=headers, 
-                data=json.dumps(ticket_data), 
-                auth=self._auth
-            )
-        
         if response.status_code == 201:
                 jira_issue_key = response.json().get('key')
-                staff_ids = [obj['value'] for obj in form_data['staff'][1:]]  
+                staff_ids = [obj['value'] for obj in additional_data['staff'][1:]]  
 
                 if staff_ids:
                     servicedesk_config = {

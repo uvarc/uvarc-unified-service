@@ -2,10 +2,10 @@ from flask_restful import Resource
 from flask import g, request, make_response, jsonify
 from datetime import datetime
 from app import mongo_service
-from .business import UVARCUsersOfficeHoursDataManager, CreateTicketBusinessLogic
+from .business import UVARCUsersOfficeHoursDataManager, UVARCGeneralLDAPDataManager
 
 
-class UVARCUserOfficeHoursEndpoint(Resource):
+class UVARCGeneralLDAPUserEndpoint(Resource):
 
     def get(self):
         """
@@ -110,7 +110,7 @@ class UVARCUserOfficeHoursEndpoint(Resource):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = UVARCUsersOfficeHoursDataManager()
+        get_info_helper = UVARCGeneralLDAPDataManager()
 
         id = request.args.get("id")
         if not id:
@@ -131,7 +131,7 @@ class UVARCUserOfficeHoursEndpoint(Resource):
         return {"data": get_info_helper.get_user_info(id)}, 200
 
 
-class UVARCUsersOfficeHoursEndpoint(Resource):
+class UVARCGeneralLDAPUsersEndpoint(Resource):
     """
     This endpoint retrieves detailed user information, including historical data if a specific time is provided. Supports multiple user IDs as a comma-separated list.
 
@@ -233,7 +233,7 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = UVARCUsersOfficeHoursDataManager()
+        get_info_helper = UVARCGeneralLDAPDataManager()
 
         ids = request.args.get("ids")
         if not ids:
@@ -261,7 +261,7 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
 
         return {"data": response_data}, 200
     
-class CreateTicketEndpoint(Resource):
+class UVARCOfficeHoursFormEndpoint(Resource):
     """
     This endpoint creates a ticket for office hours based on the provided form data.
 
@@ -350,7 +350,7 @@ class CreateTicketEndpoint(Resource):
             if not form_data:
                 return {"error": "No data provided"}, 400
             
-            ticket_logic = CreateTicketBusinessLogic()
+            ticket_logic = UVARCUsersOfficeHoursDataManager()
             ticket_data = ticket_logic.create_officehour_ticket(form_data)
             
             return {"data": ticket_data}, 200  

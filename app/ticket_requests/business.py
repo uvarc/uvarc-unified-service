@@ -3,15 +3,15 @@ import pytz
 import json
 
 
-class CreateTicketBusinessLogic:
+class UVARCUsersOfficeHoursDataManager:
     def __init__(self):
         # set constant
-        self.issue_type_id = "10700"  
-        self.project_key = "OH"
+        self.project_name = "CONSULTATIONS & OUTREACH" 
+        self.request_type = "IT_HELP" 
 
     def create_officehour_ticket(self,form_data):
 
-        ldap_helper = UVARCUsersOfficeHoursDataManager()
+        ldap_helper = UVARCGeneralLDAPDataManager()
         ldap_info = ldap_helper.get_user_info(form_data['userID'])
         if not ldap_info:
             return {"error": "LDAP user not found"}, 400
@@ -26,44 +26,9 @@ class CreateTicketBusinessLogic:
 
         reporter = self.__get_reporter_username(customer_id)
         reporter_username = reporter.get("displayName", "")
-        print(form_data)
 
-        # return jira_service.create_new_officehour_ticket(reporter_username, form_data, ldap_info)
-        return jira_service.create_new_ticket(reporter=reporter_username, project_name="CONSULTATIONS & OUTREACH", request_type="IT_HELP", department=ldap_info["department"], school=ldap_info["school"], additional_data = form_data)
-        #  mapped_details = [{'value': item['value']} for item in form_data['details']]
-        # ticket_data = {
-        #     "fields": {
-        #         "project": {"key": self.project_key},
-        #         "reporter": {"name": customer_id},  
-        #         "issuetype": {"id": '10700'},  
-        #         "description": form_data['comments'],  
-        #         "customfield_13184": {"value": form_data['requestType']}, 
-        #         "customfield_10972": "Office Hours Request",  
-        #         "customfield_13176": ldap_info['department'],  
-        #         "customfield_13196": ldap_info['school'],  
-        #         "customfield_13175": form_data['date'], 
-        #         "customfield_13190": form_data['discipline'],  
-        #         "customfield_13194": mapped_details,  
-        #         "customfield_13203": {"value": form_data['meetingType']},  
-        #         "summary": form_data['summary']  
-        #     }
-        # }
-
-        # if form_data['staff'][0]['value']:
-        #         ticket_data["fields"]["assignee"] = {"name": form_data['staff'][0]['value']}
-
-        # if form_data['computePlatform1'] != "none":
-        #         ticket_data["fields"]["customfield_13189"] = {
-        #             "value": form_data['computePlatform1'],
-        #             "child": {"value": form_data['computePlatform2']}
-        #         }
-
-        # if form_data['storagePlatform1'] != "none":
-        #     ticket_data["fields"]["customfield_13195"] = {
-        #         "value": form_data['storagePlatform1'],
-        #         "child": {"value": form_data['storagePlatform2']}
-        #     }
-
+        return jira_service.create_new_ticket(reporter=reporter_username, project_name=self.project_name, request_type=self.request_type, department=ldap_info["department"], school=ldap_info["school"], additional_data = form_data)
+        
     def __get_reporter_username(self, reporter):
         reporter_dict = json.loads(reporter)
         return reporter_dict
@@ -71,7 +36,7 @@ class CreateTicketBusinessLogic:
 
 
 
-class UVARCUsersOfficeHoursDataManager:
+class UVARCGeneralLDAPDataManager:
     def __init__(self):
         self.__correlations = {
             "AS": "CLAS",
