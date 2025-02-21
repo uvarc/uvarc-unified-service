@@ -13,6 +13,8 @@ def fetch_connections_info():
         try:
             settings["JIRA"]['CLIENT_ID'] = os.environ['JIRA_CLIENT_ID']
             settings["JIRA"]['CLIENT_SECRET'] = os.environ['JIRA_CLIENT_SECRET']
+            settings["WORKDAY"]['CLIENT_ID'] = os.environ['WORKDAY_CLIENT_ID']
+            settings["WORKDAY"]['CLIENT_SECRET'] = os.environ['WORKDAY_CLIENT_SECRET']
             settings["SMTP"]['CLIENT_ID'] = os.environ['SMTP_CLIENT_ID']
             settings["SMTP"]['CLIENT_SECRET'] = os.environ['SMTP_CLIENT_SECRET']
             settings["AWS"]['CLIENT_ID'] = os.environ['AWS_CLIENT_ID']
@@ -61,16 +63,16 @@ AWS_CONN_INFO = {
 
 ENV_NAME = settings_info['ENV']
 if ENV_NAME == 'prod':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
 elif ENV_NAME == 'test':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu',"https://staging-onprem.rc.virginia.edu"]
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
 else:
     CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000','http://localhost:3000','http://127.0.0.1:5000','http://127.0.0.1:3000']
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
                      '@', settings_info["MONGODB"]["HOSTS"][0], ':', settings_info["MONGODB"]["PORT"],
-                     '/uvarc_unified_data'])
+                     '/uvarc_unified_data', '?retryWrites=true'])
 CELERY_BROKER_URL = MONGO_URI
 CELERY_BACKEND_SETTINGS = {
     "options": {
@@ -89,6 +91,13 @@ ENV_BOOL_FLAGS_TUPLE = (ENV_NAME in (
     'local', 'dev'), ENV_NAME == 'prod')
 
 DEVELOPMENT, PRODUCTION = ENV_BOOL_FLAGS_TUPLE
+
+WORKDAY_CONN_INFO = {
+    'HOST': settings_info['WORKDAY']['HOSTS'][0],
+    'PORT': settings_info['WORKDAY']['PORT'],
+    'CLIENT_ID': settings_info['WORKDAY']['CLIENT_ID'],
+    'PASSWORD': settings_info['WORKDAY']['CLIENT_SECRET']
+}
 
 JIRA_CONN_INFO = {
     'HOST': settings_info['JIRA']['HOSTS'][0],

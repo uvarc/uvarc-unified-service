@@ -7,7 +7,7 @@ from flask_restful import reqparse
 from app import app
 from . import allocation_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.resource_requests.endpoints import StorageRequestEndpoint, UVARCResourcRequestFormInfoEndpoint
+from app.resource_requests.endpoints import StorageRequestEndpoint, UVARCFDMValidorEndpoint, UVARCResourcRequestFormInfoEndpoint
 
 
 api = UVARCUnifiedApi(allocation_requests)
@@ -16,6 +16,7 @@ parser = reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
+    (UVARCFDMValidorEndpoint, '/rcwebform/fdm/verify'),
     (UVARCResourcRequestFormInfoEndpoint, '/rcwebform/user/<uid>'),
     (StorageRequestEndpoint, '/rcwebform/user/storage_request')
 ]
