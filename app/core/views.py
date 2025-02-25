@@ -4,10 +4,10 @@ from flask import abort, jsonify, request, url_for
 from flask_restful import reqparse
 
 from app import app
-from . import account_requests
+from . import core
 from common_utils.rest_exception import UVARCUnifiedApi
 
-api = UVARCUnifiedApi(account_requests)
+api = UVARCUnifiedApi(core)
 
 parser = flask_restful.reqparse.RequestParser()
 parser.add_argument('resource')
@@ -16,7 +16,7 @@ endpoints = [
 ]
 
 
-@account_requests.route('/', methods=['GET'])
+@core.route('/', methods=['GET'])
 def root():
     output = {}
     for rule in app.url_map.iter_rules():
