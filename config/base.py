@@ -67,7 +67,7 @@ if ENV_NAME == 'prod':
 elif ENV_NAME == 'test':
     CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
 else:
-    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000','http://localhost:3000','http://127.0.0.1:5000','http://127.0.0.1:3000']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000','http://localhost:3000']
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],

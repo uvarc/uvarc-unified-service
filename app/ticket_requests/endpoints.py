@@ -1,8 +1,9 @@
 from flask_restful import Resource
-from flask import g, request, make_response, jsonify
+from flask import abort,g, request, make_response, jsonify
 from datetime import datetime
-from app import mongo_service
-from .business import UVARCUsersOfficeHoursDataManager, UVARCGeneralLDAPDataManager
+from app import app,mongo_service
+from .business import UVARCUsersOfficeHoursDataManager, UVARCUserInfoManager
+from common_utils import cors_check
 
 
 class UVARCGeneralLDAPUserEndpoint(Resource):
@@ -110,7 +111,7 @@ class UVARCGeneralLDAPUserEndpoint(Resource):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = UVARCGeneralLDAPDataManager()
+        get_info_helper = UVARCUserInfoManager()
 
         id = request.args.get("id")
         if not id:
@@ -233,7 +234,7 @@ class UVARCGeneralLDAPUsersEndpoint(Resource):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = UVARCGeneralLDAPDataManager()
+        get_info_helper = UVARCUserInfoManager()
 
         ids = request.args.get("ids")
         if not ids:
@@ -346,17 +347,50 @@ class UVARCOfficeHoursFormEndpoint(Resource):
     """
     def post(self):
         try:
-            form_data = request.json
-            if not form_data:
-                return {"error": "No data provided"}, 400
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                form_data = request.json
+                if not form_data:
+                    return {"error": "No data provided"}, 400
+                
+                ticket_logic = UVARCUsersOfficeHoursDataManager()
+                ticket_data = ticket_logic.create_officehour_ticket(form_data)
             
-            ticket_logic = UVARCUsersOfficeHoursDataManager()
-            ticket_data = ticket_logic.create_officehour_ticket(form_data)
-            
-            return {"data": ticket_data}, 200  
+                response = make_response({"data": ticket_data}, 200) 
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return response
 
         except Exception as ex:
             return make_response(jsonify({"status": "error", "message": str(ex)}), 400)
+        
+    def options(self):
+        """
+        This is the office hours preflight option call'
+        ---
+        responses:
+            200:
+                description: Returns 200 for a preflight options call
+        """
+        try:
+
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                response = jsonify({})
+                response.headers.add('Origin', request.host_url)
+                response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
+                response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
 
 
 # class GetLDAPUserInfoEndpoint(Resource):
