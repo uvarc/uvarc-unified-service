@@ -2,7 +2,8 @@ from flask_restful import Resource
 from flask import abort,g, request, make_response, jsonify
 from datetime import datetime
 from app import app,mongo_service
-from .business import UVARCUsersOfficeHoursDataManager, UVARCUserInfoManager
+from .business import UVARCUsersOfficeHoursDataManager
+from common_utils.business import UVARCUserInfoManager
 from common_utils import cors_check
 
 
