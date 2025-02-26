@@ -141,15 +141,15 @@ def stop():
     else:
         print('Server is not running.')
 
-from app.account_requests import account_requests
+from app.core import core
 from app.resource_requests import allocation_requests
 from app.ticket_requests import ticket_requests
-app.register_blueprint(account_requests)
+app.register_blueprint(core)
 app.register_blueprint(allocation_requests)
 app.register_blueprint(ticket_requests)
 
 
-from app.account_requests import tasks
+from app.core import tasks
 from app.resource_requests import tasks
 from app.ticket_requests import tasks
 from common_utils import tasks

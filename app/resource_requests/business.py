@@ -1,8 +1,11 @@
+import json
 import bson
 import bson.json_util
 from datetime import datetime, timezone
+
+import requests
 from app import app, mongo_service
-from app.account_requests.business import UVARCUsersDataManager, UVARCGroupsDataManager
+from app.core.business import UVARCUsersDataManager, UVARCGroupsDataManager
 from common_service_handlers.workday_service_handler import WorkdayServiceHandler
 from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
@@ -36,6 +39,31 @@ class UVARCResourcRequestFormInfoDataManager():
         # return bson.json_util.dumps(user_resources_info)
         return user_resources_info
 
+    def __generate_fdm_tag_str_from_dict(self, fdm_tag_dict):
+        return ' > '.join(
+            [
+                fdm_tag_dict['company'],
+                fdm_tag_dict['cost_center'],
+                fdm_tag_dict['business_unit'],
+                fdm_tag_dict['fund'],
+                fdm_tag_dict['grant'],
+                fdm_tag_dict['gift'],
+                fdm_tag_dict['project'],
+                fdm_tag_dict['designated'],
+                fdm_tag_dict['function'],
+                fdm_tag_dict['program_code'],
+                fdm_tag_dict['activity'],
+                fdm_tag_dict['assignee']
+            ]
+        )
+
+    def __extract_fdm_tags_str_list(self, fdm_tag_list):
+        fdm_tags_str_list = []
+        for fdm_tag_dict in fdm_tag_list:
+            fdm_tags_str_list.append(self.__generate_fdm_tag_str_from_dict(fdm_tag_dict))
+        return fdm_tags_str_list
+            
+
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
         if 'pi_uid' in group_info_db and group_info_db['pi_uid']!='' and group_info_db['pi_uid'] != group_info['pi_uid']:
             raise Exception('Cannot process the request: The requestor uid does not match the pi uid for the project')
@@ -47,10 +75,20 @@ class UVARCResourcRequestFormInfoDataManager():
                 raise Exception('Cannot process the new resource request: Unsupported service unit request tier was provided')
             elif resource_request_type == 'storage' and group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
                 raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
-            elif 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and len(group_info_db['resources'][resource_request_type]) > 0:
+            elif 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
-                if resource_request_id in group_info_db['resources'][resource_request_type]:
+                if len(group_info_db['resources'][resource_request_type]) > 0 and resource_request_id in group_info_db['resources'][resource_request_type]:
                     raise Exception('Cannot process the new resource request: The resource request with same request name already exists in system')
+                else:
+                    resource_request_id = group_info['group_name']
+                    if 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details']:
+                        for billing_detail in group_info['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info']:
+                            try:
+                                uva_billing_info_validator = UVARCBillingInfoValidator(billing_detail)
+                                uva_billing_info_validator.legacy_validation_fdm_info()
+                            except Exception as ex:
+                                raise ex
+                    
         elif request_type == 'UPDATE':
             if resource_request_type in group_info_db['resources'] and len(group_info_db['resources'][resource_request_type]) > 0:
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
@@ -58,6 +96,19 @@ class UVARCResourcRequestFormInfoDataManager():
                     raise Exception('Cannot process the update resource request: The resource request with request name does not exists in system to update')
                 elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['pending', 'processing']:
                     raise Exception('Cannot process the update resource request: The previous resource request caanot be pending/processing')
+                else:
+                    if 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details']:
+                        fdm_tags_str_db_list = []
+                        if 'billing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']:
+                            fdm_tags_str_db_list = self.__extract_fdm_tags_str_list(group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info'])
+                            
+                        for billing_detail in group_info['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info']:
+                            if self.__generate_fdm_tag_str_from_dict(billing_detail) not in fdm_tags_str_db_list:
+                                try:
+                                    uva_billing_info_validator = UVARCBillingInfoValidator(billing_detail)
+                                    uva_billing_info_validator.legacy_validation_fdm_info()
+                                except Exception as ex:
+                                    raise ex
         return True
 
     def __transfer_user_resource_request_info_to_db(self, group_info, group_info_db, resource_request_type, request_type):
@@ -133,3 +184,38 @@ class UVARCBillingInfoValidator():
     def validate_fdm_info(self):
         workday_service_handler = WorkdayServiceHandler(app)
         return workday_service_handler.validate_fdm(self.__fdm_dict)
+
+    def legacy_validation_fdm_info(self):
+        billing_data = {
+            'company': self.__fdm_dict['company'],
+            'cost_center': self.__fdm_dict['cost_center'],
+            'business_unit': self.__fdm_dict['business_unit'],
+            'fund': self.__fdm_dict['fund'],
+            'grant': self.__fdm_dict['grant'],
+            'gift': self.__fdm_dict['gift'],
+            'project': self.__fdm_dict['project'],
+            'designated': self.__fdm_dict['designated'],
+            'function': self.__fdm_dict['function'],
+            'program': self.__fdm_dict['program_code'],
+            'activity': self.__fdm_dict['activity'],
+            'assignee': self.__fdm_dict['assignee']
+        }
+        api_url = "https://uvarc-unified-service.hpc.virginia.edu/uvarc/api/resource/rcwebform/fdm/verify"
+        headers = {"Content-Type": "application/json", 'Origin': 'https://uvarc-api.pods.uvarc.io'}
+        try:
+            app.logger.info("starting to validation API")
+            payload = json.dumps(billing_data)
+            app.logger.info(payload)
+            response = requests.post(api_url, headers=headers, data=payload)
+            # app.logger.info("response:", response)
+            response_dict = eval(json.loads(response.text)[0])
+            if response_dict.get("Valid") == "true":
+                return True
+                print("Billing validation successful.")
+            else:
+                error_message = response_dict.get("ErrorText")
+                raise ValueError(f"Billing validation failed: {error_message}")
+        except Exception as ex:
+            app.log_exception(ex)
+            print(ex)
+            raise ex
