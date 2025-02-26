@@ -6,7 +6,7 @@ from .business import UVARCUsersOfficeHoursDataManager, UVARCUserInfoManager
 from common_utils import cors_check
 
 
-class UVARCGeneralLDAPUserEndpoint(Resource):
+class UVARCUserInfoEndpoint(Resource):
 
     def get(self):
         """
@@ -29,75 +29,6 @@ class UVARCGeneralLDAPUserEndpoint(Resource):
         responses:
             200:
                 description: Returns detailed user information.
-                schema:
-                    type: object
-                    properties:
-                        data:
-                            type: object
-                            properties:
-                                uid:
-                                    type: string
-                                    description: User's unique identifier.
-                                displayName:
-                                    type: string
-                                    description: Full display name of the user.
-                                title:
-                                    type: string
-                                    description: User's title or role.
-                                uvaDisplayDepartment:
-                                    type: array
-                                    items:
-                                        type: string
-                                    description: List of UVA department affiliations.
-                                department:
-                                    type: string
-                                    description: User's primary department.
-                                school:
-                                    type: string
-                                    description: User's school affiliation.
-                                description:
-                                    type: array
-                                    items:
-                                        type: string
-                                    description: List of user descriptions or roles.
-                                pwdLastSet:
-                                    type: string
-                                    format: date-time
-                                    description: Last password update time.
-                                userAccountControl:
-                                    type: string
-                                    description: User account status (e.g., "enabled").
-                                primaryGroupID:
-                                    type: string
-                                    description: User's primary group ID.
-                                Sponsored:
-                                    type: string
-                                    description: Whether the user is sponsored ("True" or "False").
-                                Rivanna_status:
-                                    type: string
-                                    description: Rivanna account status.
-                                date_of_query:
-                                    type: string
-                                    format: date-time
-                                    description: Timestamp when the query was performed.
-                                update_time:
-                                    type: string
-                                    format: date-time
-                                    description: Timestamp of the last update.
-                                comment:
-                                    type: string
-                                    description: Comments about user and group changes.
-                                Rivanna_Status:
-                                    type: string
-                                    description: User's Rivanna account activity status.
-                                member_groups:
-                                    type: array
-                                    items:
-                                        type: string
-                                    description: List of user group memberships.
-                                uidNumber:
-                                    type: string
-                                    description: User's unique numeric identifier.
             400:
                 description: An error response due to a missing or invalid query parameter.
                 examples:
@@ -132,7 +63,7 @@ class UVARCGeneralLDAPUserEndpoint(Resource):
         return {"data": get_info_helper.get_user_info(id)}, 200
 
 
-class UVARCGeneralLDAPUsersEndpoint(Resource):
+class UVARCUsersInfoEndpoint(Resource):
     """
     This endpoint retrieves detailed user information, including historical data if a specific time is provided. Supports multiple user IDs as a comma-separated list.
 
@@ -153,77 +84,6 @@ class UVARCGeneralLDAPUsersEndpoint(Resource):
     responses:
         200:
             description: Returns detailed user information for the specified user IDs.
-            schema:
-                type: object
-                properties:
-                    data:
-                        type: array
-                        items:
-                            type: object
-                            properties:
-                                uid:
-                                    type: string
-                                    description: User's unique identifier.
-                                displayName:
-                                    type: string
-                                    description: Full display name of the user.
-                                title:
-                                    type: string
-                                    description: User's title or role.
-                                uvaDisplayDepartment:
-                                    type: array
-                                    items:
-                                        type: string
-                                    description: List of UVA department affiliations.
-                                department:
-                                    type: string
-                                    description: User's primary department.
-                                school:
-                                    type: string
-                                    description: User's school affiliation.
-                                description:
-                                    type: array
-                                    items:
-                                        type: string
-                                    description: List of user descriptions or roles.
-                                pwdLastSet:
-                                    type: string
-                                    format: date-time
-                                    description: Last password update time.
-                                userAccountControl:
-                                    type: string
-                                    description: User account status (e.g., "enabled").
-                                primaryGroupID:
-                                    type: string
-                                    description: User's primary group ID.
-                                Sponsored:
-                                    type: string
-                                    description: Whether the user is sponsored ("True" or "False").
-                                Rivanna_status:
-                                    type: string
-                                    description: Rivanna account status.
-                                date_of_query:
-                                    type: string
-                                    format: date-time
-                                    description: Timestamp when the query was performed.
-                                update_time:
-                                    type: string
-                                    format: date-time
-                                    description: Timestamp of the last update.
-                                comment:
-                                    type: string
-                                    description: Comments about user and group changes.
-                                Rivanna_Status:
-                                    type: string
-                                    description: User's Rivanna account activity status.
-                                member_groups:
-                                    type: array
-                                    items:
-                                        type: string
-                                    description: List of user group memberships.
-                                uidNumber:
-                                    type: string
-                                    description: User's unique numeric identifier.
         400:
             description: An error response due to a missing or invalid query parameter.
         500:
