@@ -226,7 +226,7 @@ class UVARCUsersGroupsSyncManager:
     @synchronized
     def backfill_users_hist_info(self):
         # Read CSV File
-        backfill_users_hist_info = pd.read_csv("data/backfill/users_info.csv")
+        backfill_users_hist_info = pd.read_csv("data/dropbox/backfill/users_info.csv")
 
         # Only repopulate the database if there are no documents in there currently
         if mongo_service.db.uvarc_users.count_documents({}) == 0:
@@ -299,7 +299,7 @@ class UVARCUsersGroupsSyncManager:
 
     def backfill_groups_hist_info(self):
         if 'uvarc_groups' not in mongo_service.db.list_collection_names() or mongo_service.db.uvarc_groups.count_documents({}) == 0:
-            with open('data/backfill/groups_info.csv', mode='r') as csv_file:
+            with open('data/dropbox/backfill/groups_info.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for group_info in csv_reader:
                     self.create_group_info(group_info)
