@@ -75,7 +75,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 abort(401)
             else:
                 resource_requests_info = request.get_json()
-                app.logger.info("Form data created resource received: {resource_requests_info}".format(resource_requests_info=resource_requests_info))
+                app.logger.info("Form data create resource request received: {resource_requests_info}".format(resource_requests_info=resource_requests_info))
                 if resource_requests_info and len(resource_requests_info) > 0:
                     for resource_request_info in resource_requests_info:
                         uvarc_resource_request_manager = UVARCResourcRequestFormInfoDataManager(uid)
@@ -111,7 +111,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 abort(401)
             else:
                 resource_requests_info = request.get_json()
-                app.logger.info("Form data created resource received: {resource_requests_info}".format(resource_requests_info=resource_requests_info))
+                app.logger.info("Form data update resource request received: {resource_requests_info}".format(resource_requests_info=resource_requests_info))
                 if resource_requests_info and len(resource_requests_info) > 0:
                     for resource_request_info in resource_requests_info:
                         uvarc_resource_request_manager = UVARCResourcRequestFormInfoDataManager(uid)
@@ -214,24 +214,32 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 }
             ), 400)
 
-
-class StorageRequestEndpoint(Resource):
-    def get(self):
-        """
-        This is a storage request endpoint that returns 'Storage request received!'
-        ---
-        responses:
-            200:
-                description: A successful response
-                examples:
-                    application/json: "Storage request received!"
-            400:
-                description: An error response
-                examples:
-                    application/json: "error!"
-        """
+    def delete(self, uid=None):
         try:
-            return 'Storage request received implementation wip!'
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                group_name = request.args['group_name']
+                resource_request_type = request.args['resource_request_type']
+                resource_requst_name = request.args['resource_requst_name']
+
+                app.logger.info("Form data retire resource request received: uid={uid} group_name={group_name} resource_request_type={resource_request_type} resource_requst_name={resource_requst_name}".format(uid=uid, group_name=group_name, resource_request_type=resource_request_type, resource_requst_name=resource_requst_name))
+                uvarc_resource_request_manager = UVARCResourcRequestFormInfoDataManager(uid)
+                if resource_request_type == 'hpc_service_units':
+                    uvarc_resource_request_manager.retire_user_resource_su_request_info(group_name, resource_request_type, resource_requst_name)
+                elif resource_request_type == 'storage':
+                    uvarc_resource_request_manager.retire_user_resource_storage_request_info(group_name, resource_request_type, resource_requst_name)
+                response = jsonify(
+                    {
+                        "status": "success",
+                        "message": 'Retire resource request submitted successfully'
+                    }
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response,
+                    200
+                )
         except Exception as ex:
             return make_response(jsonify(
                 {
