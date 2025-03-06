@@ -1,4 +1,4 @@
-FROM python:3.12.6
+FROM python:3.12.6 AS base
 LABEL maintainer="rkc7h@virginia.edu"
 
 ENV NON_ROOT_USER=non_root_user
@@ -52,4 +52,6 @@ RUN cp nginx.conf /etc/nginx/nginx.conf && chmod -R g+wx /etc/nginx/
 RUN rm -rf /usr/bin/python2
 EXPOSE 5000
 USER $NON_ROOT_USER
+
+FROM base as service
 CMD ["supervisord"]

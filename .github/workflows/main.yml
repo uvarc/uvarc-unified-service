@@ -37,23 +37,48 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
       -
-        name: Build and push
+        name: Build and push base
         if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/Dockerfile
+          target: base
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/uvarc/${{ env.BUILD_PROJ }}:${{ github.ref_name }}
-            ghcr.io/uvarc/${{ env.BUILD_PROJ }}:latest
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-base:${{ github.ref_name }}
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-base:latest
       -
-        name: Build and push
+        name: Build and push base
         if: github.ref != 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/Dockerfile
+          target: base
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-base:${{ github.ref_name }}-base
+      -
+        name: Build and push service
+        if: github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          target: service
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}:${{ github.ref_name }}
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}:latest
+      -
+        name: Build and push service
+        if: github.ref != 'refs/heads/master'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          target: service
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/uvarc/${{ env.BUILD_PROJ }}:${{ github.ref_name }}
