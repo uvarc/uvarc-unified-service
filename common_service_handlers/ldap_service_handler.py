@@ -5,11 +5,11 @@ from ldap3.core.exceptions import LDAPSocketReceiveError
 class PrivateLDAPServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.private_ldap_url = f"ldaps://{app.config["ESERVICES_LDAP_HOST"]}:{
-            app.config["ESERVICES_LDAP_PORT"]}"
+        self.private_ldap_url = f"ldaps://{app.config["PRIVATE_LDAP_HOST"]}: {
+            app.config["PRIVATE_LDAP_PORT"]}"
         self.private_ldap_bind_user = f"{
-            app.config["ESERVICES_LDAP_CLIENT_ID"]}@{app.config["ESERVICES_LDAP_HOST"]}"
-        self.private_ldap_bind_pass = app.config['ESERVICES_LDAP_CLIENT_SECRET']
+            app.config["PRIVATE_LDAP_CLIENT_ID"]}@{app.config["PRIVATE_LDAP_HOST"]}"
+        self.private_ldap_bind_pass = app.config['PRIVATE_LDAP_CLIENT_SECRET']
         self.__private_ldap_attribute_list = [
             "sAMAccountName",
             "displayName",
