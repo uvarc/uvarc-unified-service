@@ -23,7 +23,7 @@ RUN chmod g+wx /var/log/
 ENV APP_LOC $NON_ROOT_WORK_DIR/uvarc_unified_service
 WORKDIR $APP_LOC
 RUN sudo mkdir -p $NON_ROOT_WORK_DIR && \
-    sudo mkdir -p $APP_LOC
+    sudo mkdir -p $APP_LOC && sudo mkdir -p $APP_LOC/bin
 RUN sudo mkdir  -p  /var/lib/nginx/body
 RUN sudo mkdir  -p  /var/lib/nginx/fastcgi
 RUN sudo mkdir  -p  /var/lib/nginx/proxy
@@ -31,7 +31,7 @@ RUN sudo mkdir  -p  /var/lib/nginx/uwsgi
 RUN sudo mkdir  -p  /var/lib/nginx/scgi
 RUN sudo chown  -R www-data  /var/lib/nginx
 RUN sudo chown  -R $NON_ROOT_USER /var/lib/nginx
-ADD ./bin .
+ADD ./bin/pull-newkey.sh ./bin/.
 
 FROM base as codebase
 ADD ./requirements.txt .
