@@ -58,7 +58,7 @@ jobs:
           target: base
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-base:${{ github.ref_name }}-base
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-base:${{ github.ref_name }}
       -
         name: Build and push service
         if: github.ref == 'refs/heads/master'
