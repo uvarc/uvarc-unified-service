@@ -31,7 +31,7 @@ RUN sudo mkdir  -p  /var/lib/nginx/uwsgi
 RUN sudo mkdir  -p  /var/lib/nginx/scgi
 RUN sudo chown  -R www-data  /var/lib/nginx
 RUN sudo chown  -R $NON_ROOT_USER /var/lib/nginx
-ADD ./bin/pull-newkey.sh .
+ADD ./bin .
 
 FROM base as codebase
 ADD ./requirements.txt .
