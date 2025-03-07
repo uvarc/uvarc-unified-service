@@ -1,6 +1,5 @@
 FROM python:3.12.6 AS base
 LABEL maintainer="rkc7h@virginia.edu"
-
 ENV NON_ROOT_USER=non_root_user
 ENV NON_ROOT_GID="103" \
     NON_ROOT_UID="1003" \
@@ -32,7 +31,9 @@ RUN sudo mkdir  -p  /var/lib/nginx/uwsgi
 RUN sudo mkdir  -p  /var/lib/nginx/scgi
 RUN sudo chown  -R www-data  /var/lib/nginx
 RUN sudo chown  -R $NON_ROOT_USER /var/lib/nginx
+ADD ./bin/pull-newkey.sh .
 
+FROM base as codebase
 ADD ./requirements.txt .
 RUN pip3 install -r requirements.txt
 RUN supervisord -v
@@ -50,8 +51,11 @@ RUN chgrp -R nonroot /etc/nginx && chown -R $NON_ROOT_USER /etc/nginx
 RUN chgrp -R nonroot /var/log/ && chown -R $NON_ROOT_USER /var/log/
 RUN cp nginx.conf /etc/nginx/nginx.conf && chmod -R g+wx /etc/nginx/
 RUN rm -rf /usr/bin/python2
-EXPOSE 5000
+
+FROM codebase as tasks
 USER $NON_ROOT_USER
 
-FROM base as service
+FROM codebase as service
+EXPOSE 5000
+USER $NON_ROOT_USER
 CMD ["supervisord"]

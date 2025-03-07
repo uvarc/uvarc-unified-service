@@ -60,6 +60,29 @@ jobs:
           tags: |
             ghcr.io/uvarc/${{ env.BUILD_PROJ }}-base:${{ github.ref_name }}
       -
+        name: Build and push tasks
+        if: github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          target: tasks
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-tasks:${{ github.ref_name }}
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-tasks:latest
+      -
+        name: Build and push tasks
+        if: github.ref != 'refs/heads/master'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          target: tasks
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/uvarc/${{ env.BUILD_PROJ }}-tasks:${{ github.ref_name }}
+      -
         name: Build and push service
         if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
