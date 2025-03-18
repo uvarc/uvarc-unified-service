@@ -2,14 +2,119 @@ from flask_restful import Resource
 from flask import abort, g, request, make_response, jsonify
 from datetime import datetime
 from app import app
-from app.resource_requests.business import UVARCBillingInfoValidator, UVARCResourcRequestFormInfoDataManager
+from app.resource_requests.business import UVARCBillingInfoValidator, UVARCAdminFormInfoDataManager, UVARCResourcRequestFormInfoDataManager
 from common_utils import cors_check
+
+
+class UVARCAdminFormInfoEndpoint(Resource):
+
+    def get(self, group_name):
+        """
+        This is a resource request form endpoint to fetch group owner details!'
+        ---
+        responses:
+            200:
+                description: Returns
+                    {
+                        "is_owner_set": <true/false>,
+                        "owner_uid": <uid>
+                    }
+            400:
+                description: An error response
+                examples:
+                    application/json: "error!"
+        """
+        try:
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                response = jsonify(
+                    UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
+                    200
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response
+                )
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
+    def put(self, group_name):
+        """
+        This is a resource request form endpoint to update group ownwr!'
+        ---
+        responses:
+            200:
+                description: Returns true or false
+            400:
+                description: An error response
+                examples:
+                    application/json: "error!"
+        """
+        try:
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                group_info = request.get_json()
+                UVARCAdminFormInfoDataManager(group_name).set_group_admin_info(group_info['owner_uid'])
+
+                response = jsonify(
+                    {
+                        "status": "success",
+                        "message": 'Group owner updated successfully'
+                    }
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response,
+                    200
+                )
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
+    def options(self, uid=None):
+        """
+        This is a resource request form endpoint that returns all data required for display and processing the form request!'
+        ---
+        responses:
+            200:
+                description: Returns 200 for a preflight options call
+        """
+        try:
+
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                response = jsonify({})
+                response.headers.add('Origin', request.host_url)
+                response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
+                response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
 
 
 class UVARCFDMValidorEndpoint(Resource):
     def post(self):
         """
-        This is a resource request form endpoint that returns all data required for display and processing the form request!'
+        This is a resource request form endpoint validates FDM details!'
         ---
         responses:
             200:

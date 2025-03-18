@@ -4,6 +4,8 @@ import threading
 RESOURCE_REQUESTS_ADMINS_INFO = {
     'rkc7h',
     'kc2bj',
+    'cyj7aj',
+    'nem2p',
     'cyj7aj'
 }
 RESOURCE_REQUESTS_SERVICE_UNITS_TIERS = ['ssz_standard', 'ssz_instructional', 'ssz_paid', 'hsz_standard', 'hsz_paid']

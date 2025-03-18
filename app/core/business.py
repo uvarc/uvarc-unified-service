@@ -51,8 +51,18 @@ class UVARCUsersDataManager:
             member_groups.remove('research-infrastructure-users')
         return member_groups
 
+    def get_owner_groups_info(self):
+        owner_groups = []
+        for group_info in mongo_service.db.uvarc_groups.find({"pi_uid": self.__user['uid']}):
+            owner_groups.append(group_info['group_name'])
+        return owner_groups
+
     def get_user_resources_info(self):
-        return self.__user_resources
+        user_resources = []
+        for user_resource in self.__user_resources:
+            if 'resources' in user_resource:
+                user_resources.append(user_resource)
+        return user_resources
 
 
 class UVARCGroupsDataManager:
@@ -81,7 +91,7 @@ class UVARCGroupsDataManager:
     def get_group_info(self):
         return self.__group
 
-    def set_grouo_info(self, group_info):
+    def set_group_info(self, group_info):
         UVARCUsersGroupsSyncManager().update_group_resource_info(group_info)
 
 

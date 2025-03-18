@@ -1,5 +1,136 @@
+import boto3
 import csv
-from datetime import datetime, timedelta
+import json
+from datetime import date, datetime, timedelta
+
+STANDARD_STORAGE_REQUEST_INFO_TABLE = 'jira_standard_storage_requests_info'
+PROJECT_STORAGE_REQUEST_INFO_TABLE = 'jira_project_storage_requests_info'
+PAID_SU_REQUESTS_INFO_TABLE = 'jira_paid_su_requests_info'
+
+
+class DynamoDbTableData:
+    def __init__(self, date_str):
+        print (date_str)
+        self.date_str = date_str
+        self.aws_access_key_id = ''
+        self.aws_secret_access_key = ''
+
+    def get_items_from_paid_su_requests_info_table(self):
+        try:
+            dynamodb_session = boto3.Session(
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                region_name='us-east-1'
+            )
+            tableName = PAID_SU_REQUESTS_INFO_TABLE
+            # Initialize DynamoDB resource
+            dynamodb = dynamodb_session.resource('dynamodb')
+            table = dynamodb.Table(tableName)
+
+            try:
+                target_date = datetime.strptime(self.date_str, '%Y-%m')
+            except ValueError:
+                print(f"Invalid date format: {self.date_str}. Expected format: 'YYYY-MM'.")
+                return None
+
+            formatted_date = target_date.strftime('%Y-%m')
+
+            response = table.scan(
+                FilterExpression=boto3.dynamodb.conditions.Attr('date').begins_with(formatted_date))
+
+            if 'Items' in response and response['Items']:
+                items = response['Items']
+                items.sort(key=lambda x: x['date'])
+                print(f"Items retrieved successfully: {json.dumps(items, indent=4)}")
+                return items
+                # app.logger.info(json.dumps(items, indent=4))
+            else:
+                print(f"No items found before the date: {formatted_date}")
+                # app.logger.warning(f"No items found before the date: {formatted_date}")
+                return []
+
+        except Exception as ex:
+            # app.log_exception(ex)
+            print(f"An error occurred: {ex}")
+            return []
+
+    def get_items_from_project_storage_requests_info_table(self):
+        try:
+            dynamodb_session = boto3.Session(
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                region_name='us-east-1'
+            )
+            tableName = PROJECT_STORAGE_REQUEST_INFO_TABLE
+            # Initialize DynamoDB resource
+            dynamodb = dynamodb_session.resource('dynamodb')
+            table = dynamodb.Table(tableName)
+
+            try:
+                target_date = datetime.strptime(self.date_str, '%Y-%m')
+            except ValueError:
+                print(f"Invalid date format: {self.date_str}. Expected format: 'YYYY-MM'.")
+                return None
+
+            formatted_date = target_date.strftime('%Y-%m')
+
+            response = table.scan(
+                FilterExpression=boto3.dynamodb.conditions.Attr('date').begins_with(formatted_date))
+
+            if 'Items' in response and response['Items']:
+                items = response['Items']
+                items.sort(key=lambda x: x['date'])
+                print(f"Items retrieved successfully: {json.dumps(items, indent=4)}")
+                return items
+                # app.logger.info(json.dumps(items, indent=4))
+            else:
+                print(f"No items found before the date: {formatted_date}")
+                # app.logger.warning(f"No items found before the date: {formatted_date}")
+                return []
+
+        except Exception as ex:
+            # app.log_exception(ex)
+            print(f"An error occurred: {ex}")
+            return []
+
+    def get_items_from_standard_storage_requests_info_table(self):
+        try:
+            dynamodb_session = boto3.Session(
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                region_name='us-east-1'
+            )
+            tableName = STANDARD_STORAGE_REQUEST_INFO_TABLE
+            # Initialize DynamoDB resource
+            dynamodb = dynamodb_session.resource('dynamodb')
+            table = dynamodb.Table(tableName)
+
+            try:
+                target_date = datetime.strptime(self.date_str, '%Y-%m')
+            except ValueError:
+                print(f"Invalid date format: {self.date_str}. Expected format: 'YYYY-MM'.")
+                return None
+
+            formatted_date = target_date.strftime('%Y-%m')
+
+            response = table.scan(
+                FilterExpression=boto3.dynamodb.conditions.Attr('date').begins_with(formatted_date))
+
+            if 'Items' in response and response['Items']:
+                items = response['Items']
+                items.sort(key=lambda x: x['date'])
+                print(f"Items retrieved successfully: {json.dumps(items, indent=4)}")
+                return items
+                # app.logger.info(json.dumps(items, indent=4))
+            else:
+                print(f"No items found before the date: {formatted_date}")
+                # app.logger.warning(f"No items found before the date: {formatted_date}")
+                return []
+
+        except Exception as ex:
+            # app.log_exception(ex)
+            print(f"An error occurred: {ex}")
+            return []
 
 
 class LegacyRCBillingHandler:
@@ -16,6 +147,7 @@ class LegacyRCBillingHandler:
             csv_reader = csv.DictReader(csv_file)
             for fdm_row in reversed(list(csv_reader)):
                 fdm_elements = fdm_row['Expense GLA'].split('>')
+                # print(fdm_row)
                 for index, raw_fdm_item in enumerate(fdm_elements):
                     fdm_elements[index] = fdm_elements[index].strip()
                 share_name = ''
@@ -49,13 +181,13 @@ class LegacyRCBillingHandler:
                         share_name = fdm_row['Charge Description'].split('/')[1].split(' ')[0]
                 else:
                     share_name = fdm_row['Charge Description'].split(' ')[0]
-                
+
                 if ',' in share_name:
                     share_name = share_name.split(',')[0]
                 # print('{} : {}'.format(share_name, fdm_row['Charge Description']))
 
                 share_name_fdm_lookup_dict[share_name.strip().lower()] = fdm_elements
-                # print(share_name_fdm_lookup_dict[share_name])
+                # print(share_name_fdm_lookup_dict[share_name]
 
         with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing-not-found.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
@@ -76,6 +208,29 @@ class LegacyRCBillingHandler:
                         self.__all_standard_multi_fdm_dict[share_name][int(fdm_index)-1] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
                     else:
                         share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+        new_standard_storage_fdm_records = DynamoDbTableData((date.today().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m'))
+        for fdm_row in new_standard_storage_fdm_records.get_items_from_project_storage_requests_info_table():
+            fdm_elements = [
+                fdm_row['company'], 
+                fdm_row['business_unit'], 
+                fdm_row['cost_center'],
+                fdm_row['fund'],
+                fdm_row['gift'], 
+                fdm_row['grant'],
+                fdm_row['designated'],
+                fdm_row['project'],
+                fdm_row['program'],
+                fdm_row['function'],
+                fdm_row['activity'],
+                fdm_row['assignee'],
+                '',
+                '',
+                '',
+                ''
+            ]
+
+            share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
+            print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
 
         return share_name_fdm_lookup_dict
 
@@ -127,6 +282,29 @@ class LegacyRCBillingHandler:
                     else:
                         share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
 
+        new_project_storage_fdm_records = DynamoDbTableData((date.today().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m'))
+        for fdm_row in new_project_storage_fdm_records.get_items_from_project_storage_requests_info_table():
+            fdm_elements = [
+                fdm_row['company'], 
+                fdm_row['business_unit'], 
+                fdm_row['cost_center'],
+                fdm_row['fund'],
+                fdm_row['gift'], 
+                fdm_row['grant'],
+                fdm_row['designated'],
+                fdm_row['project'],
+                fdm_row['program'],
+                fdm_row['function'],
+                fdm_row['activity'],
+                fdm_row['assignee'],
+                '',
+                '',
+                '',
+                ''
+            ]
+
+            share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
+            print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
 
         return share_name_fdm_lookup_dict
 
@@ -222,7 +400,7 @@ class LegacyRCBillingHandler:
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-project-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         test_reporter_fp_not_found = open(
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-project-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
-        try: 
+        try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
             report_writer_not_found = csv.writer(test_reporter_fp_not_found, delimiter=',', quotechar='"')
@@ -259,12 +437,60 @@ class LegacyRCBillingHandler:
             test_reporter_fp.close()
             print('------------------------------------')
 
+    def generate_rc_paid_su_ssz_billing(self):
+        print('------------------------------------')
+        print('Generating Paid SU SSZ Billing:')
+        print('------------------------------------')
+        header_row = ('Date', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee', 'Internal Reference', 'Location', 'Loan', 'Region', 'Override Amt', 'Owner', 'Description')
+        test_reporter_fp = open(
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-ssz-paid-su-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+        try:
+            report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
+            report_writer.writerow(list(header_row))
+            today = datetime.now()
+            bill_date = (today - timedelta(days=today.day)).replace(day=1)
+            new_paid_su_fdm_records = DynamoDbTableData((date.today().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m'))
+            for fdm_row in new_paid_su_fdm_records.get_items_from_paid_su_requests_info_table():
+                print(fdm_row)
+                report_writer.writerow( 
+                    [
+                        bill_date.strftime("%d-%b-%y"),
+                        fdm_row['company'], 
+                        fdm_row['business_unit'], 
+                        fdm_row['cost_center'],
+                        fdm_row['fund'],
+                        fdm_row['gift'], 
+                        fdm_row['grant'],
+                        fdm_row['designated'],
+                        fdm_row['project'],
+                        fdm_row['program'],
+                        fdm_row['function'],
+                        fdm_row['activity'],
+                        fdm_row['assignee'],
+                        '',
+                        '',
+                        '',
+                        '',
+                        int(fdm_row['bill_amount'])*100,
+                        fdm_row['cost_center'],
+                        '{} RC Rivanna SUs {}'.format(fdm_row['owner_uid'], fdm_row['allocation_name'])
+                    ]
+                )
+
+                # share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
+                # print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
+                # RC Rivanna SUs collabrobogroup_paid
+        
+        finally:
+            test_reporter_fp.close()
+            print('------------------------------------')
 
 def main():
     try:
         legacyRCBillingHandler = LegacyRCBillingHandler()
         legacyRCBillingHandler.generate_rc_standard_storage_billing()
         legacyRCBillingHandler.generate_rc_project_storage_billing()
+        legacyRCBillingHandler.generate_rc_paid_su_ssz_billing()
     except Exception as ex:
         raise ex
 

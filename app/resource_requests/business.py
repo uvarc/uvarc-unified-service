@@ -10,6 +10,36 @@ from common_service_handlers.workday_service_handler import WorkdayServiceHandle
 from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
 
+class UVARCAdminFormInfoDataManager():
+    def __init__(self, group_name):
+        self.__group_name = group_name
+
+    def get_group_admin_info(self):
+        self.__uvarc_group_data_manager = UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True)
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        return {
+            "is_owner_set": True if 'pi_uid' in group_info_db and group_info_db['pi_uid'] != None and group_info_db['pi_uid'].strip() != '' else False,
+            "owner_uid": group_info_db['pi_uid'] if 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '' else ''
+        }
+
+    def set_group_admin_info(self, owner_uid):
+        self.__uvarc_group_data_manager = UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True)
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        if 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '':
+            raise Exception('Cannot process set group owner request: The group owner has already been claimed')
+
+        if UVARCResourcRequestFormInfoDataManager(owner_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
+            raise Exception('Cannot process set group owner request: The user {} is not elligible to request research resource {}'.format(owner_uid))
+
+        if self.__group_name not in UVARCUsersDataManager(uid=owner_uid, upsert=True, refresh=True).get_user_groups_info():
+            raise Exception('Cannot process set group owner request: The {} is not part of grouper/mygrops {}'.format(owner_uid, self.__group_name))
+
+        group_info_db['pi_uid'] = owner_uid
+        self.__uvarc_group_data_manager.set_group_info(
+            group_info_db
+        )
+
+
 class UVARCResourcRequestFormInfoDataManager():
     def __init__(self, uid):
         self.__uid = uid
@@ -19,7 +49,7 @@ class UVARCResourcRequestFormInfoDataManager():
 
         return {
             'is_user_resource_request_elligible': True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
-            'user_groups': self.__uvarc_user_data_manager.get_user_groups_info(),
+            'user_groups': self.__uvarc_user_data_manager.get_owner_groups_info(),
             'user_resources': self.__transfer_db_data_to_user_resource_request_info(list(self.__uvarc_user_data_manager.get_user_resources_info()))
         }
 
@@ -30,11 +60,11 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_info.pop('group_members_hist')
             user_resource_info.pop('group_members_update_time')
             for resource_type in RESOURCE_TYPES:
-                if resource_type in user_resource_info['resources']:
+                if 'resources' in user_resource_info and resource_type in user_resource_info['resources']:
                     for user_resource_service_units in user_resource_info['resources'][resource_type]:
                         for user_resource_service_unit_attrib in user_resource_info['resources'][resource_type][user_resource_service_units]:
                             if user_resource_service_unit_attrib.find('date') > -1:
-                                user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib]=user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib].strftime('%Y-%m-%dT%H:%M:%SZ')
+                                user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib] = user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib].strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # return bson.json_util.dumps(user_resources_info)
         return user_resources_info
@@ -63,11 +93,21 @@ class UVARCResourcRequestFormInfoDataManager():
             fdm_tags_str_list.append(self.__generate_fdm_tag_str_from_dict(fdm_tag_dict))
         return fdm_tags_str_list
 
+    def __validate_user_resource_request_authorization(self, group_info_db, pi_uid):
+        if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
+            raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid:
+            raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the project'.format(self.__uid))
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid:
+            raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the project'.format(self.__uid))
+        elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
+            raise Exception('Cannot process the request: The requestor {} is not elligible to submit the resource reuest'.format(self.__uid))
+        return True
+
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
-        if 'pi_uid' in group_info_db and group_info_db['pi_uid']!='' and group_info_db['pi_uid'] != group_info['pi_uid']:
-            raise Exception('Cannot process the request: The requestor uid does not match the pi uid for the project')
-        elif group_info['data_agreement_signed'] is False:
-            raise Exception('Cannot process the request: The data agreement is not accepted by usert')
+        self.__validate_user_resource_request_authorization(group_info_db, group_info['pi_uid'])
+        if group_info['data_agreement_signed'] is False:
+            raise Exception('Cannot process the request: The data agreement was not signed by requestor {}'.format(self.__uid))
 
         if request_type == 'CREATE':
             if resource_request_type == 'hpc_service_units' and group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_SERVICE_UNITS_TIERS:
@@ -87,7 +127,7 @@ class UVARCResourcRequestFormInfoDataManager():
                                 uva_billing_info_validator.legacy_validation_fdm_info()
                             except Exception as ex:
                                 raise ex
-                    
+
         elif request_type == 'UPDATE':
             if resource_request_type in group_info_db['resources'] and len(group_info_db['resources'][resource_request_type]) > 0:
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
@@ -132,8 +172,9 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['data_agreement_signed'] = group_info['data_agreement_signed']
                 group_info_db['delegates_uid'] = group_info['delegates_uid'] if 'delegates_uid' in group_info else ''
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
+                request_date = group_info_db['resources'][resource_request_type][resource_request_id]['request_date']
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
-                # group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
 
@@ -144,7 +185,7 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        self.__uvarc_group_data_manager.set_grouo_info(
+        self.__uvarc_group_data_manager.set_group_info(
             self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
@@ -153,35 +194,35 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        self.__uvarc_group_data_manager.set_grouo_info(
+        self.__uvarc_group_data_manager.set_group_info(
             self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
     def retire_user_resource_su_request_info(self, group_name, resource_request_type, resource_request_id):
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        if self.__uid == group_info_db['pi_uid'] or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
-            if group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
-                if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
-                    group_info_db['resources'][resource_request_type][resource_request_id]["request_expiry_date"] = datetime.now(timezone.utc)
-                    group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
-                    group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
-                    self.__uvarc_group_data_manager.set_grouo_info(
-                        group_info_db
-                    )
-                else:
-                    raise Exception('Cannot process the retire resource request: The requested resource is not found')
+        # if self.__uid == group_info_db['pi_uid']: or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
+        if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
+            if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
+                group_info_db['resources'][resource_request_type][resource_request_id]["request_expiry_date"] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
+                self.__uvarc_group_data_manager.set_group_info(
+                    group_info_db
+                )
             else:
-                raise Exception('Cannot process the retire resource request: The requested resource is not active to retire')
+                raise Exception('Cannot process the retire resource request: The requested resource is not found')
         else:
-            raise Exception('Cannot process the retire resource request: The requestor UID is not authorized to submit the retire resource request')
+            raise Exception('Cannot process the retire resource request: The requested resource is not active to retire')
+        # else:
+        #     raise Exception('Cannot process the retire resource request: The requestor UID is not authorized to submit the retire resource request')
 
     def create_user_resource_storage_request_info(self, user_resource_request_info):
         resource_request_type = 'storage'
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        self.__uvarc_group_data_manager.set_grouo_info(
+        self.__uvarc_group_data_manager.set_group_info(
             self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
@@ -190,28 +231,28 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        self.__uvarc_group_data_manager.set_grouo_info(
+        self.__uvarc_group_data_manager.set_group_info(
             self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         )
 
     def retire_user_resource_storage_request_info(self, group_name, resource_request_type, resource_request_id):
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        if self.__uid == group_info_db['pi_uid'] or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
-            if group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
-                if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
-                    group_info_db['resources'][resource_request_type][resource_request_id]["request_expiry_date"] = datetime.now(timezone.utc)
-                    group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
-                    group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
-                    self.__uvarc_group_data_manager.set_grouo_info(
-                        group_info_db
-                    )
-                else:
-                    raise Exception('Cannot process the retire resource request: The requested resource is not found')
+        # if self.__uid == group_info_db['pi_uid'] or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
+        if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
+            if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
+                group_info_db['resources'][resource_request_type][resource_request_id]["request_expiry_date"] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
+                self.__uvarc_group_data_manager.set_group_info(
+                    group_info_db
+                )
             else:
-                raise Exception('Cannot process the retire resource request: The requested resource is not active to retire')
+                raise Exception('Cannot process the retire resource request: The requested resource is not found')
         else:
-            raise Exception('Cannot process the retire resource request: The requestor UID is not authorized to submit the retire resource request')
+            raise Exception('Cannot process the retire resource request: The requested resource is not active to retire')
+        # else:
+        #     raise Exception('Cannot process the retire resource request: The requestor UID is not authorized to submit the retire resource request')
 
 
 class UVARCBillingInfoValidator():

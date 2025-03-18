@@ -14,5 +14,6 @@ celerybeat-schedule.db
 data/*.*
 data/mongodb
 data/billing
+data/dropbox
 data/dropbox/backfill
 connections.json
