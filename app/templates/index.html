@@ -169,13 +169,13 @@
             success: function(response) {
                 const data = response[0];
                 if (data.is_owner_set) {
-                    $('#response').html('<div style="color: green;">Owner UID: ' + data.owner_uid + '</div>');
+                    $('#response').html('<div style="color: green; color: red;font-style: italic; font-size: 15px;">Owner UID: ' + data.owner_uid + '</div>');
                } else {
-                    $('#response').html('<div style="color: orange;">No owner set for the group.</div>');
+                    $('#response').html('<div style="color: orange; color: red;font-style: italic; font-size: 15px;">No owner set for the group.</div>');
                 }
             },
             error: function(xhr, status, error) {
-                $('#response').html('<div style="color: red;">An error occurred while searching.</div>');
+                $('#response').html('<div style="color: red; color: red;font-style: italic; font-size: 15px;">An error occurred while searching.</div>');
             }
         });
     });
@@ -193,7 +193,7 @@
             contentType: 'application/json',
             data: JSON.stringify(data),
             success: function(response) {
-                $('#updateResponse').html('<p style="color: green;">' + response.message + '</p>');
+                $('#updateResponse').html('<p style="color: green; color: red;font-style: italic; font-size: 15px;">' + response.message + '</p>');
             },
             error: function(xhr, status, error) {
                 var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred';
@@ -210,10 +210,10 @@
             type: 'POST',
             data: formData,
             success: function(response) {
-                $('#message').html('<div style="color: green;">' + response.message + '</div>');
+                $('#message').html('<div style="color: green; color: red;font-style: italic; font-size: 15px;">' + response.message + '</div>');
             },
             error: function(xhr, status, error) {
-                $('#message').html('<div style="color: red;">An error occurred.</div>');
+                $('#message').html('<div style="color: red; color: red;font-style: italic; font-size: 15px;">An error occurred.</div>');
             }
         });
     });
