@@ -1,5 +1,8 @@
+from flask import json, jsonify
 import pytz
 from app import app, mongo_service
+from common_service_handlers.aws_service_handler import AWSServiceHandler
+from common_service_handlers.jira_service_handler import JiraServiceHandler
 
 
 class UVARCUsersOfficeHoursDataManager:
@@ -20,7 +23,7 @@ class UVARCUsersOfficeHoursDataManager:
             "RC": "ITS/RC",
             "RS": "RESEARCH",
         }
-        
+
     def __school_conversion(self, user):
         prev_school = user["school"]
         if prev_school != "":
@@ -82,3 +85,97 @@ class UVARCUsersOfficeHoursDataManager:
                 return self.__format_user_info(user)
         else:
             return None
+
+
+class GeneralSupportRequestManager:
+    def process_support_request(self, form_elements_dict, service_host, version):
+        jira_service_handler = JiraServiceHandler(app)
+        is_rc_project = True
+        desc_str = ''
+        attrib_to_var = {
+              'name': None,
+              'email': None,
+              'uid': None,
+              'category': '',
+              'request_title': None,
+              'department': '',
+              'school': '',
+              'discipline': '',
+              'discipline-other': '',
+              'cost-center': '',
+              'components': '',
+              'participants': None
+        }
+        submitted_attribs = list(form_elements_dict)
+
+        for attrib in submitted_attribs:
+            if attrib in attrib_to_var:
+                attrib_to_var[attrib] = form_elements_dict[attrib]
+
+        desc_str = self.description_with_additional_parameters(desc_str, form_elements_dict)
+        project_ticket_route =\
+                app.config['JIRA_CATEGORY_PROJECT_ROUTE_DICT'][
+                    attrib_to_var['category'].strip().title()]
+        if attrib_to_var['request_title'] is not None:
+            summary_str = attrib_to_var['request_title']
+        else:
+            summary_str = '{} Request'.format(attrib_to_var['category'])
+
+        ticket_response = jira_service_handler.create_new_ticket(
+            reporter=attrib_to_var['email'] if '@' not in attrib_to_var['email'] else attrib_to_var['email'].split('@')[0],
+            participants=attrib_to_var['participants'],
+            project_name=project_ticket_route[0],
+            request_type=project_ticket_route[1],
+            components=attrib_to_var['components'],
+            summary=summary_str,
+            desc=desc_str,
+            department=attrib_to_var['department'],
+            school=attrib_to_var['school'],
+            discipline=attrib_to_var['discipline'] if attrib_to_var['discipline'] != 'other' else attrib_to_var['discipline-other'],
+            is_rc_project=is_rc_project
+        )
+
+        app.logger.info(ticket_response)
+        print('Ticket Response: ' + str(ticket_response))
+        return ticket_response
+
+    def description_with_additional_parameters(self, desc_str, form_elements_dict):
+        excluded_keys = {'department', 'school', 'discipline', 'discipline-other'}
+        for key, value in form_elements_dict.items():
+            if key not in excluded_keys:
+                desc_str = ''.join([desc_str, '{}: {}\n'.format(
+                    key, value)])
+        return desc_str
+
+    def update_resource_request_status(self, data):
+        aws_service = AWSServiceHandler(app)
+        sqs = aws_service.get_resource('sqs')
+        queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
+        response = queue.send_message(
+         MessageBody=json.dumps(
+                        {
+                            "ticket_id": data['ticket_id'],
+                            "request_type": data['request_type'],
+                            "group_name": data['group_name'],
+                            "status": data['processing_status']
+                        }
+                    ))
+        return response
+
+    def receive_message(self):
+        aws_service = AWSServiceHandler(app)
+        sqs = aws_service.get_resource('sqs')
+        queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
+        messages = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=20, VisibilityTimeout=10)
+        if len(messages) > 0:
+            for message in messages:
+                message_obj = json.loads(message.body)
+                print(message_obj)
+                # after processing, delete the message from the queue 
+                message.delete()
+        else:
+            message_obj = jsonify({
+                'status': 'error',
+                'message': 'No messages in the queue.'
+            })
+        return message_obj

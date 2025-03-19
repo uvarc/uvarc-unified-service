@@ -10,6 +10,7 @@ class JiraServiceHandler:
         self._project_info_lookup_dict = app.config['JIRA_PROJECT_INFO_LOOKUP']
         self._project_request_type_lookup_dict =\
             app.config['JIRA_PROJECT_REQUEST_TYPE_LOOKUP']
+        self._customfield = app.config['CUSTOMFIELD_VALUES']
 
     def __get_jira_host_info(self, app):
         return [
@@ -133,11 +134,11 @@ class JiraServiceHandler:
             "raiseOnBehalfOf": reporter
         }
 
-        if is_rc_project and (department!='' or school!=''):
-            payload["requestFieldValues"]["customfield_13176"] = department
-            payload["requestFieldValues"]["customfield_13196"] = school
+        if is_rc_project and (department != '' or school != ''):
+            payload["requestFieldValues"][self._customfield[0]] = department
+            payload["requestFieldValues"][self._customfield[1]] = school
         if is_rc_project and discipline != '':
-            payload["requestFieldValues"]["customfield_13190"] = discipline
+            payload["requestFieldValues"][self._customfield[2]] = discipline
 
         if components:
             payload["requestFieldValues"]["components"] = []

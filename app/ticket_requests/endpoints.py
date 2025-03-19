@@ -1,8 +1,11 @@
 from flask_restful import Resource
-from flask import g, request, make_response, jsonify
+from app import app
+from flask import g, render_template, request, redirect, make_response, jsonify, url_for
 from datetime import datetime
 from app import mongo_service
 from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager
+from app.ticket_requests.business import GeneralSupportRequestManager
+RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 
 
 class UVARCUserOfficeHoursEndpoint(Resource):
@@ -63,6 +66,58 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
             response_data.append(get_info_helper.get_user_info(id))
 
         return {"data": response_data}, 200
+
+
+class GeneralSupportRequestEndPoint(Resource):
+    def post(version='v2'):
+        try:
+            response = json.loads(GeneralSupportRequestManager().process_support_request(
+                request.form, request.host_url, version))
+            ticket_id = response['issueKey']
+            request_type = response['requestTypeId']
+            group_name = next((field['value'] for field in response['requestFieldValues'] if field['fieldId'] == 'summary'), None)
+            return render_template('index.html', logo_url=RC_SMALL_LOGO_URL, ticket_id=ticket_id, request_type=request_type, group_name=group_name)
+        except Exception as ex:
+            print(ex)
+            return render_template('message.html',
+                                   logo_url=RC_SMALL_LOGO_URL,
+                                   message="An error occurred while processing your request.")
+
+
+class SendMesaageEndPoint(Resource):
+    def post(version='v2'):
+        data = request.get_json()
+        try:
+            response = GeneralSupportRequestManager().update_resource_request_status(data)
+            return response
+        except Exception as e:
+            # Handle AWS SQS errors
+            return jsonify({"error": str(e)}), 500
+
+
+class ReceiveMesaageEndPoint(Resource):
+    def get(self):
+        try:
+            response = GeneralSupportRequestManager().receive_message()
+            return response
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+class AdminPagesEndPoint(Resource):
+    @app.route('/admin', methods=['GET'])
+    def index():
+        return render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'])
+
+    @app.route('/submit', methods=['POST'])
+    def submit_form():
+        try:
+            response = GeneralSupportRequestManager().update_resource_request_status(request.form)
+            print(response)
+            return jsonify({'message': 'Resource request status updated successfully!'}), 200
+        except Exception as e:
+            print(e)
+            return jsonify({'message': 'An error occurred during resource request update.'}), 500
 
 
 # class GetLDAPUserInfoEndpoint(Resource):
