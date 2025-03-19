@@ -88,7 +88,7 @@ CELERY_BEAT_SCHEDULE = {
 
 
 ENV_BOOL_FLAGS_TUPLE = (ENV_NAME in (
-    'local', 'dev'), ENV_NAME == 'prod')
+    'local', 'dev', 'test'), ENV_NAME == 'prod')
 
 DEVELOPMENT, PRODUCTION = ENV_BOOL_FLAGS_TUPLE
 
