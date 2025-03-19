@@ -1,8 +1,11 @@
 from flask_restful import Resource
-from flask import g, request, make_response, jsonify
+from app import app
+from flask import g, render_template, request, redirect, make_response, jsonify, url_for
 from datetime import datetime
 from app import mongo_service
 from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager
+from app.ticket_requests.business import GeneralSupportRequestManager
+RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 
 
 class UVARCUserOfficeHoursEndpoint(Resource):
@@ -63,6 +66,20 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
             response_data.append(get_info_helper.get_user_info(id))
 
         return {"data": response_data}, 200
+
+
+class AdminPagesEndPoint(Resource):
+    def get(self):
+        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
+
+    def post(self):
+        try:
+            response = GeneralSupportRequestManager().update_resource_request_status(request.form)
+            print(response)
+            return jsonify({'message': 'Resource request status updated successfully!'}), 200
+        except Exception as e:
+            print(e)
+            return jsonify({'message': 'An error occurred during resource request update.'}), 500
 
 
 # class GetLDAPUserInfoEndpoint(Resource):

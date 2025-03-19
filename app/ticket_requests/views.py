@@ -1,13 +1,10 @@
 import urllib
 import flask_restful
 from flask import jsonify, url_for
-from flask_restful import reqparse
-
 from app import app
 from . import ticket_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.ticket_requests.endpoints import UVARCUserOfficeHoursEndpoint, UVARCUsersOfficeHoursEndpoint
-
+from app.ticket_requests.endpoints import AdminPagesEndPoint, UVARCUserOfficeHoursEndpoint, UVARCUsersOfficeHoursEndpoint
 
 api = UVARCUnifiedApi(ticket_requests)
 
@@ -17,6 +14,7 @@ parser.add_argument('resource')
 endpoints = [
     (UVARCUserOfficeHoursEndpoint, '/officehours/get_user_details'),
     (UVARCUsersOfficeHoursEndpoint, '/officehours/get_users_details'),
+    (AdminPagesEndPoint, '/admin/mgmt')
 ]
 
 
