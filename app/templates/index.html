@@ -86,16 +86,17 @@
 
     <div id="form1" class="tab-content">
         <h2>Search PI UID</h2>
+        <div id="response" style = "margin:10px"></div>
             <form id="search_form">
                 <label for="group_name">Group Name:</label>
                 <input type="text" id="group_name" name="group_name" required>
                 <button type="submit">Search</button>
-            </form><br/><br/>
-           <div id="response"></div>
+            </form>
     </div>
 
     <div id="form2" class="tab-content" style="display:none;">
         <h2>Update Group Owner UID</h2>
+        <div id="updateResponse" style = "margin:10px"></div>
         <form id="update_uid_form">
             <label for="group_name">Group Name:</label>
             <input type="text" id="group_name_update" name="group_name" required>
@@ -104,8 +105,7 @@
             <input type="text" id="owner_uid" name="owner_uid" required>
             
             <button type="submit">Submit</button>
-        </form><br/><br/>
-        <div id="updateResponse"></div>
+        </form>
     </div>
     <div id="form3" class="tab-content" style="display:none;">
         <div id="message" style="text-align: center; margin-top: 20px;">
@@ -144,6 +144,8 @@
             form.style.display = index === tabIndex ? 'block' : 'none';
         });
         $('#message').html('');
+        $('#response').html('');
+        $('#response').html('');
         // Remove active class from all tab buttons
         const tabButtons = document.querySelectorAll('.tab-button');
         tabButtons.forEach(button => button.classList.remove('active'));
@@ -164,12 +166,11 @@
                 "accept": "application/json",
                 "Access-Control-Allow-Origin": "*"
             },
-        
             success: function(response) {
                 const data = response[0];
                 if (data.is_owner_set) {
-                    $('#response').html('<div style="color: green;">Owner UID: ' + response.owner_uid + '</div>');
-                } else {
+                    $('#response').html('<div style="color: green;">Owner UID: ' + data.owner_uid + '</div>');
+               } else {
                     $('#response').html('<div style="color: orange;">No owner set for the group.</div>');
                 }
             },
@@ -193,13 +194,11 @@
             data: JSON.stringify(data),
             success: function(response) {
                 $('#updateResponse').html('<p style="color: green;">' + response.message + '</p>');
-            
-                $('#UpdateGroup')[0].reset();
             },
             error: function(xhr, status, error) {
-                console.error('Error updating group:', error);
-                alert('Failed to update group.');
-            }
+                var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred';
+                $('#updateResponse').html('<div style="color: red;font-style: italic; font-size: 15px;">' + errorMessage + '</div>');
+        }
         });
     });
   
