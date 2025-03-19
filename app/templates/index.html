@@ -206,7 +206,7 @@
         event.preventDefault();
         const formData = $(this).serialize();
         $.ajax({
-            url: '/submit',
+            url: '/uvarc/api/ticket/admin/mgmt',
             type: 'POST',
             data: formData,
             success: function(response) {

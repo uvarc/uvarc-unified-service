@@ -68,49 +68,11 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
         return {"data": response_data}, 200
 
 
-class GeneralSupportRequestEndPoint(Resource):
-    def post(version='v2'):
-        try:
-            response = json.loads(GeneralSupportRequestManager().process_support_request(
-                request.form, request.host_url, version))
-            ticket_id = response['issueKey']
-            request_type = response['requestTypeId']
-            group_name = next((field['value'] for field in response['requestFieldValues'] if field['fieldId'] == 'summary'), None)
-            return render_template('index.html', logo_url=RC_SMALL_LOGO_URL, ticket_id=ticket_id, request_type=request_type, group_name=group_name)
-        except Exception as ex:
-            print(ex)
-            return render_template('message.html',
-                                   logo_url=RC_SMALL_LOGO_URL,
-                                   message="An error occurred while processing your request.")
-
-
-class SendMesaageEndPoint(Resource):
-    def post(version='v2'):
-        data = request.get_json()
-        try:
-            response = GeneralSupportRequestManager().update_resource_request_status(data)
-            return response
-        except Exception as e:
-            # Handle AWS SQS errors
-            return jsonify({"error": str(e)}), 500
-
-
-class ReceiveMesaageEndPoint(Resource):
-    def get(self):
-        try:
-            response = GeneralSupportRequestManager().receive_message()
-            return response
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-
 class AdminPagesEndPoint(Resource):
-    @app.route('/admin', methods=['GET'])
-    def index():
-        return render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'])
+    def get(self):
+        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
 
-    @app.route('/submit', methods=['POST'])
-    def submit_form():
+    def post(self):
         try:
             response = GeneralSupportRequestManager().update_resource_request_status(request.form)
             print(response)
