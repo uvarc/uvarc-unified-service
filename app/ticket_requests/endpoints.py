@@ -76,7 +76,11 @@ class AdminPagesEndPoint(Resource):
         try:
             response = GeneralSupportRequestManager().update_resource_request_status(request.form)
             print(response)
-            return jsonify({'message': 'Resource request status updated successfully!'}), 200
+            if response.get("ResponseMetadata", {}).get("HTTPStatusCode") == 200:
+                return {'message': 'Resource request status updated successfully!'}, 200
+            else:
+                return {'message': 'Resource request update failed.', 'details': response}, 400
+
         except Exception as e:
             print(e)
             return jsonify({'message': 'An error occurred during resource request update.'}), 500
