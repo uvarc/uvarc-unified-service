@@ -7,5 +7,10 @@
   // "python.pythonPath": ".venv/bin/python",
   "autopep8.path": [".venv/bin/autopep8"],
   "flake8.path": [".venv/bin/flake8"],
-  "python.autoComplete.extraPaths": [".venv/lib/python3.12/site-packages"]
+  "python.autoComplete.extraPaths": [
+    ".venv/lib/python3.12/site-packages"
+  ],
+  "python.analysis.extraPaths": [
+    ".venv/lib/python3.12/site-packages"
+  ]
 }
