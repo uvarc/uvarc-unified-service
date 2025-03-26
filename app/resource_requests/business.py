@@ -178,15 +178,16 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
 
-            return group_info_db
+            return group_info_db, resource_request_id
 
     def create_user_resource_su_request_info(self, user_resource_request_info):
         resource_request_type = 'hpc_service_units'
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
-            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            group_info_db
         )
 
     def update_user_resource_su_request_info(self, user_resource_request_info):
@@ -194,8 +195,9 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        group_info_db, resource_request_id =  self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
-            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            group_info_db
         )
 
     def retire_user_resource_su_request_info(self, group_name, resource_request_type, resource_request_id):
@@ -222,8 +224,9 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
-            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            group_info_db
         )
 
     def update_user_resource_storage_request_info(self, user_resource_request_info):
@@ -231,8 +234,9 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
-            self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+            group_info_db
         )
 
     def retire_user_resource_storage_request_info(self, group_name, resource_request_type, resource_request_id):

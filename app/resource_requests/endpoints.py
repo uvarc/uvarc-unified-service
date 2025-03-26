@@ -25,17 +25,17 @@ class UVARCAdminFormInfoEndpoint(Resource):
                     application/json: "error!"
         """
         try:
-            if cors_check(app, request.headers.get('Origin')):
-                abort(401)
-            else:
-                response = jsonify(
-                    UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
-                    200
-                )
-                response.headers.add('Access-Control-Allow-Credentials', 'true')
-                return make_response(
-                    response
-                )
+            # if cors_check(app, request.headers.get('Origin')):
+            #     abort(401)
+            # else:
+            response = jsonify(
+                UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
+                200
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
         except Exception as ex:
             return make_response(jsonify(
                 {
@@ -57,23 +57,23 @@ class UVARCAdminFormInfoEndpoint(Resource):
                     application/json: "error!"
         """
         try:
-            if cors_check(app, request.headers.get('Origin')):
-                abort(401)
-            else:
-                group_info = request.get_json()
-                UVARCAdminFormInfoDataManager(group_name).set_group_admin_info(group_info['owner_uid'])
+            # if cors_check(app, request.headers.get('Origin')):
+            #     abort(401)
+            # else:
+            group_info = request.get_json()
+            UVARCAdminFormInfoDataManager(group_name).set_group_admin_info(group_info['owner_uid'])
 
-                response = jsonify(
-                    {
-                        "status": "success",
-                        "message": 'Group owner updated successfully'
-                    }
-                )
-                response.headers.add('Access-Control-Allow-Credentials', 'true')
-                return make_response(
-                    response,
-                    200
-                )
+            response = jsonify(
+                {
+                    "status": "success",
+                    "message": 'Group owner updated successfully'
+                }
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response,
+                200
+            )
         except Exception as ex:
             return make_response(jsonify(
                 {
