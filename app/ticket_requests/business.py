@@ -1,4 +1,4 @@
-from flask import json, jsonify
+from flask import json, jsonify, make_response
 import pytz
 from app import app, mongo_service
 from common_service_handlers.aws_service_handler import AWSServiceHandler
@@ -88,7 +88,7 @@ class UVARCUsersOfficeHoursDataManager:
 
 
 class GeneralSupportRequestManager:
-    def process_support_request(self, form_elements_dict, service_host, version):
+    def process_support_request(self, form_elements_dict):
         jira_service_handler = JiraServiceHandler(app)
         is_rc_project = True
         desc_str = ''
@@ -162,20 +162,54 @@ class GeneralSupportRequestManager:
                     ))
         return response
 
-    def receive_message(self):
+    def set_queue_message(self, data):
         aws_service = AWSServiceHandler(app)
         sqs = aws_service.get_resource('sqs')
         queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
-        messages = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=20, VisibilityTimeout=10)
-        if len(messages) > 0:
-            for message in messages:
-                message_obj = json.loads(message.body)
-                print(message_obj)
-                # after processing, delete the message from the queue 
-                message.delete()
-        else:
-            message_obj = jsonify({
-                'status': 'error',
-                'message': 'No messages in the queue.'
-            })
-        return message_obj
+        response = queue.send_message(
+                MessageBody=json.dumps(
+                        {
+                          'group_name': data['group_name'],
+                          'resource_request_type': data['resource_request_type'],
+                          'resource_request_id': data['resource_request_id'],
+                          'status': data['status']
+                        }
+                    ))
+        print(response)
+        return response
+
+    def receive_message(self):
+        try:
+            aws_service = AWSServiceHandler(app)
+            sqs = aws_service.get_resource('sqs')
+            queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
+            messages = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=20, VisibilityTimeout=10)
+            if len(messages) > 0:
+                for message in messages:
+                    message_obj = json.loads(message.body)
+                    if message_obj.get('status') == 'pending':
+                        #mocking data
+                        form_data = {'email': 'cyj7aj@virginia.edu', 'name': 'raji', 'uid': 'cyj7aj', 'category': 'Storage',
+                               'department': '', 'cost-center': 'CC1260', 'company_id': 'UVA_207', 'business_unit': 'BU01',
+                               'fund': 'FD068', 'grant': '', 'gift': '', 'program': '', 'project': 'PJ02322', 'designated': '',
+                               'function': 'FN009', 'activity': '', 'assignee':'988443044', 'components': '', 'participants': None}
+                        message_obj.update(form_data)
+                        response = json.loads(self.process_support_request(message_obj))
+                        if response['issueKey']:
+                             # after creating ticket, delete the message from the queue 
+                            message.delete()
+                            return make_response(jsonify({"ticket_id": response['issueKey']}), 201)
+                        else:
+                            return make_response(jsonify({"error": "Failed to create Jira ticket."}), 500)
+                    else:
+                        print(message)
+            else:
+                message_obj = {
+                    'status': 'error',
+                    'message': 'No messages available in the queue.'
+                 }
+                return message_obj
+             
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            return make_response(jsonify({"error": "An unexpected error occurred."}), 500)
