@@ -1,6 +1,7 @@
 from flask_restful import Resource
 from app import app
-from flask import g, render_template, request, redirect, make_response, jsonify, url_for, abort
+from flask import g, json, render_template, request, redirect, make_response, url_for, abort
+from flask import jsonify
 from datetime import datetime
 from app import mongo_service
 from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, GeneralSupportRequestManager
@@ -207,6 +208,25 @@ class AdminPagesEndPoint(Resource):
         except Exception as e:
             print(e)
             return jsonify({'message': 'An error occurred during resource request update.'}), 500
+
+
+class SendMesaageEndPoint(Resource):
+    def post(self):
+        data = request.get_json()
+        try:
+            response = GeneralSupportRequestManager().set_queue_message(data)
+            return {'message': 'Message sent to queue successfully!', 'MessageId': response['MessageId']}, 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+class ReceiveMesaageEndPoint(Resource):
+    def get(self):
+        try:
+            response = GeneralSupportRequestManager().receive_message()
+            return response
+        except Exception as e:
+            return make_response(jsonify({"error": str(e)}), 500)
 
 
 # class GetLDAPUserInfoEndpoint(Resource):

@@ -4,7 +4,7 @@ from flask import jsonify, url_for
 from app import app
 from . import ticket_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.ticket_requests.endpoints import AdminPagesEndPoint, UVARCUserInfoEndpoint,  UVARCUsersInfoEndpoint, UVARCOfficeHoursFormEndpoint
+from app.ticket_requests.endpoints import AdminPagesEndPoint, ReceiveMesaageEndPoint, SendMesaageEndPoint, UVARCUserInfoEndpoint,  UVARCUsersInfoEndpoint, UVARCOfficeHoursFormEndpoint
 
 api = UVARCUnifiedApi(ticket_requests)
 
@@ -15,7 +15,9 @@ endpoints = [
     (UVARCUserInfoEndpoint, '/officehours/get_user_details'),
     (UVARCUsersInfoEndpoint, '/officehours/get_users_details'),
     (UVARCOfficeHoursFormEndpoint, '/officehours/create_ticket'),
-    (AdminPagesEndPoint, '/admin/mgmt')
+    (AdminPagesEndPoint, '/admin/mgmt'),
+    (SendMesaageEndPoint, '/admin/sendMessage'),
+    (ReceiveMesaageEndPoint, '/admin/read-message')
 ]
 
 
