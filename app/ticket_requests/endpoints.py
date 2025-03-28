@@ -1,20 +1,52 @@
 from flask_restful import Resource
 from app import app
-from flask import g, json, render_template, request, redirect, make_response, url_for
+from flask import g, json, render_template, request, redirect, make_response, url_for, abort
 from flask import jsonify
 from datetime import datetime
 from app import mongo_service
-from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager
-from app.ticket_requests.business import GeneralSupportRequestManager
+from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, GeneralSupportRequestManager
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
+from common_utils import cors_check
+from common_utils.business import UVARCUserInfoManager
 
 
-class UVARCUserOfficeHoursEndpoint(Resource):
+class UVARCUserInfoEndpoint(Resource):
+
     def get(self):
+        """
+        This endpoint retrieves detailed information for one user, including historical data if a specific time is provided.
+
+        ---
+        parameters:
+            - in: query
+            name: id
+            required: true
+            type: string
+            description: The unique identifier of the user whose data is being queried.
+            - in: query
+            name: time
+            required: false
+            type: string
+            format: date-time
+            description: A specific time in ISO format (YYYY-MM-DD) to filter historical data.
+
+        responses:
+            200:
+                description: Returns detailed user information.
+            400:
+                description: An error response due to a missing or invalid query parameter.
+                examples:
+                    application/json: {"error": "No query parameter 'id' found"}
+            500:
+                description: An error response indicating a failure in connecting to MongoDB.
+                examples:
+                    application/json: {"error": "MongoDB connection failed"}
+        """
+
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = UVARCUsersOfficeHoursDataManager()
+        get_info_helper = UVARCUserInfoManager()
 
         id = request.args.get("id")
         if not id:
@@ -35,12 +67,38 @@ class UVARCUserOfficeHoursEndpoint(Resource):
         return {"data": get_info_helper.get_user_info(id)}, 200
 
 
-class UVARCUsersOfficeHoursEndpoint(Resource):
+class UVARCUsersInfoEndpoint(Resource):
+    """
+    This endpoint retrieves detailed user information, including historical data if a specific time is provided. Supports multiple user IDs as a comma-separated list.
+
+    ---
+    parameters:
+        - in: query
+        name: ids
+        required: true
+        type: string
+        description: A comma-separated list of unique identifiers for the users whose data is being queried.
+        - in: query
+        name: time
+        required: false
+        type: string
+        format: date-time
+        description: A specific time in ISO format (YYYY-MM-DD) to filter historical data.
+
+    responses:
+        200:
+            description: Returns detailed user information for the specified user IDs.
+        400:
+            description: An error response due to a missing or invalid query parameter.
+        500:
+            description: An error response indicating a failure in connecting to MongoDB.
+    """
+
     def get(self):
         if mongo_service is None:
             return {"error": "MongoDB connection failed"}, 500
 
-        get_info_helper = UVARCUsersOfficeHoursDataManager()
+        get_info_helper = UVARCUserInfoManager()
 
         ids = request.args.get("ids")
         if not ids:
@@ -67,6 +125,71 @@ class UVARCUsersOfficeHoursEndpoint(Resource):
             response_data.append(get_info_helper.get_user_info(id))
 
         return {"data": response_data}, 200
+    
+class UVARCOfficeHoursFormEndpoint(Resource):
+    """
+    This endpoint creates a ticket for office hours based on the provided form data.
+
+    ---
+
+    responses:
+        200:
+            description: Returns the created ticket data.
+            schema:
+                type: object
+                properties:
+                    data:
+                        type: object
+                        description: The details of the successfully created ticket.
+        400:
+            description: An error response due to invalid input or missing data.
+    """
+    def post(self):
+        try:
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                form_data = request.json
+                if not form_data:
+                    return {"error": "No data provided"}, 400
+                
+                ticket_logic = UVARCUsersOfficeHoursDataManager()
+                ticket_data = ticket_logic.create_officehour_ticket(form_data)
+            
+                response = make_response({"data": ticket_data}, 200) 
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return response
+
+        except Exception as ex:
+            return make_response(jsonify({"status": "error", "message": str(ex)}), 400)
+        
+    def options(self):
+        """
+        This is the office hours preflight option call'
+        ---
+        responses:
+            200:
+                description: Returns 200 for a preflight options call
+        """
+        try:
+
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                response = jsonify({})
+                response.headers.add('Origin', request.host_url)
+                response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
+                response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
 
 
 class AdminPagesEndPoint(Resource):
