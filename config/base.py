@@ -67,7 +67,7 @@ if ENV_NAME == 'prod':
 elif ENV_NAME == 'test':
     CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
 else:
-    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000','http://localhost:3000']
 
 MONGO_URI = ''.join(['mongodb://',
                      settings_info["MONGODB"]["CLIENT_ID"], ':', settings_info["MONGODB"]["CLIENT_SECRET"],
@@ -109,7 +109,7 @@ JIRA_CONN_INFO = {
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 
 JIRA_PROJECTS = ('RIVANNA', 'IVY', 'GENERAL_SUPPORT',
-                 'SENTINEL', 'CHASE', 'ACCORD_SUPPORT', 'UVA_RESEARCH_CONCIERGE_SERVICES')
+                 'SENTINEL', 'CHASE', 'ACCORD_SUPPORT', 'UVA_RESEARCH_CONCIERGE_SERVICES','CONSULTATIONS & OUTREACH')
 
 JIRA_PROJECT_REQUEST_TYPES = (
     'RIVANNA_GET_IT_HELP',
@@ -120,6 +120,7 @@ JIRA_PROJECT_REQUEST_TYPES = (
     'ACCORD_SUPPORT_TECHNICAL_SUPPORT',
     'DATA_ANALYTICS_CONSULTING',
     'ITHRIV_CONCIERGE_INQUIRY',
+    'IT_HELP'
 )
 
 JIRA_CATEGORY_PROJECT_ROUTE_DICT = {
@@ -173,6 +174,7 @@ if DEVELOPMENT:
         JIRA_PROJECTS[3]: 43,
         JIRA_PROJECTS[4]: 12,
         JIRA_PROJECTS[5]: 33,
+        JIRA_PROJECTS[7]: 34
     }
 
     JIRA_PROJECT_REQUEST_TYPE_LOOKUP = {
@@ -183,8 +185,21 @@ if DEVELOPMENT:
         JIRA_PROJECT_REQUEST_TYPES[4]: 106,
         JIRA_PROJECT_REQUEST_TYPES[5]: 251,
         JIRA_PROJECT_REQUEST_TYPES[6]: 278,
+        JIRA_PROJECT_REQUEST_TYPES[8]: 254
     }
     CUSTOMFIELD_VALUES = ('customfield_13076', 'customfield_13096', 'customfield_13090')
+
+    JIRA_CUSTOM_FIELDS = {
+        "custom_field_request_type": "customfield_13084",
+        "custom_field_department": "customfield_13076",
+        "custom_field_school": "customfield_13096",
+        "custom_field_date": "customfield_13075",
+        "custom_field_discipline": "customfield_13090",
+        "custom_field_details": "customfield_13094",
+        "custom_field_meeting_type": "customfield_13102",
+        "custom_field_compute_platform": "customfield_13089",
+        "custom_field_storage_platform": "customfield_13095"
+    }
 
     QUEUE_NAME = 'uvarc_unified_response_queue_dev'
 
@@ -215,6 +230,7 @@ elif PRODUCTION:
         JIRA_PROJECTS[3]: 36,
         JIRA_PROJECTS[4]: 12,
         JIRA_PROJECTS[5]: 47,
+        JIRA_PROJECTS[7]: 46
     }
     JIRA_PROJECT_REQUEST_TYPE_LOOKUP = {
         JIRA_PROJECT_REQUEST_TYPES[0]: 413,
@@ -224,8 +240,20 @@ elif PRODUCTION:
         JIRA_PROJECT_REQUEST_TYPES[4]: 106,
         JIRA_PROJECT_REQUEST_TYPES[5]: 387,
         JIRA_PROJECT_REQUEST_TYPES[6]: 401,
+        JIRA_PROJECT_REQUEST_TYPES[8]: 403
     }
     CUSTOMFIELD_VALUES = ('customfield_13176', 'customfield_13196', 'customfield_13190')
+    JIRA_CUSTOM_FIELDS = {
+        "custom_field_request_type": "customfield_13184",
+        "custom_field_department": "customfield_13176",
+        "custom_field_school": "customfield_13196",
+        "custom_field_date": "customfield_13175",
+        "custom_field_discipline": "customfield_13190",
+        "custom_field_details": "customfield_13194",
+        "custom_field_meeting_type": "customfield_13203",
+        "custom_field_compute_platform": "customfield_13189",
+        "custom_field_storage_platform": "customfield_13195"
+    }
 
     QUEUE_NAME = 'uvarc_unified_response_queue'
 
