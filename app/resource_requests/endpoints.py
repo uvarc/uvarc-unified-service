@@ -37,13 +37,17 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 response
             )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
 
     def put(self, group_name):
         """
@@ -76,13 +80,18 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 200
             )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
+
 
     def options(self, uid=None):
         """
@@ -139,13 +148,17 @@ class UVARCFDMValidorEndpoint(Resource):
                     response
                 )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
 
     def options(self, uid=None):
         """
@@ -206,13 +219,17 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     200
                 )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
 
     def put(self, uid=None):
         try:
@@ -243,13 +260,17 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     200
                 )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
 
     # @api.param('uid', 'The user ID')
     def get(self, uid=None):
@@ -289,13 +310,17 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     response
                 )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
 
     def options(self, uid=None):
         """
@@ -352,10 +377,14 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     200
                 )
         except Exception as ex:
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return make_response(jsonify(
+            response = jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
-                }
-            ), 400)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
