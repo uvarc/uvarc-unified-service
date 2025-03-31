@@ -94,14 +94,14 @@ class UVARCResourcRequestFormInfoDataManager():
         return fdm_tags_str_list
 
     def __validate_user_resource_request_authorization(self, group_info_db, pi_uid):
-        # if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
-        #     raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
-        # elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid:
-        #     raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the project'.format(self.__uid))
-        # elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid:
-        #     raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the project'.format(self.__uid))
-        # elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
-        #     raise Exception('Cannot process the request: The requestor {} is not elligible to submit the resource reuest'.format(self.__uid))
+        if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
+            raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid:
+            raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the project'.format(self.__uid))
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid:
+            raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the project'.format(self.__uid))
+        elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
+            raise Exception('Cannot process the request: The requestor {} is not elligible to submit the resource reuest'.format(self.__uid))
 
         return True
 
