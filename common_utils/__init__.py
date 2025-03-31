@@ -6,7 +6,9 @@ RESOURCE_REQUESTS_ADMINS_INFO = {
     'kc2bj',
     'cyj7aj',
     'nem2p',
-    'cyj7aj'
+    'cyj7aj',
+    'jf2dg',
+    'clm8v'
 }
 RESOURCE_REQUESTS_SERVICE_UNITS_TIERS = ['ssz_standard', 'ssz_instructional', 'ssz_paid', 'hsz_standard', 'hsz_paid']
 RESOURCE_REQUESTS_STORAGE_TIERS = ['ssz_standard', 'ssz_project', 'hsz_standard', 'hsz_project']
