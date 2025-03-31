@@ -10,7 +10,7 @@ PAID_SU_REQUESTS_INFO_TABLE = 'jira_paid_su_requests_info'
 
 class DynamoDbTableData:
     def __init__(self, date_str):
-        print (date_str)
+        print(date_str)
         self.date_str = date_str
         self.aws_access_key_id = ''
         self.aws_secret_access_key = ''
