@@ -37,6 +37,7 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 response
             )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
@@ -75,6 +76,7 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 200
             )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
@@ -137,6 +139,7 @@ class UVARCFDMValidorEndpoint(Resource):
                     response
                 )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
@@ -203,6 +206,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     200
                 )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
@@ -239,6 +243,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     200
                 )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
@@ -284,6 +289,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     response
                 )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
@@ -346,6 +352,7 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     200
                 )
         except Exception as ex:
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(jsonify(
                 {
                     "status": "error",
