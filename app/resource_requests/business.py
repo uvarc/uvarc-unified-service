@@ -25,14 +25,12 @@ class UVARCAdminFormInfoDataManager():
     def set_group_admin_info(self, owner_uid):
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        # if 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '':
-        #     raise Exception('Cannot process set group owner request: The group owner has already been claimed')
-
-        # if UVARCResourcRequestFormInfoDataManager(owner_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
-        #     raise Exception('Cannot process set group owner request: The user {} is not eligible to request research resource {}'.format(owner_uid, self.__group_name))
-
-        # if self.__group_name not in UVARCUsersDataManager(uid=owner_uid, upsert=True, refresh=True).get_user_groups_info():
-        #     raise Exception('Cannot process set group owner request: The {} is not part of grouper/mygrops {}'.format(owner_uid, self.__group_name))
+        if 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '':
+            raise Exception('Cannot process set group owner request: The group owner has already been claimed')
+        if UVARCResourcRequestFormInfoDataManager(owner_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
+            raise Exception('Cannot process set group owner request: The user {} is not eligible to request research resource {}'.format(owner_uid, self.__group_name))
+        if self.__group_name not in UVARCUsersDataManager(uid=owner_uid, upsert=True, refresh=True).get_user_groups_info():
+            raise Exception('Cannot process set group owner request: The {} is not part of grouper/mygrops {}'.format(owner_uid, self.__group_name))
 
         group_info_db['pi_uid'] = owner_uid
         self.__uvarc_group_data_manager.set_group_info(
@@ -97,12 +95,11 @@ class UVARCResourcRequestFormInfoDataManager():
         if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
             raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
         elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid:
-            raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the project'.format(self.__uid))
+            raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the group {}'.format(self.__uid, group_info_db['group_name']))
         elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid:
-            raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the project'.format(self.__uid))
+            raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the group {}'.format(self.__uid, group_info_db['group_name']))
         elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
-            raise Exception('Cannot process the request: The requestor {} is not elligible to submit the resource reuest'.format(self.__uid))
-
+            raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource reuest'.format(self.__uid))
         return True
 
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
