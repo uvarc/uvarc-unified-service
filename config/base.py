@@ -63,7 +63,7 @@ AWS_CONN_INFO = {
 
 ENV_NAME = settings_info['ENV']
 if ENV_NAME == 'prod':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io','http://localhost:5000','http://localhost:3000']
 elif ENV_NAME == 'test':
     CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
 else:
@@ -240,7 +240,7 @@ elif PRODUCTION:
         JIRA_PROJECT_REQUEST_TYPES[4]: 106,
         JIRA_PROJECT_REQUEST_TYPES[5]: 387,
         JIRA_PROJECT_REQUEST_TYPES[6]: 401,
-        JIRA_PROJECT_REQUEST_TYPES[8]: 403
+        JIRA_PROJECT_REQUEST_TYPES[8]: 380
     }
     CUSTOMFIELD_VALUES = ('customfield_13176', 'customfield_13196', 'customfield_13190')
     JIRA_CUSTOM_FIELDS = {

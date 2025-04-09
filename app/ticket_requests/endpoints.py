@@ -154,9 +154,12 @@ class UVARCOfficeHoursFormEndpoint(Resource):
                     return {"error": "No data provided"}, 400
                 
                 ticket_logic = UVARCUsersOfficeHoursDataManager()
-                ticket_data = ticket_logic.create_officehour_ticket(form_data)
-            
-                response = make_response({"data": ticket_data}, 200) 
+                ticket_response, ticket_data = ticket_logic.create_officehour_ticket(form_data)
+                response = None
+                if not ticket_response:
+                    response = make_response({"error": ticket_data}, 400)
+                else: 
+                    response = make_response({"data": ticket_data}, 200) 
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return response
 
