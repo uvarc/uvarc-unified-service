@@ -180,7 +180,9 @@ class JiraServiceHandler:
         # Required changes from office hours once I get right Request Type
         if is_office_hours and additional_data:
             mapped_details = [{'value': item['value']} for item in additional_data['details']]
-            payload["requestFieldValues"]["description"] = additional_data["comments"]
+            payload["requestFieldValues"]["description"] = (
+                f"Requested by: {additional_data['userID']}\n{additional_data['comments']}"
+            )   
             payload["requestFieldValues"]["summary"] = additional_data["summary"]
             payload["requestFieldValues"][custom_fields_dict["custom_field_request_type"]] = {"value": additional_data['requestType']}
             payload["requestFieldValues"][custom_fields_dict["custom_field_date"]] = additional_data["date"]
