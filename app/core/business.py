@@ -68,11 +68,11 @@ class UVARCUsersDataManager:
 class UVARCGroupsDataManager:
     def __init__(self, group_name, upsert=True, refresh=False):
         if group_name is None:
-            raise Exception('Group Name provided cannot be {}'.format(uid))
+            raise Exception('Group Name provided cannot be {}'.format(group_name))
         self.__group = self.__get_group_all_info(group_name, upsert, refresh)
         if self.__group is None:
             raise Exception('Group with group_name {} not found'.format(group_name))
- 
+
     def __refresh_group_all_info(self, group_name):
         group = mongo_service.db.uvarc_groups.find_one({"group_name": group_name})
         if group:
@@ -173,8 +173,11 @@ class UVARCUsersGroupsSyncManager:
     def fetch_user_all_info(self, uid):
         eservices_entry = self.__private_ldap_service_handler.get_private_ldap_info(
             uid)
-        public_entry = self.__public_ldap_service_handler.get_public_ldap_info(
-            uid)
+        if app.config["PRODUCTION"]:
+            public_entry = self.__public_ldap_service_handler.get_public_ldap_info(
+                uid)
+        else:
+            public_entry = None
         commission_entry = self.__get_commission(uid)
 
         if not eservices_entry:
@@ -188,12 +191,15 @@ class UVARCUsersGroupsSyncManager:
         else:
             for public_attribute in self.__public_ldap_service_handler.get_public_ldap_query_attribute_list():
                 complete_ldap_entry[public_attribute] = ""
-            complete_ldap_entry["uid"] = complete_ldap_entry["sAMAccountName"]
+            if app.config["PRODUCTION"]:
+                complete_ldap_entry["uid"] = complete_ldap_entry["sAMAccountName"]
+            else:
+                complete_ldap_entry["uid"] = uid
         member_groups = []
         if 'memberOf' in complete_ldap_entry:
             for group in  complete_ldap_entry['memberOf']:
                 if ('OU=Personal,OU=Groups,DC=eservices,DC=virginia,DC=edu'.lower() in group.lower() or
-                    'OU=MyGroups,DC=eservices,DC=virginia,DC=edu'.lower() in group.lower()) and 'OU=IAM'.lower() not in group.lower():
+                    'OU=MyGroups,DC=eservices,DC=virginia,DC=edu'.lower() in group.lower()) and 'OU=IAM'.lower() not in group.lower() and 'OU=ServiceNow'.lower() not in group.lower():
                     member_groups.append(group.split(',')[0][3:])
         del complete_ldap_entry["sAMAccountName"]
         del complete_ldap_entry["memberOf"]

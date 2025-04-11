@@ -22,6 +22,11 @@ class UVARCAdminFormInfoDataManager():
             "owner_uid": group_info_db['pi_uid'] if 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '' else ''
         }
 
+    def get_group_users_info(self):
+        return {
+            "users": UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True).get_group_info()['group_members']
+        }
+
     def set_group_admin_info(self, owner_uid):
         self.__uvarc_group_data_manager = UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
@@ -43,7 +48,9 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uid = uid
 
     def get_user_resource_request_info(self):
-        self.__uvarc_user_data_manager = UVARCUsersDataManager(uid=self.__uid, upsert=True, refresh=True)    
+        self.__uvarc_user_data_manager = UVARCUsersDataManager(uid=self.__uid, upsert=True, refresh=True)
+        
+        print(self.__uvarc_user_data_manager.get_user_groups_info())
 
         return {
             'is_user_resource_request_elligible': True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else self.__uvarc_user_data_manager.is_user_resource_request_elligible(),

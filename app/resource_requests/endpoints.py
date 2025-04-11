@@ -28,10 +28,16 @@ class UVARCAdminFormInfoEndpoint(Resource):
             # if cors_check(app, request.headers.get('Origin')):
             #     abort(401)
             # else:
-            response = jsonify(
-                UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
-                200
-            )
+            if 'group_users_info' in request.args and request.args['group_users_info'] == 'true':
+                response = jsonify(
+                    UVARCAdminFormInfoDataManager(group_name).get_group_users_info(),
+                    200
+                )
+            else:
+                response = jsonify(
+                    UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
+                    200
+                )
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(
                 response

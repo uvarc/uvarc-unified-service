@@ -188,7 +188,8 @@ class PublicLDAPServiceHandler:
             "uid", "description", "uvaDisplayDepartment"
         ]
         self.__public_ldap_conn = None
-        self.__public_ldap_conn = self.__connect()
+        if app.config["PRODUCTION"]:
+            self.__public_ldap_conn = self.__connect()
 
     def __connect(self):
         try:
