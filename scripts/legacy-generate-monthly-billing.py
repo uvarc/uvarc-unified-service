@@ -1,6 +1,7 @@
 import boto3
 import csv
 import json
+import shutil
 from datetime import date, datetime, timedelta
 
 STANDARD_STORAGE_REQUEST_INFO_TABLE = 'jira_standard_storage_requests_info'
@@ -138,9 +139,15 @@ class LegacyRCBillingHandler:
         self.__all_fdm_lookup_dict = {}
         self.__all_standard_multi_fdm_dict = {}
         self.__all_project_multi_fdm_dict = {}
+        self.__standard_storage_free_space = 10
         self.__all_fdm_lookup_dict['standard_storage_fdm_info'] = self.__fetch_standard_storage_fdm_details()
         self.__all_fdm_lookup_dict['project_storage_fdms_info'] = self.__fetch_project_storage_fdm_details()
 
+    def stage_rc_all_pre_billing_files(self):
+        source_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/gpfs-list"
+        destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing.csv'
+        shutil.copyfile(source_file, destination_file)
+        
     def __fetch_standard_storage_fdm_details(self):
         share_name_fdm_lookup_dict = {}
         with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out.csv', mode='r', encoding='utf-8') as csv_file:
@@ -209,7 +216,7 @@ class LegacyRCBillingHandler:
                     else:
                         share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
         new_standard_storage_fdm_records = DynamoDbTableData((date.today().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m'))
-        for fdm_row in new_standard_storage_fdm_records.get_items_from_project_storage_requests_info_table():
+        for fdm_row in new_standard_storage_fdm_records.get_items_from_standard_storage_requests_info_table():
             fdm_elements = [
                 fdm_row['company'], 
                 fdm_row['business_unit'], 
@@ -228,7 +235,7 @@ class LegacyRCBillingHandler:
                 '',
                 ''
             ]
-
+            # print(fdm_row)
             share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
             print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
 
@@ -310,11 +317,40 @@ class LegacyRCBillingHandler:
 
     def __percent_share_ratio(self, part, whole):
         return (part / whole)
-    
+
+    def __generate_ceph_storage_pre_billing_file(self):
+        RS_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/ceph-list"
+        
+        PI_dict = {}
+        with open(RS_file, "r") as fp:
+            for row in (line.split(":") for line in fp):
+                if "TB" not in row[3]:
+                    continue
+                PI = row[7]
+                if PI in PI_dict:
+                    PI_dict[PI].append(row)
+                else:
+                    PI_dict[PI] = [row]
+        rc_standard_storage_billing_fp = open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing.csv', mode='w')
+        rc_standard_storage_billing_fp.write("PI,Share Name,Project Name,Size\n")
+        for PI in sorted(PI_dict.keys()):
+            total = 0
+            for row in PI_dict[PI]:
+                row[3] = row[3][:-2].strip() # remove trailing " TB"
+                total += int(row[3])
+            if total > self.__standard_storage_free_space:
+                for row in PI_dict[PI]:
+                    print(",".join((PI, row[0], row[6], row[3])))
+                    rc_standard_storage_billing_fp.write(",".join((PI, row[0], row[6], row[3]))+'\n')
+                print(",".join((PI, "total", str(total), str(total - self.__standard_storage_free_space))))
+                rc_standard_storage_billing_fp.write(",".join((PI, "total", str(total), str(total - self.__standard_storage_free_space)))+'\n')
+        rc_standard_storage_billing_fp.close()
+
     def generate_rc_standard_storage_billing(self):
         print('------------------------------------')
         print('Generating Standard Storage Billing: CEPH')
         print('------------------------------------')
+        self.__generate_ceph_storage_pre_billing_file()
         header_row = ('Date', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee', 'Internal Reference', 'Location', 'Loan', 'Region', 'Override Amt', 'Owner', 'Description')
         header_row_not_found = ('PI', 'Share Name', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee')
         data_row = [''] * len(header_row)
@@ -328,7 +364,7 @@ class LegacyRCBillingHandler:
             report_writer.writerow(list(header_row))
             report_writer_not_found = csv.writer(test_reporter_fp_not_found, delimiter=',', quotechar='"')
             report_writer_not_found.writerow(list(header_row_not_found))
-            free_space_max =10
+            free_space_max = self.__standard_storage_free_space
             free_space = free_space_max
             pi_share_list = []
             pi_billing_row_list = []
@@ -388,10 +424,16 @@ class LegacyRCBillingHandler:
             test_reporter_fp.close()
             print('------------------------------------')
 
+    def __generate_gpfs_storage_pre_billing_file(self):
+        source_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/gpfs-list"
+        destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing.csv'
+        shutil.copyfile(source_file, destination_file)
+
     def generate_rc_project_storage_billing(self):
         print('------------------------------------')
         print('Generating Project Storage Billing: GPFS')
         print('------------------------------------')
+        self.__generate_gpfs_storage_pre_billing_file()
         header_row = ('Date', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee', 'Internal Reference', 'Location', 'Loan', 'Region', 'Override Amt', 'Owner', 'Description')
         header_row_not_found = ('PI', 'Share Name', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee')
         data_row = [''] * len(header_row)
@@ -479,11 +521,11 @@ class LegacyRCBillingHandler:
 
                 # share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
                 # print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
-                # RC Rivanna SUs collabrobogroup_paid
-        
+                # RC Rivanna SUs collabrobogroup_paid        
         finally:
             test_reporter_fp.close()
             print('------------------------------------')
+
 
 def main():
     try:
