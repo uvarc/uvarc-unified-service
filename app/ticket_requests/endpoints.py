@@ -4,7 +4,7 @@ from flask import g, json, render_template, request, redirect, make_response, ur
 from flask import jsonify
 from datetime import datetime
 from app import mongo_service
-from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, GeneralSupportRequestManager
+from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 from common_utils import cors_check
 from common_utils.business import UVARCUserInfoManager

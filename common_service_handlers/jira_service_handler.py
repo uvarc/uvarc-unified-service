@@ -140,7 +140,7 @@ class JiraServiceHandler:
         additional_data = None
     ):
         is_office_hours = False
-        
+
         if additional_data and additional_data['meetingType'] == "Office Hours (walk-in)":
             is_office_hours = True
 

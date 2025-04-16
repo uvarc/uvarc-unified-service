@@ -35,8 +35,9 @@ class UVARCUsersOfficeHoursDataManager:
         reporter_dict = json.loads(reporter)
         return reporter_dict
 
-class GeneralSupportRequestManager:
-    def process_support_request(self, form_elements_dict):
+
+class UVARCSupportRequestsManager:
+    def create_support_request(self,  request_type, request_info_dict):
         jira_service_handler = JiraServiceHandler(app)
         is_rc_project = True
         desc_str = ''
@@ -44,7 +45,6 @@ class GeneralSupportRequestManager:
               'name': None,
               'email': None,
               'uid': None,
-              'category': '',
               'request_title': None,
               'department': '',
               'school': '',
@@ -54,23 +54,32 @@ class GeneralSupportRequestManager:
               'components': '',
               'participants': None
         }
-        submitted_attribs = list(form_elements_dict)
+        submitted_attribs = list(request_info_dict)
 
         for attrib in submitted_attribs:
             if attrib in attrib_to_var:
-                attrib_to_var[attrib] = form_elements_dict[attrib]
+                attrib_to_var[attrib] = request_info_dict[attrib]
 
-        desc_str = self.description_with_additional_parameters(desc_str, form_elements_dict)
+        desc_str = self.description_with_additional_parameters(desc_str, request_info_dict)
         project_ticket_route =\
                 app.config['JIRA_CATEGORY_PROJECT_ROUTE_DICT'][
-                    attrib_to_var['category'].strip().title()]
+                    request_type]
         if attrib_to_var['request_title'] is not None:
             summary_str = attrib_to_var['request_title']
         else:
-            summary_str = '{} Request'.format(attrib_to_var['category'])
+            summary_str = '{} Request'.format(request_type)
+
+        try:
+            jira_service_handler.create_new_customer(
+                name=request_info_dict['uid'],
+                email='{}@virginia.edu'.format(request_info_dict['uid'])
+            )            
+        except Exception as ex:
+            app.log_exception(ex)
+            print(ex)
 
         ticket_response = jira_service_handler.create_new_ticket(
-            reporter=attrib_to_var['email'] if '@' not in attrib_to_var['email'] else attrib_to_var['email'].split('@')[0],
+            reporter=request_info_dict['uid'],
             participants=attrib_to_var['participants'],
             project_name=project_ticket_route[0],
             request_type=project_ticket_route[1],
@@ -79,7 +88,7 @@ class GeneralSupportRequestManager:
             desc=desc_str,
             department=attrib_to_var['department'],
             school=attrib_to_var['school'],
-            discipline=attrib_to_var['discipline'] if attrib_to_var['discipline'] != 'other' else attrib_to_var['discipline-other'],
+            discipline=attrib_to_var['discipline'],
             is_rc_project=is_rc_project
         )
 

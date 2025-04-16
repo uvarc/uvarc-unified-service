@@ -1,11 +1,12 @@
 import json
+from app.ticket_requests.business import UVARCSupportRequestsManager
 import bson
 import bson.json_util
 from datetime import datetime, timezone
 
 import requests
 from app import app, mongo_service
-from app.core.business import UVARCUsersDataManager, UVARCGroupsDataManager
+from app.core.business import UVARCUserDataManager, UVARCGroupDataManager
 from common_service_handlers.workday_service_handler import WorkdayServiceHandler
 from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
@@ -15,7 +16,7 @@ class UVARCAdminFormInfoDataManager():
         self.__group_name = group_name
 
     def get_group_admin_info(self):
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(self.__group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         return {
             "is_owner_set": True if 'pi_uid' in group_info_db and group_info_db['pi_uid'] != None and group_info_db['pi_uid'].strip() != '' else False,
@@ -24,17 +25,17 @@ class UVARCAdminFormInfoDataManager():
 
     def get_group_users_info(self):
         return {
-            "users": UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True).get_group_info()['group_members']
+            "users": UVARCGroupDataManager(self.__group_name, upsert=True, refresh=True).get_group_info()['group_members']
         }
 
     def set_group_admin_info(self, owner_uid):
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(self.__group_name, upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(self.__group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         if 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '':
             raise Exception('Cannot process set group owner request: The group owner has already been claimed')
         if UVARCResourcRequestFormInfoDataManager(owner_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
             raise Exception('Cannot process set group owner request: The user {} is not eligible to request research resource {}'.format(owner_uid, self.__group_name))
-        if self.__group_name not in UVARCUsersDataManager(uid=owner_uid, upsert=True, refresh=True).get_user_groups_info():
+        if self.__group_name not in UVARCUserDataManager(uid=owner_uid, upsert=True, refresh=True).get_user_groups_info():
             raise Exception('Cannot process set group owner request: The {} is not part of grouper/mygrops {}'.format(owner_uid, self.__group_name))
 
         group_info_db['pi_uid'] = owner_uid
@@ -48,7 +49,7 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uid = uid
 
     def get_user_resource_request_info(self):
-        self.__uvarc_user_data_manager = UVARCUsersDataManager(uid=self.__uid, upsert=True, refresh=True)
+        self.__uvarc_user_data_manager = UVARCUserDataManager(uid=self.__uid, upsert=True, refresh=True)
         
         print(self.__uvarc_user_data_manager.get_user_groups_info())
 
@@ -115,10 +116,16 @@ class UVARCResourcRequestFormInfoDataManager():
             raise Exception('Cannot process the request: The data agreement was not signed by requestor {}'.format(self.__uid))
 
         if request_type == 'CREATE':
-            if resource_request_type == 'hpc_service_units' and group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_SERVICE_UNITS_TIERS:
-                raise Exception('Cannot process the new resource request: Unsupported service unit request tier was provided')
-            elif resource_request_type == 'storage' and group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
-                raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
+            if resource_request_type == 'hpc_service_units':
+                if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_SERVICE_UNITS_TIERS:
+                    raise Exception('Cannot process the new resource request: Unsupported service unit request tier was provided')
+                elif 'request_count' not in group_info['resources'][resource_request_type][group_info['group_name']]:
+                    raise Exception('Cannot process the new resource request: request_count is missing')
+            elif resource_request_type == 'storage':
+                if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
+                    raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
+                elif 'request_size' not in group_info['resources'][resource_request_type][group_info['group_name']]:
+                    raise Exception('Cannot process the new resource request: request_size is missing')
             elif 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 if len(group_info_db['resources'][resource_request_type]) > 0 and resource_request_id in group_info_db['resources'][resource_request_type]:
@@ -132,7 +139,6 @@ class UVARCResourcRequestFormInfoDataManager():
                                 uva_billing_info_validator.legacy_validation_fdm_info()
                             except Exception as ex:
                                 raise ex
-
         elif request_type == 'UPDATE':
             if resource_request_type in group_info_db['resources'] and len(group_info_db['resources'][resource_request_type]) > 0:
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
@@ -165,6 +171,9 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['delegates_uid'] = group_info['delegates_uid'] if 'delegates_uid' in group_info else ''
                 if 'resources' not in group_info_db:
                     group_info_db['resources'] = {resource_request_type: {}}
+                elif resource_request_type not in group_info_db['resources']:
+                    group_info_db['resources'][resource_request_type] = {}
+                    
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][group_info['group_name']]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
@@ -188,9 +197,36 @@ class UVARCResourcRequestFormInfoDataManager():
     def create_user_resource_su_request_info(self, user_resource_request_info):
         resource_request_type = 'hpc_service_units'
         request_type = 'CREATE'
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        self.__uvarc_group_data_manager.set_group_info(
+            group_info_db
+        )
+
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        for resource_name in sorted(group_info_db['resources'][resource_request_type]):
+            if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending':
+                uvarcSupportRequestsManager = UVARCSupportRequestsManager()
+                ticket_response = uvarcSupportRequestsManager.create_support_request(
+                    'Storage',
+                    {
+                        'uid': group_info_db['pi_uid'],
+                        'grpup_name': group_info_db['group_name'],
+                        'allocation_name': resource_name,
+                        'request_count': group_info_db['resources'][resource_request_type][resource_name]['request_count'],
+                        'data_agreement_signed': group_info_db['data_agreement_signed'],
+                        'project_name': group_info_db['project_name'],
+                        'project_description': group_info_db['project_desc'],
+                        'requedst_type': request_type
+                    }
+                )
+                print(ticket_response)
+                group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing'
+                if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
+                group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(json.loads(ticket_response)['issueKey'])
+
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
@@ -198,15 +234,42 @@ class UVARCResourcRequestFormInfoDataManager():
     def update_user_resource_su_request_info(self, user_resource_request_info):
         resource_request_type = 'hpc_service_units'
         request_type = 'UPDATE'
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         group_info_db, resource_request_id =  self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
 
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        for resource_name in sorted(group_info_db['resources'][resource_request_type]):
+            if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending':
+                uvarcSupportRequestsManager = UVARCSupportRequestsManager()
+                ticket_response = uvarcSupportRequestsManager.create_support_request(
+                    'Storage',
+                    {
+                        'uid': group_info_db['pi_uid'],
+                        'grpup_name': group_info_db['group_name'],
+                        'allocation_name': resource_name,
+                        'request_count': group_info_db['resources'][resource_request_type][resource_name]['request_count'],
+                        'data_agreement_signed': group_info_db['data_agreement_signed'],
+                        'project_name': group_info_db['project_name'],
+                        'project_description': group_info_db['project_desc'],
+                        'requedst_type': request_type
+                    }
+                )
+                print(ticket_response)
+                group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing'
+                if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
+                group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(json.loads(ticket_response)['issueKey'])
+
+        self.__uvarc_group_data_manager.set_group_info(
+            group_info_db
+        )
+
     def retire_user_resource_su_request_info(self, group_name, resource_request_type, resource_request_id):
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(group_name, upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         # if self.__uid == group_info_db['pi_uid']: or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
         if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
@@ -227,9 +290,35 @@ class UVARCResourcRequestFormInfoDataManager():
     def create_user_resource_storage_request_info(self, user_resource_request_info):
         resource_request_type = 'storage'
         request_type = 'CREATE'
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        self.__uvarc_group_data_manager.set_group_info(
+            group_info_db
+        )
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        for resource_name in sorted(group_info_db['resources'][resource_request_type]):
+            if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending':
+                uvarcSupportRequestsManager = UVARCSupportRequestsManager()
+                ticket_response = uvarcSupportRequestsManager.create_support_request(
+                    'Storage',
+                    {
+                        'uid': group_info_db['pi_uid'],
+                        'grpup_name': group_info_db['group_name'],
+                        'share_name': resource_name,
+                        'request_size': group_info_db['resources'][resource_request_type][resource_name]['request_size'],
+                        'data_agreement_signed': group_info_db['data_agreement_signed'],
+                        'project_name': group_info_db['project_name'],
+                        'project_description': group_info_db['project_desc'],
+                        'requedst_type': request_type
+                    }
+                )
+                print(ticket_response)
+                group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing'
+                if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
+                group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(json.loads(ticket_response)['issueKey'])
+
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
@@ -237,15 +326,42 @@ class UVARCResourcRequestFormInfoDataManager():
     def update_user_resource_storage_request_info(self, user_resource_request_info):
         resource_request_type = 'storage'
         request_type = 'UPDATE'
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
 
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        for resource_name in sorted(group_info_db['resources'][resource_request_type]):
+            if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending':
+                uvarcSupportRequestsManager = UVARCSupportRequestsManager()
+                ticket_response = uvarcSupportRequestsManager.create_support_request(
+                    'Storage',
+                    {
+                        'uid': group_info_db['pi_uid'],
+                        'grpup_name': group_info_db['group_name'],
+                        'share_name': resource_name,
+                        'request_size': group_info_db['resources'][resource_request_type][resource_name]['request_size'],
+                        'data_agreement_signed': group_info_db['data_agreement_signed'],
+                        'project_name': group_info_db['project_name'],
+                        'project_description': group_info_db['project_desc'],
+                        'requedst_type': request_type
+                    }
+                )
+                print(ticket_response)
+                group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing'
+                if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
+                group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(json.loads(ticket_response)['issueKey'])
+
+        self.__uvarc_group_data_manager.set_group_info(
+            group_info_db
+        )
+
     def retire_user_resource_storage_request_info(self, group_name, resource_request_type, resource_request_id):
-        self.__uvarc_group_data_manager = UVARCGroupsDataManager(group_name, upsert=True, refresh=True)
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         # if self.__uid == group_info_db['pi_uid'] or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
         if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
@@ -306,3 +422,8 @@ class UVARCBillingInfoValidator():
             app.log_exception(ex)
             print(ex)
             raise ex
+
+
+class UVARCResourceRequestsFlowManager():
+    def __init__(self):
+        pass

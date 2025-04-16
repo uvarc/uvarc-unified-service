@@ -9,7 +9,7 @@ from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandl
 from common_utils import synchronized
 
 
-class UVARCUsersDataManager:
+class UVARCUserDataManager:
     def __init__(self, uid, upsert=True, refresh=False):
         if uid is None:
             raise Exception('User uid provided cannot be {}'.format(uid))
@@ -65,7 +65,7 @@ class UVARCUsersDataManager:
         return user_resources
 
 
-class UVARCGroupsDataManager:
+class UVARCGroupDataManager:
     def __init__(self, group_name, upsert=True, refresh=False):
         if group_name is None:
             raise Exception('Group Name provided cannot be {}'.format(group_name))
@@ -94,6 +94,13 @@ class UVARCGroupsDataManager:
     def set_group_info(self, group_info):
         UVARCUsersGroupsSyncManager().update_group_resource_info(group_info)
 
+
+class UVARCGroupsDataManager:
+    def __init__(self):
+        pass
+
+    def get_all_pending_resources(self):
+        pass
 
 class UVARCUsersGroupsSyncManager:
     def __init__(self):
@@ -447,6 +454,7 @@ class UVARCUsersGroupsSyncManager:
                     self.create_user_info({'uid': uid})
             if 'group_members' not in group:
                 group['group_members'] = []
+            data_to_set = {}
             if sorted(group_members_ldap) != group['group_members'] or (len(group['group_members']) == 0 and 'group_members_hist' not in group):
                 app.logger.info('{} group changes detected'.format(group['group_name']))
                 if 'group_members_hist' in group:
@@ -455,14 +463,19 @@ class UVARCUsersGroupsSyncManager:
                     group_members_hist = []
                 if len(group['group_members']) > 0:
                     group_members_hist.append(group['group_members'])
+                data_to_set["group_members"] = sorted(group_members_ldap),
+                data_to_set["group_members_hist"] = group_members_hist,
+                data_to_set["group_members_update_time"] = datetime.now(timezone.utc)
+            if 'resources' not in group:
+                data_to_set['resources'] = {
+                    "hpc_service_units": {},
+                    "storage": {}
+                }
                 mongo_service.db.uvarc_groups.update_one(
                     {"group_name": group['group_name']},
                     {
-                        "$set": {
-                            "group_members": sorted(group_members_ldap),
-                            "group_members_hist": group_members_hist,
-                            "group_members_update_time": datetime.now(timezone.utc)
-                        }
+                        "$set": data_to_set
                     },
                     False
                 )
+
