@@ -149,8 +149,24 @@ class LegacyRCBillingHandler:
         shutil.copyfile(source_file, destination_file)
         
     def __fetch_standard_storage_fdm_details(self):
+        reverse_pop_list=[]
+        header=None
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out.csv', 'r') as file:
+            reader = csv.reader(file)
+            header = next(reader)
+            print("Header row:", header)
+            for row in reader:
+                reverse_pop_list.append(row)
+
+        reverse_file_fp = open(
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-reversed.csv', 'w', newline='')                
+        reverse_writer = csv.writer(reverse_file_fp, delimiter=',', quotechar='"')
+        reverse_writer.writerow(header)
+        while reverse_pop_list:
+            reverse_writer.writerow(reverse_pop_list.pop())
+        
         share_name_fdm_lookup_dict = {}
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out.csv', mode='r', encoding='utf-8') as csv_file:
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-reversed.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for fdm_row in reversed(list(csv_reader)):
                 fdm_elements = fdm_row['Expense GLA'].split('>')
@@ -202,19 +218,19 @@ class LegacyRCBillingHandler:
                 if fdm_row['Cost Center'] != '':
                     share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
 
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-new.csv', mode='r', encoding='utf-8') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for fdm_row in list(csv_reader):
-                if fdm_row['Cost Center'] != '':
-                    if ' - ' in fdm_row['Share Name'] and ' of ' in fdm_row['Share Name'].split(' - ')[1]:
-                        share_name = fdm_row['Share Name'].split(' - ')[0].strip().lower()
-                        fdm_index = fdm_row['Share Name'].split(' - ')[1].split(' of ')[0]
-                        fdm_list_size = fdm_row['Share Name'].split(' - ')[1].split(' of ')[1].split(' ')[0]
-                        if share_name not in self.__all_project_multi_fdm_dict:
-                            self.__all_standard_multi_fdm_dict[share_name] = [[] for _ in range(int(fdm_list_size))]
-                        self.__all_standard_multi_fdm_dict[share_name][int(fdm_index)-1] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
-                    else:
-                        share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+        # with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-new.csv', mode='r', encoding='utf-8') as csv_file:
+        #     csv_reader = csv.DictReader(csv_file)
+        #     for fdm_row in list(csv_reader):
+        #         if fdm_row['Cost Center'] != '':
+        #             if ' - ' in fdm_row['Share Name'] and ' of ' in fdm_row['Share Name'].split(' - ')[1]:
+        #                 share_name = fdm_row['Share Name'].split(' - ')[0].strip().lower()
+        #                 fdm_index = fdm_row['Share Name'].split(' - ')[1].split(' of ')[0]
+        #                 fdm_list_size = fdm_row['Share Name'].split(' - ')[1].split(' of ')[1].split(' ')[0]
+        #                 if share_name not in self.__all_project_multi_fdm_dict:
+        #                     self.__all_standard_multi_fdm_dict[share_name] = [[] for _ in range(int(fdm_list_size))]
+        #                 self.__all_standard_multi_fdm_dict[share_name][int(fdm_index)-1] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+        #             else:
+        #                 share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
         new_standard_storage_fdm_records = DynamoDbTableData((date.today().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m'))
         for fdm_row in new_standard_storage_fdm_records.get_items_from_standard_storage_requests_info_table():
             fdm_elements = [
@@ -242,8 +258,25 @@ class LegacyRCBillingHandler:
         return share_name_fdm_lookup_dict
 
     def __fetch_project_storage_fdm_details(self):
+        reverse_pop_list=[]
+        header=None
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out.csv', 'r') as file:
+            reader = csv.reader(file)
+            header = next(reader)
+            print("Header row:", header)
+            for row in reader:
+                reverse_pop_list.append(row)
+
+        reverse_file_fp = open(
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out-reversed.csv', 'w', newline='')                
+        reverse_writer = csv.writer(reverse_file_fp, delimiter=',', quotechar='"')
+        reverse_writer.writerow(header)
+        while reverse_pop_list:
+            reverse_writer.writerow(reverse_pop_list.pop())
+
+
         share_name_fdm_lookup_dict = {}
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out.csv', mode='r', encoding='utf-8') as csv_file:
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out-reversed.csv', mode='r', encoding='utf-8') as csv_file:
             # csv_reader = csv.DictReader(csv_file)
             # for fdm_row in reversed(list(csv_reader)):
             #     fdm_elements = fdm_row['Expense GLA'].split('>')
@@ -251,29 +284,36 @@ class LegacyRCBillingHandler:
             #         fdm_elements[index] = fdm_elements[index].strip()
             #     share_name = fdm_row['Share Name']
         # return share_name_fdm_lookup_dict
+
             csv_reader = csv.DictReader(csv_file)
-            for fdm_row in reversed(list(csv_reader)):
+            for fdm_row in csv_reader:
                 fdm_elements = fdm_row['Expense GLA'].split('>')
                 for index, raw_fdm_item in enumerate(fdm_elements):
                     fdm_elements[index] = fdm_elements[index].strip()
                 share_name = ''
                 if 'TB ' in fdm_row['Charge Description']:
                     if 'research project storage' in fdm_row['Charge Description'].split('TB ')[1]:
-                        parse_list = fdm_row['Charge Description'].split('TB ')[1].split('research project storage')[1].strip().split(' ')
-                        share_name = parse_list[len(parse_list)-1] if 'TB' not in parse_list[len(parse_list)-1] else fdm_row['Charge Description'].split('research project storage ')[1].split(' ')[0]
+                        if fdm_row['Charge Description'].split('TB ')[1].split('research project storage')[1].strip() == '':
+                            if fdm_row['Charge Description'].split('TB ')[1].split('research project storage')[0].strip() != '':
+                                share_name = fdm_row['Charge Description'].split('TB ')[1].split('research project storage')[0].strip().split(' /')[1]
+                        else:
+                            parse_list = fdm_row['Charge Description'].split('TB ')[1].split('research project storage')[1].strip().split(' ')
+                            share_name = parse_list[len(parse_list)-1] if 'TB' not in parse_list[len(parse_list)-1] else fdm_row['Charge Description'].split('research project storage ')[1].split(' ')[0]
                     else:
                         share_name = fdm_row['Charge Description'].split('TB ')[1].split(' ')[0]
                 if share_name.strip().lower() == '':
                     print('{} : {}'.format(share_name, fdm_row['Charge Description']))
+                    if 'TB ' in fdm_row['Charge Description']:
+                        if 'research project storage' in fdm_row['Charge Description'].split('TB ')[1]:
+                            print('{} : {}'.format(share_name, fdm_row['Charge Description']))
                 else:
                     share_name_fdm_lookup_dict[share_name.strip().lower()] = fdm_elements
                 # print(share_name_fdm_lookup_dict[share_name])
-
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing-not-found.csv', mode='r', encoding='utf-8') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for fdm_row in list(csv_reader):
-                if fdm_row['Cost Center'] != '':
-                    share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+        # with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing-not-found.csv', mode='r', encoding='utf-8') as csv_file:
+        #     csv_reader = csv.DictReader(csv_file)
+        #     for fdm_row in list(csv_reader):
+        #         if fdm_row['Cost Center'] != '':
+        #             share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
 
         with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out-new.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
@@ -286,8 +326,8 @@ class LegacyRCBillingHandler:
                         if share_name not in self.__all_project_multi_fdm_dict:
                             self.__all_project_multi_fdm_dict[share_name] = [[] for _ in range(int(fdm_list_size))]
                         self.__all_project_multi_fdm_dict[share_name][int(fdm_index)-1] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
-                    else:
-                        share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+                    # else:
+                    #     share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
 
         new_project_storage_fdm_records = DynamoDbTableData((date.today().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m'))
         for fdm_row in new_project_storage_fdm_records.get_items_from_project_storage_requests_info_table():
