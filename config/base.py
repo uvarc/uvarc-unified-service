@@ -63,9 +63,9 @@ AWS_CONN_INFO = {
 
 ENV_NAME = settings_info['ENV']
 if ENV_NAME == 'prod':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io', 'https://usermeetings.pods.uvarc.io']
 elif ENV_NAME == 'test':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io', 'https://usermeetings.pods.uvarc.io']
 else:
     CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000','http://localhost:3000']
 
