@@ -15,8 +15,8 @@ class UVARCUsersOfficeHoursDataManager:
 
         ldap_helper = UVARCUserInfoManager()
         ldap_info = ldap_helper.get_user_info(form_data['userID'])
-        if not ldap_info:
-            return {"error": "LDAP user not found"}, 400
+        # if not ldap_info:
+        #     return {"error": "LDAP user not found"}, 400
         customer_data = {
             "name": form_data['userID'],
             "email": f"{form_data['userID']}@virginia.edu",
@@ -27,9 +27,20 @@ class UVARCUsersOfficeHoursDataManager:
             customer_id = jira_service.create_new_customer(customer_data['name'], customer_data['email'])
 
         reporter = self.__get_reporter_username(customer_id)
-        reporter_username = reporter.get("displayName", "")
-
-        return jira_service.create_new_ticket(reporter=reporter_username, project_name=self.project_name, request_type=self.request_type, department=ldap_info["department"], school=ldap_info["school"], additional_data = form_data)
+        reporter_email = reporter.get("emailAddress", "")
+        reporter_username = reporter_email if '@' not in reporter_email else reporter_email.split('@')[0] 
+        department = ''
+        school = ''
+        
+        # only set department and school if we received a valid user ID
+        # otherwise set reporter to None since that means we don't have a valid userID input
+        if ldap_info and ldap_info["department"] and ldap_info["school"]:
+            department = ldap_info["department"]
+            school = ldap_info["school"]
+        else:
+            reporter_username = None
+          
+        return jira_service.create_new_ticket(reporter=reporter_username, project_name=self.project_name, request_type=self.request_type, department=department, school=school, additional_data = form_data)
         
     def __get_reporter_username(self, reporter):
         reporter_dict = json.loads(reporter)
