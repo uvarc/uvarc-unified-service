@@ -84,7 +84,7 @@ class UVARCSupportRequestsManager:
             jira_service_handler.create_new_customer(
                 name=request_info_dict['uid'],
                 email='{}@virginia.edu'.format(request_info_dict['uid'])
-            )            
+            )
         except Exception as ex:
             app.log_exception(ex)
             print(ex)

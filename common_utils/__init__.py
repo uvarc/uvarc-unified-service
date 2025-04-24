@@ -8,11 +8,13 @@ RESOURCE_REQUESTS_ADMINS_INFO = {
     'nem2p',
     'cyj7aj',
     'jf2dg',
-    'clm8v'
+    'clm8v',
+    'jus2yw',
+    'khs3z'
 }
 RESOURCE_REQUESTS_SERVICE_UNITS_TIERS = ['ssz_standard', 'ssz_instructional', 'ssz_paid', 'hsz_standard', 'hsz_paid']
 RESOURCE_REQUESTS_STORAGE_TIERS = ['ssz_standard', 'ssz_project', 'hsz_standard', 'hsz_project']
-RESOURCE_REQUESTS_STATUS_TYPES = ['pending', 'processing', 'active', 'expired', 'error']
+RESOURCE_REQUESTS_STATUS_TYPES = ['pending', 'processing', 'active', 'expired', 'retiring', 'retired', 'error']
 RESOURCE_TYPES = ['hpc_service_units','storage']
 
 
