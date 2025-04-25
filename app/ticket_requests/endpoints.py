@@ -125,7 +125,8 @@ class UVARCUsersInfoEndpoint(Resource):
             response_data.append(get_info_helper.get_user_info(id))
 
         return {"data": response_data}, 200
-    
+
+
 class UVARCOfficeHoursFormEndpoint(Resource):
     """
     This endpoint creates a ticket for office hours based on the provided form data.
@@ -201,7 +202,7 @@ class AdminPagesEndPoint(Resource):
 
     def post(self):
         try:
-            response = GeneralSupportRequestManager().update_resource_request_status(request.form)
+            response = UVARCSupportRequestsManager().update_resource_request_status(request.form)
             print(response)
             if response.get("ResponseMetadata", {}).get("HTTPStatusCode") == 200:
                 return {'message': 'Resource request status updated successfully!'}, 200
@@ -217,7 +218,7 @@ class SendMesaageEndPoint(Resource):
     def post(self):
         data = request.get_json()
         try:
-            response = GeneralSupportRequestManager().set_queue_message(data)
+            response = UVARCSupportRequestsManager().set_queue_message(data)
             return {'message': 'Message sent to queue successfully!', 'MessageId': response['MessageId']}, 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -226,7 +227,7 @@ class SendMesaageEndPoint(Resource):
 class ReceiveMesaageEndPoint(Resource):
     def get(self):
         try:
-            response = GeneralSupportRequestManager().receive_message()
+            response = UVARCSupportRequestsManager().receive_message()
             return response
         except Exception as e:
             return make_response(jsonify({"error": str(e)}), 500)
