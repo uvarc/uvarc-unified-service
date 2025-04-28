@@ -67,8 +67,6 @@ class UVARCAdminFormInfoDataManager():
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
                 else:
                     raise Exception("Cannot update request status {request_status}: The resource is not in a state to process updates".format(update_status=update_status))
-                else:
-                    raise Exception("Cannot update unsupported request status:{request_status}".format(update_status=update_status))
                 uvarc_group_data_manager.set_group_info(
                     group_info_db
                 )
