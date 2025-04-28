@@ -6,6 +6,42 @@ from app.resource_requests.business import UVARCBillingInfoValidator, UVARCAdmin
 from common_utils import cors_check
 
 
+class UVARCAdminFormStatusUpdateEndpoint(Resource):
+    def put(self):
+        try:
+            form_field_data = request.form
+            UVARCAdminFormInfoDataManager(form_field_data['group_name']).update_resource_request_status(
+                form_field_data['ticket_id'],
+                form_field_data['resource_type'],
+                form_field_data['resource_name'],
+                form_field_data['update_status'],
+                form_field_data['update_comment']
+            )
+            response = jsonify(
+                {
+                    "status": "success",
+                    "message": 'Resource request status updated successfully!'
+                }
+            )
+            return make_response(
+                response,
+                200
+            )
+            return {'message': ''}, 200
+        except Exception as ex:
+            print(ex)
+            response = jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                },
+                400
+            )
+            return make_response(
+                response
+            )
+
+
 class UVARCAdminFormInfoEndpoint(Resource):
 
     def get(self, group_name):

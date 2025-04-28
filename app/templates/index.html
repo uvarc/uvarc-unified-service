@@ -112,23 +112,33 @@
             <h2>{{ message }}</h2>
         </div>
         <h2>Update Resource Request Status</h2>
-       <form  id="update_status_form" action="/submit" method="POST">
-          <label for="ticket_id">Ticket ID:</label>
-          <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" required><br>
+        <form  id="update_status_form" action="/submit" method="POST">
+            <label for="ticket_id">Ticket ID:</label>
+            <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" required><br>
 
-          <label for="request_type">Request Type:</label>
-          <input type="text" id="request_type" name="request_type" value="{{ request_type }}" required><br>
+            <label for="group_name">Group Name:</label>
+            <input type="text" id="group_name" name="group_name" value="{{ group_name }}" required><br>
 
-          <label for="group_name">Group Name:</label>
-          <input type="text" id="group_name" name="group_name" value="{{ group_name }}" required><br>
+            <label for="resource_type">Resource Type:</label>
+            <select id="resource_type" name="resource_type" required>
+                <option value="hpc_service_units">HPC Service Units</option>
+                <option value="storage">Storage</option>
+            </select><br><br>
 
-          <label for="processing_status">Processing Status:</label>
-          <select id="processing_status" name="processing_status" required>
-              <option value="Active">Active</option>
-              <option value="Error">Error</option>
-          </select><br><br>
+            <label for="resource_name">Resource Name:</label>
+            <input type="text" id="resource_name" name="resource_name" value="{{ resource_name }}" required><br>
 
-          <button type="submit">Submit</button>
+            <label for="update_status">Update Status:</label>
+            <select id="update_status" name="update_status" required>
+                <option value="active">Active</option>
+                <option value="retired">Retired</option>
+                <option value="error">Error</option>
+            </select><br><br>
+
+            <label for="group_name">Update Comment:</label>
+            <input type="text" id="update_comment" name="update_comment" value="{{ update_comment }}" required><br>
+
+            <button type="submit">Submit</button>
        </form>
 
     </div>
@@ -214,8 +224,8 @@
         event.preventDefault();
         const formData = $(this).serialize();
         $.ajax({
-            url: '/uvarc/api/ticket/admin/mgmt',
-            type: 'POST',
+            url: '/uvarc/api/resource/rcadminform/group/update',
+            type: 'PUT',
             data: formData,
             success: function(response) {
                 $('#message').html('<div style="color: green; font-style: italic; font-size: 15px;">' + response.message + '</div>');

@@ -1,9 +1,10 @@
-from flask import json, jsonify, make_response
-import pytz
+from flask import json
 from app import app, jira_service
-from common_service_handlers.aws_service_handler import AWSServiceHandler
+
+# from common_service_handlers.aws_service_handler import AWSServiceHandler
 from common_service_handlers.jira_service_handler import JiraServiceHandler
 from common_utils.business import UVARCUserInfoManager
+
 
 class UVARCUsersOfficeHoursDataManager:
     def __init__(self):
@@ -115,69 +116,55 @@ class UVARCSupportRequestsManager:
                     key, value)])
         return desc_str
 
-    def update_resource_request_status(self, data):
-        aws_service = AWSServiceHandler(app)
-        sqs = aws_service.get_resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
-        response = queue.send_message(
-         MessageBody=json.dumps(
-                        {
-                            "ticket_id": data['ticket_id'],
-                            "request_type": data['request_type'],
-                            "group_name": data['group_name'],
-                            "status": data['processing_status']
-                        }
-                    ))
-        return response
 
-    def set_queue_message(self, data):
-        aws_service = AWSServiceHandler(app)
-        sqs = aws_service.get_resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
-        response = queue.send_message(
-                MessageBody=json.dumps(
-                        {
-                          'group_name': data['group_name'],
-                          'resource_request_type': data['resource_request_type'],
-                          'resource_request_id': data['resource_request_id'],
-                          'status': data['status']
-                        }
-                    ))
-        print(response)
-        return response
+    # def set_queue_message(self, data):
+    #     aws_service = AWSServiceHandler(app)
+    #     sqs = aws_service.get_resource('sqs')
+    #     queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
+    #     response = queue.send_message(
+    #             MessageBody=json.dumps(
+    #                     {
+    #                       'group_name': data['group_name'],
+    #                       'resource_request_type': data['resource_request_type'],
+    #                       'resource_request_id': data['resource_request_id'],
+    #                       'status': data['status']
+    #                     }
+    #                 ))
+    #     print(response)
+    #     return response
 
-    def receive_message(self):
-        try:
-            aws_service = AWSServiceHandler(app)
-            sqs = aws_service.get_resource('sqs')
-            queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
-            messages = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=20, VisibilityTimeout=10)
-            if len(messages) > 0:
-                for message in messages:
-                    message_obj = json.loads(message.body)
-                    if message_obj.get('status') == 'pending':
-                        #mocking data
-                        form_data = {'email': 'cyj7aj@virginia.edu', 'name': 'raji', 'uid': 'cyj7aj', 'category': 'Storage',
-                               'department': '', 'cost-center': 'CC1260', 'company_id': 'UVA_207', 'business_unit': 'BU01',
-                               'fund': 'FD068', 'grant': '', 'gift': '', 'program': '', 'project': 'PJ02322', 'designated': '',
-                               'function': 'FN009', 'activity': '', 'assignee':'988443044', 'components': '', 'participants': None}
-                        message_obj.update(form_data)
-                        response = json.loads(self.process_support_request(message_obj))
-                        if response['issueKey']:
-                             # after creating ticket, delete the message from the queue 
-                            message.delete()
-                            return make_response(jsonify({"ticket_id": response['issueKey']}), 201)
-                        else:
-                            return make_response(jsonify({"error": "Failed to create Jira ticket."}), 500)
-                    else:
-                        print(message)
-            else:
-                message_obj = {
-                    'status': 'error',
-                    'message': 'No messages available in the queue.'
-                 }
-                return message_obj
+    # def receive_message(self):
+    #     try:
+    #         aws_service = AWSServiceHandler(app)
+    #         sqs = aws_service.get_resource('sqs')
+    #         queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
+    #         messages = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=20, VisibilityTimeout=10)
+    #         if len(messages) > 0:
+    #             for message in messages:
+    #                 message_obj = json.loads(message.body)
+    #                 if message_obj.get('status') == 'pending':
+    #                     #mocking data
+    #                     form_data = {'email': 'cyj7aj@virginia.edu', 'name': 'raji', 'uid': 'cyj7aj', 'category': 'Storage',
+    #                            'department': '', 'cost-center': 'CC1260', 'company_id': 'UVA_207', 'business_unit': 'BU01',
+    #                            'fund': 'FD068', 'grant': '', 'gift': '', 'program': '', 'project': 'PJ02322', 'designated': '',
+    #                            'function': 'FN009', 'activity': '', 'assignee':'988443044', 'components': '', 'participants': None}
+    #                     message_obj.update(form_data)
+    #                     response = json.loads(self.process_support_request(message_obj))
+    #                     if response['issueKey']:
+    #                          # after creating ticket, delete the message from the queue 
+    #                         message.delete()
+    #                         return make_response(jsonify({"ticket_id": response['issueKey']}), 201)
+    #                     else:
+    #                         return make_response(jsonify({"error": "Failed to create Jira ticket."}), 500)
+    #                 else:
+    #                     print(message)
+    #         else:
+    #             message_obj = {
+    #                 'status': 'error',
+    #                 'message': 'No messages available in the queue.'
+    #              }
+    #             return message_obj
              
-        except Exception as e:
-            print(f"Unexpected error: {str(e)}")
-            return make_response(jsonify({"error": "An unexpected error occurred."}), 500)
+    #     except Exception as e:
+    #         print(f"Unexpected error: {str(e)}")
+    #         return make_response(jsonify({"error": "An unexpected error occurred."}), 500)

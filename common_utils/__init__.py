@@ -15,7 +15,7 @@ RESOURCE_REQUESTS_ADMINS_INFO = {
 RESOURCE_REQUESTS_SERVICE_UNITS_TIERS = ['ssz_standard', 'ssz_instructional', 'ssz_paid', 'hsz_standard', 'hsz_paid']
 RESOURCE_REQUESTS_STORAGE_TIERS = ['ssz_standard', 'ssz_project', 'hsz_standard', 'hsz_project']
 RESOURCE_REQUESTS_STATUS_TYPES = ['pending', 'processing', 'active', 'expired', 'retiring', 'retired', 'error']
-RESOURCE_TYPES = ['hpc_service_units','storage']
+RESOURCE_TYPES = ['hpc_service_units', 'storage']
 
 
 def synchronized(f):

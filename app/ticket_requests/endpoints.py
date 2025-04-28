@@ -1,3 +1,4 @@
+# from app.resource_requests.business import UVARCAdminFormInfoDataManager
 from flask_restful import Resource
 from app import app
 from flask import g, json, render_template, request, redirect, make_response, url_for, abort
@@ -199,19 +200,6 @@ class UVARCOfficeHoursFormEndpoint(Resource):
 class AdminPagesEndPoint(Resource):
     def get(self):
         return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
-
-    def post(self):
-        try:
-            response = UVARCSupportRequestsManager().update_resource_request_status(request.form)
-            print(response)
-            if response.get("ResponseMetadata", {}).get("HTTPStatusCode") == 200:
-                return {'message': 'Resource request status updated successfully!'}, 200
-            else:
-                return {'message': 'Resource request update failed.', 'details': response}, 400
-
-        except Exception as e:
-            print(e)
-            return jsonify({'message': 'An error occurred during resource request update.'}), 500
 
 
 class SendMesaageEndPoint(Resource):

@@ -18,16 +18,18 @@ class IntervalTasks:
                     ticket_request_payload = {
                         'uid': group_info_db['pi_uid'],
                         'grpup_name': group_info_db['group_name'],
-                        'share_name': resource_name,
                         'data_agreement_signed': group_info_db['data_agreement_signed'],
                         'project_name': group_info_db['project_name'],
                         'project_description': group_info_db['project_desc'],
-                        'requedst_type': request_type
+                        'resource_type': resource_request_type,
+                        'resource_name': resource_name
                     }
                     if resource_request_type == 'hpc_service_units':
                         ticket_request_payload['request_count'] = group_info_db['resources'][resource_request_type][resource_name]['request_count']
+                        ticket_request_payload['allocation_name'] = resource_name
                     elif resource_request_type == 'storage':
                         ticket_request_payload['request_size'] = group_info_db['resources'][resource_request_type][resource_name]['request_size']
+                        ticket_request_payload['share_name'] = resource_name
                     ticket_response = uvarc_support_requests_manager.create_support_request(
                         support_request_type,
                         ticket_request_payload
