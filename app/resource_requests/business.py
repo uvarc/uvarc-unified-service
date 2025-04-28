@@ -162,7 +162,7 @@ class UVARCResourcRequestFormInfoDataManager():
                     raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
                 elif 'request_size' not in group_info['resources'][resource_request_type][group_info['group_name']]:
                     raise Exception('Cannot process the new resource request: request_size is missing')
-            elif 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
+            if 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 if len(group_info_db['resources'][resource_request_type]) > 0 and resource_request_id in group_info_db['resources'][resource_request_type]:
                     raise Exception('Cannot process the new resource request: The resource request with same request name already exists in system')
@@ -211,6 +211,12 @@ class UVARCResourcRequestFormInfoDataManager():
                     group_info_db['resources'][resource_request_type] = {}
                     
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
+                if resource_request_type == 'hpc_service_units':
+                    if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_paid':
+                        group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = 0 + int(group_info_db['resources'][resource_request_type][resource_request_id]['request_count'])
+                    elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_standard':
+                        group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = 1000000
+                        
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][group_info['group_name']]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
@@ -223,6 +229,10 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['delegates_uid'] = group_info['delegates_uid'] if 'delegates_uid' in group_info else ''
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
                 request_date = group_info_db['resources'][resource_request_type][resource_request_id]['request_date']
+                if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_paid':
+                    group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_count'] + int(group_info_db['resources'][resource_request_type][resource_request_id]['request_count'])
+                elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_standard':
+                    group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = 1000000
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
