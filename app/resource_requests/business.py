@@ -103,10 +103,10 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_info.pop('group_members_update_time')
             for resource_type in RESOURCE_TYPES:
                 if 'resources' in user_resource_info and resource_type in user_resource_info['resources']:
-                    for user_resource_service_units in user_resource_info['resources'][resource_type]:
-                        for user_resource_service_unit_attrib in user_resource_info['resources'][resource_type][user_resource_service_units]:
-                            if user_resource_service_unit_attrib.find('date') > -1:
-                                user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib] = user_resource_info['resources'][resource_type][user_resource_service_units][user_resource_service_unit_attrib].strftime('%Y-%m-%dT%H:%M:%SZ')
+                    for user_resource_name in user_resource_info['resources'][resource_type]:
+                        for user_resource_attrib in user_resource_info['resources'][resource_type][user_resource_name]:
+                            if user_resource_attrib.find('date') > -1:
+                                user_resource_info['resources'][resource_type][user_resource_name][user_resource_attrib] = user_resource_info['resources'][resource_type][user_resource_name][user_resource_attrib].strftime('%Y-%m-%dT%H:%M:%SZ') if user_resource_info['resources'][resource_type][user_resource_name][user_resource_attrib] is not None else ''
 
         # return bson.json_util.dumps(user_resources_info)
         return user_resources_info
