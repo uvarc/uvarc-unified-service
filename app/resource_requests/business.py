@@ -8,7 +8,7 @@ import requests
 from app import app
 from app.core.business import UVARCUserDataManager, UVARCGroupDataManager
 from common_service_handlers.workday_service_handler import WorkdayServiceHandler
-from common_utils import RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
+from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
 
 class UVARCAdminFormInfoDataManager():
@@ -157,9 +157,13 @@ class UVARCResourcRequestFormInfoDataManager():
                     raise Exception('Cannot process the new resource request: Unsupported service unit request tier was provided')
                 elif 'request_count' not in group_info['resources'][resource_request_type][group_info['group_name']]:
                     raise Exception('Cannot process the new resource request: request_count is missing')
+                elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_paid' and ('billing_details' not in group_info['resources'][resource_request_type][group_info['group_name']] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details'] or len(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['fdm_billing_info']) == 0):
+                    raise Exception('Cannot process the new resource request: FDM billing details are required but missing for the paid tier resource request')
             elif resource_request_type == 'storage':
                 if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
                     raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
+                elif 'billing_details' not in group_info['resources'][resource_request_type][group_info['group_name']] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details'] or len(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['fdm_billing_info']) == 0:
+                    raise Exception('Cannot process the new resource request: FDM billing details are required but missing')
                 elif 'request_size' not in group_info['resources'][resource_request_type][group_info['group_name']]:
                     raise Exception('Cannot process the new resource request: request_size is missing')
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
@@ -183,6 +187,20 @@ class UVARCResourcRequestFormInfoDataManager():
                 elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring', 'retired']:
                     raise Exception('Cannot process the update resource request: The previous resource request caanot be in {status} state'.format(status=group_info_db['resources'][resource_request_type][resource_request_id]['request_status']))
                 else:
+                    if resource_request_type == 'hpc_service_units':
+                        if group_info['resources'][resource_request_type][resource_request_id]['tier'] not in RESOURCE_REQUESTS_SERVICE_UNITS_TIERS:
+                            raise Exception('Cannot process the update resource request: Unsupported service unit request tier was provided')
+                        elif 'request_count' not in group_info['resources'][resource_request_type][resource_request_id]:
+                            raise Exception('Cannot process the update resource request: request_count is missing')
+                        elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_paid' and ('billing_details' not in group_info['resources'][resource_request_type][resource_request_id] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][resource_request_id]['billing_details'] or len(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info']) == 0):
+                            raise Exception('Cannot process the update resource request: FDM billing details are required but missing for the paid tier resource request')
+                    elif resource_request_type == 'storage':
+                        if group_info['resources'][resource_request_type][resource_request_id]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
+                            raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
+                        elif 'billing_details' not in group_info['resources'][resource_request_type][resource_request_id] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][resource_request_id]['billing_details'] or len(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info']) == 0:
+                            raise Exception('Cannot process the update resource request: FDM billing details are required but missing')
+                        elif 'request_size' not in group_info['resources'][resource_request_type][resource_request_id]:
+                            raise Exception('Cannot process the new resource request: request_size is missing')
                     if 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details']:
                         fdm_tags_str_db_list = []
                         if 'billing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']:
@@ -213,9 +231,10 @@ class UVARCResourcRequestFormInfoDataManager():
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 if resource_request_type == 'hpc_service_units':
                     if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_paid':
-                        group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = 0 + int(group_info_db['resources'][resource_request_type][resource_request_id]['request_count'])
+                        group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = int(group_info['resources'][resource_request_type][group_info['group_name']]['request_count'])
+                        group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['pending_bill_count'] = int(group_info['resources'][resource_request_type][group_info['group_name']]['request_count'])
                     elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_standard':
-                        group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = 1000000
+                        group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD
                         
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][group_info['group_name']]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
@@ -229,10 +248,12 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['delegates_uid'] = group_info['delegates_uid'] if 'delegates_uid' in group_info else ''
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
                 request_date = group_info_db['resources'][resource_request_type][resource_request_id]['request_date']
-                if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_paid':
-                    group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_count'] + int(group_info_db['resources'][resource_request_type][resource_request_id]['request_count'])
-                elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_standard':
-                    group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = 1000000
+                if group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_paid':
+                    request_count = int(group_info['resources'][resource_request_type][resource_request_id]['request_count'])
+                    group_info['resources'][resource_request_type][resource_request_id]['request_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_count'] + request_count
+                    group_info['resources'][resource_request_type][resource_request_id]['billing_details']['pending_bill_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['pending_bill_count'] + request_count
+                elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard':
+                    group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
