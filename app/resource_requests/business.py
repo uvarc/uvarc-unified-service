@@ -105,7 +105,7 @@ class UVARCResourcRequestFormInfoDataManager():
                 if 'resources' in user_resource_info and resource_type in user_resource_info['resources']:
                     for user_resource_name in user_resource_info['resources'][resource_type]:
                         for user_resource_attrib in user_resource_info['resources'][resource_type][user_resource_name]:
-                            if user_resource_attrib.find('date') > -1:
+                            if user_resource_attrib.endswith('date'):
                                 user_resource_info['resources'][resource_type][user_resource_name][user_resource_attrib] = user_resource_info['resources'][resource_type][user_resource_name][user_resource_attrib].strftime('%Y-%m-%dT%H:%M:%SZ') if user_resource_info['resources'][resource_type][user_resource_name][user_resource_attrib] is not None else ''
 
         # return bson.json_util.dumps(user_resources_info)
