@@ -49,24 +49,24 @@ class UVARCAdminFormInfoDataManager():
         if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type] and 'request_processing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'tickets_info' in group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']:
             tickets_info = group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']['tickets_info']
             if tickets_info is not None and len(tickets_info) > 0 and ticket_id == tickets_info[len(tickets_info)-1]:
-                if group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['pending','retiring'] and update_status == 'active':
+                if group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring'] and update_status == 'active':
                     group_info_db['resources'][resource_request_type][resource_request_id]["active_date"] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]["expiry_date"] = None
                     group_info_db['resources'][resource_request_type][resource_request_id]["retire_date"] = None
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
-                elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status']=='retiring' and update_status == 'retired':
+                elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'retiring' and update_status == 'retired':
                     group_info_db['resources'][resource_request_type][resource_request_id]["retire_date"] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
-                elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['pending','retiring'] and update_status == 'error':
+                elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring'] and update_status == 'error':
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
                 else:
-                    raise Exception("Cannot update request status {request_status}: The resource is not in a state to process updates".format(update_status=update_status))
+                    raise Exception("Cannot update request status to {update_status}: The resource is not in a state to process updates".format(update_status=update_status))
                 uvarc_group_data_manager.set_group_info(
                     group_info_db
                 )
