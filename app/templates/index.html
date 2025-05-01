@@ -186,10 +186,13 @@
             },
             success: function(response) {
                 const data = response[0];
-                if (data.is_owner_set) {
-                    $('#response').html('<div style="color: green;font-style: italic; font-size: 15px;">Owner UID: ' + data.owner_uid + '</div>');
-               } else {
-                    $('#response').html('<div style="color: orange;font-style: italic; font-size: 15px;">No owner set for the group.</div>');
+                if ('is_owner_set' in data) {
+                    if(data.is_owner_set)
+                      $('#response').html('<div style="color: green;font-style: italic; font-size: 15px;">Owner UID: ' + data.owner_uid + '</div>');
+                    else
+                      $('#response').html('<div style="color: green;font-style: italic; font-size: 15px;"> No Owner is set for this group</div>');
+                } else {
+                    $('#response').html('<div style="color: red;font-style: italic; font-size: 15px;">'+ data.message + '</div>');
                 }
             },
             error: function(xhr, status, error) {
@@ -211,7 +214,13 @@
             contentType: 'application/json',
             data: JSON.stringify(data),
             success: function(response) {
-                $('#updateResponse').html('<p style="color: green;font-style: italic; font-size: 15px;">' + response.message + '</p>');
+                const data = response[0];
+                if('status' in data) {
+                  if(data.status == 'success')
+                    $('#updateResponse').html('<p style="color: green;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                  else
+                    $('#updateResponse').html('<p style="color: red;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                }
             },
             error: function(xhr, status, error) {
                 var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred';
@@ -228,7 +237,13 @@
             type: 'PUT',
             data: formData,
             success: function(response) {
-                $('#message').html('<div style="color: green; font-style: italic; font-size: 15px;">' + response.message + '</div>');
+                const data = response[0];
+                if('status' in data) {
+                  if(data.status == 'success')
+                    $('#updateResponse').html('<p style="color: green;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                  else
+                    $('#updateResponse').html('<p style="color: red;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                }
             },
             error: function(xhr, status, error) {
                 $('#message').html('<div style="color: red; font-style: italic; font-size: 15px;">An error occurred.</div>');
