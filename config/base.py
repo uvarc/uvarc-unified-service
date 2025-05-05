@@ -168,37 +168,35 @@ if DEVELOPMENT:
     }
 
     JIRA_PROJECT_INFO_LOOKUP = {
-        JIRA_PROJECTS[0]: 41,
-        JIRA_PROJECTS[1]: 38,
-        JIRA_PROJECTS[2]: 39,
-        JIRA_PROJECTS[3]: 43,
+        JIRA_PROJECTS[0]: 51,
+        JIRA_PROJECTS[1]: 48,
+        JIRA_PROJECTS[2]: 49,
+        JIRA_PROJECTS[3]: 36,
         JIRA_PROJECTS[4]: 12,
-        JIRA_PROJECTS[5]: 33,
-        JIRA_PROJECTS[7]: 34
+        JIRA_PROJECTS[5]: 47,
+        JIRA_PROJECTS[7]: 46
     }
-
     JIRA_PROJECT_REQUEST_TYPE_LOOKUP = {
-        JIRA_PROJECT_REQUEST_TYPES[0]: 303,
-        JIRA_PROJECT_REQUEST_TYPES[1]: 274,
-        JIRA_PROJECT_REQUEST_TYPES[2]: 279,
-        JIRA_PROJECT_REQUEST_TYPES[3]: 311,
+        JIRA_PROJECT_REQUEST_TYPES[0]: 413,
+        JIRA_PROJECT_REQUEST_TYPES[1]: 397,
+        JIRA_PROJECT_REQUEST_TYPES[2]: 402,
+        JIRA_PROJECT_REQUEST_TYPES[3]: 291,
         JIRA_PROJECT_REQUEST_TYPES[4]: 106,
-        JIRA_PROJECT_REQUEST_TYPES[5]: 251,
-        JIRA_PROJECT_REQUEST_TYPES[6]: 278,
-        JIRA_PROJECT_REQUEST_TYPES[8]: 254
+        JIRA_PROJECT_REQUEST_TYPES[5]: 387,
+        JIRA_PROJECT_REQUEST_TYPES[6]: 401,
+        JIRA_PROJECT_REQUEST_TYPES[8]: 380
     }
-    CUSTOMFIELD_VALUES = ('customfield_13076', 'customfield_13096', 'customfield_13090')
-
+    CUSTOMFIELD_VALUES = ('customfield_13176', 'customfield_13196', 'customfield_13190')
     JIRA_CUSTOM_FIELDS = {
-        "custom_field_request_type": "customfield_13084",
-        "custom_field_department": "customfield_13076",
-        "custom_field_school": "customfield_13096",
-        "custom_field_date": "customfield_13075",
-        "custom_field_discipline": "customfield_13090",
-        "custom_field_details": "customfield_13094",
-        "custom_field_meeting_type": "customfield_13102",
-        "custom_field_compute_platform": "customfield_13089",
-        "custom_field_storage_platform": "customfield_13095"
+        "custom_field_request_type": "customfield_13184",
+        "custom_field_department": "customfield_13176",
+        "custom_field_school": "customfield_13196",
+        "custom_field_date": "customfield_13175",
+        "custom_field_discipline": "customfield_13190",
+        "custom_field_details": "customfield_13194",
+        "custom_field_meeting_type": "customfield_13203",
+        "custom_field_compute_platform": "customfield_13189",
+        "custom_field_storage_platform": "customfield_13195"
     }
 
     QUEUE_NAME = 'uvarc_unified_response_queue_dev'
