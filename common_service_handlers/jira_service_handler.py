@@ -297,18 +297,3 @@ class JiraServiceHandler:
         except Exception as ex:
             print("Couldn't fetch tickets for customer {} from JIRA: {}".format(
                 reporter, str(ex)))
-            
-
-    def add_participants(self, jira_issue_key, id_list):
-        headers = {'content-type': 'application/json'}
-        servicedesk_config = {
-                        "usernames": id_list
-        }
-        servicedesk_res = requests.post(
-                            f"{self._connect_host_url}servicedeskapi/request/{jira_issue_key}/participant",
-                            headers=headers,
-                            auth=self._auth,
-                            data=json.dumps(servicedesk_config)
-                        )
-        
-        return servicedesk_res.text

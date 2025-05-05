@@ -41,29 +41,23 @@ class UVARCUsersOfficeHoursDataManager:
             school = ldap_info["school"]
         else:
             reporter_username = None
+
+        participants = None
+
+        staff_ids = [obj['value'] for obj in form_data['staff'][1:]]  
+        if staff_ids:
+            participants = staff_ids
           
-        response_text = jira_service.create_new_ticket(reporter=reporter_username, project_name=self.project_name, request_type=self.request_type, department=department, school=school, additional_data = form_data)
+        response_text = jira_service.create_new_ticket(reporter=reporter_username, project_name=self.project_name, participants=participants, request_type=self.request_type, department=department, school=school, additional_data = form_data)
         if "errorMessage" in response_text:
             # if failed to create ticket, then retry with not valid 
-            response_text = jira_service.create_new_ticket(reporter=None, project_name=self.project_name, request_type=self.request_type, department=department, school=school, additional_data = form_data)
-
-
-        # headers for requests
-        headers = {'content-type': 'application/json'}
+            response_text = jira_service.create_new_ticket(reporter=None, project_name=self.project_name, participants=participants, request_type=self.request_type, department=department, school=school, additional_data = form_data)
 
         # convert into json to read necessary info
         json_response = json.loads(response_text)
     
         if "errorMessage" not in response_text:
-                jira_issue_key = json_response.get('issueKey')
-                staff_ids = [obj['value'] for obj in form_data['staff'][1:]]  
-                if staff_ids:
-                    servicedesk_res = jira_service.add_participants(jira_issue_key=jira_issue_key, id_list=staff_ids)
-                    if "errorMessage" in servicedesk_res:
-                        return False, servicedesk_res
-                
-                return True, json_response
-        
+            return True, json_response
         # unable to create ticket, so return false w/ the error message
         return False, json_response
         
