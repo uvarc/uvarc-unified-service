@@ -142,7 +142,7 @@ class JiraServiceHandler:
     ):
         is_office_hours = False
 
-        if additional_data and additional_data['meetingType'] == "Office Hours (walk-in)":
+        if project_name == "CONSULTATIONS & OUTREACH":
             is_office_hours = True
 
         custom_fields_dict = self._project_custom_fields_dict
@@ -217,52 +217,7 @@ class JiraServiceHandler:
             data=json.dumps(payload),
             auth=self._auth
         )
-        
-        if is_office_hours:
-            if response.status_code == 201:
-                    jira_issue_key = response.json().get('key')
-                    staff_ids = [obj['value'] for obj in additional_data['staff'][1:]]  
 
-                    if staff_ids:
-                        servicedesk_config = {
-                            "usernames": staff_ids
-                        }
-                        servicedesk_res = requests.post(
-                            f"{self._connect_host_url}servicedeskapi/request/{jira_issue_key}/participant",
-                            headers=headers,
-                            data=json.dumps(servicedesk_config)
-                        )
-                        return True, servicedesk_res.json()
-                    return True, response.json()
-            else:
-                # addresses unique case of receiving ldap info from db
-                # but user is no longer with UVA, so they will not be recognized in JIRA
-                # try again w/ no raise on request of attribute
-                payload['raiseOnBehalfOf'] = None
-                response = requests.post(
-                    ''.join([self._connect_host_url, 'servicedeskapi/request']),
-                    headers=headers,
-                    data=json.dumps(payload),
-                    auth=self._auth
-                )
-                if response.status_code == 201:
-                    jira_issue_key = response.json().get('key')
-                    staff_ids = [obj['value'] for obj in additional_data['staff'][1:]]  
-
-                    if staff_ids:
-                        servicedesk_config = {
-                            "usernames": staff_ids
-                        }
-                        servicedesk_res = requests.post(
-                            f"{self._connect_host_url}servicedeskapi/request/{jira_issue_key}/participant",
-                            headers=headers,
-                            data=json.dumps(servicedesk_config)
-                        )
-                        return True, servicedesk_res.json()
-                    return True, response.json()
-                # unable to create ticket, so return false w/ the error message
-                return False, response.json()
-            
         return response.text
 
     def add_ticket_comment(self, ticket_id, comment):
