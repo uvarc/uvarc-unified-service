@@ -152,6 +152,8 @@ class UVARCResourcRequestFormInfoDataManager():
             raise Exception('Cannot process the request: The data agreement was not signed by requestor {}'.format(self.__uid))
 
         if request_type == 'CREATE':
+            if group_info['group_name'] not in group_info['resources'][resource_request_type]:
+                raise Exception('Cannot process the new resource request: Resource name ({resource_name}) provided is not same as group name ({group_name})'.format(resource_name=list(group_info['resources'][resource_request_type].keys())[0], group_name=group_info['group_name']))
             if resource_request_type == 'hpc_service_units':
                 if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_SERVICE_UNITS_TIERS:
                     raise Exception('Cannot process the new resource request: Unsupported service unit request tier was provided')
