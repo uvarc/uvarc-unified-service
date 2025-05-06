@@ -250,14 +250,15 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['delegates_uid'] = group_info['delegates_uid'] if 'delegates_uid' in group_info else ''
                 resource_request_id = list(group_info['resources'][resource_request_type].keys())[0]
                 request_date = group_info_db['resources'][resource_request_type][resource_request_id]['request_date']
-                if group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_paid':
-                    request_count = int(group_info['resources'][resource_request_type][resource_request_id]['request_count'])
-                    group_info['resources'][resource_request_type][resource_request_id]['request_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_count'] + request_count
-                    group_info['resources'][resource_request_type][resource_request_id]['billing_details']['pending_bill_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['pending_bill_count'] + request_count
-                elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard':
-                    group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD
-                elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_instructional':
-                    group_info['resources'][resource_request_type][group_info['group_name']]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL
+                if resource_request_type == 'hpc_service_units':
+                    if group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_paid':
+                        request_count = int(group_info['resources'][resource_request_type][resource_request_id]['request_count'])
+                        group_info['resources'][resource_request_type][resource_request_id]['request_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_count'] + request_count
+                        group_info['resources'][resource_request_type][resource_request_id]['billing_details']['pending_bill_count'] = group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['pending_bill_count'] + request_count
+                    elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard':
+                        group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD
+                    elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_instructional':
+                        group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL
 
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
