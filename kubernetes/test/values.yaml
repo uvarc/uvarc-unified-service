@@ -1,5 +1,0 @@
-fullnameOverride: uvarc-unified-service
-
-image:
-  repository: ghcr.io/uvarc/uvarc-unified-service
-  tag: develop
