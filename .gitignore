@@ -18,3 +18,4 @@ data/dropbox
 data/dropbox/backfill
 connections.json
 scripts/legacy-generate-monthly-billing.py
+.idea
