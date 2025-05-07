@@ -23,7 +23,7 @@ spec:
         persistentVolumeClaim:
           claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc
       containers:
-      - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
+      - image: "ghcr.io/uvarc/uvarc-unified-service:latest"
       #- image: "quay.io/accord/accord-service:develop"
         name: uvarc-unified-service
         imagePullPolicy: "Always"
