@@ -2,23 +2,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: uvarc-unified-service
-  name: uvarc-unified-service-deployment
-  namespace: uvarc-unified-services
+    {{- include "uvarc-unified-service.labels" . | nindent 4 }}
+  name: {{ include "uvarc-unified-service.fullname" . }}-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: uvarc-unified-service
+      {{- include "uvarc-unified-service.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: uvarc-unified-service
+        {{- include "uvarc-unified-service.selectorLabels" . | nindent 8 }}
     spec:
       volumes:
-      - name: uvarc-unified-service-ceph-data
+      - name: {{ include "uvarc-unified-service.fullname" . }}-ceph-data
         persistentVolumeClaim:
-          claimName: uvarc-unified-service-ceph-pvc-data
+          claimName: {{ include "uvarc-unified-service.fullname" . }}-ceph-pvc-data
 
       containers:
       - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
@@ -29,7 +28,7 @@ spec:
         - /usr/bin/supervisord
 
         volumeMounts:
-        - name: uvarc-unified-service-ceph-data
+        - name: {{ include "uvarc-unified-service.fullname" . }}-ceph-data
           mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
 
         resources:
@@ -41,7 +40,7 @@ spec:
             cpu: "1500m"
         envFrom:
         - configMapRef:
-            name: uvarc-unified-service-configmap
+            name: {{ include "uvarc-unified-service.fullname" . }}-configmap
         env:
         - name: JIRA_CLIENT_ID
           valueFrom:
@@ -138,4 +137,3 @@ spec:
             secretKeyRef:
               name: uvarc-unified-service-secret
               key: HPC_API_CLIENT_SECRET
-

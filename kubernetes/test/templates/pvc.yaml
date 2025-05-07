@@ -2,8 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: uvarc-unified-service-ceph-pvc-data
-  namespace: uvarc-unified-services
+  name: {{ include "uvarc-unified-service.fullname" . }}-ceph-pvc-data
+  labels:
+    {{- include "uvarc-unified-service.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteMany
@@ -12,5 +13,5 @@ spec:
       # This doesn't really matter for a static PV
       storage: 100Gi
   volumeMode: Filesystem
-  volumeName: uvarc-unified-service-ceph-pv-data
+  volumeName: {{ include "uvarc-unified-service.fullname" . }}-ceph-pv-data
   storageClassName: csi-cephfs-sc

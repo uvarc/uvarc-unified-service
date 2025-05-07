@@ -1,7 +1,9 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: uvarc-unified-service-celery-sync-ldap-data-task
+  name: {{ include "uvarc-unified-service.fullname" . }}-celery-sync-ldap-data-task
+  labels:
+    {{- include "uvarc-unified-service.labels" . | nindent 4 }}
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid
@@ -26,7 +28,7 @@ spec:
                 cpu: "500m"
             envFrom:
               - configMapRef:
-                  name: uvarc-unified-service-configmap
+                  name: {{ include "uvarc-unified-service.fullname" . }}-configmap
             env:
               - name: JIRA_CLIENT_ID
                 valueFrom:
@@ -136,10 +138,10 @@ spec:
                     key: WORKDAY_CLIENT_SECRET
 
             volumeMounts:
-              - name: uvarc-unified-service-ceph-data
+              - name: {{ include "uvarc-unified-service.fullname" . }}-ceph-data
                 mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
           restartPolicy: OnFailure
           volumes:
-            - name: uvarc-unified-service-ceph-data
+            - name: {{ include "uvarc-unified-service.fullname" . }}-ceph-data
               persistentVolumeClaim:
-                claimName: uvarc-unified-service-ceph-pvc-data
+                claimName: {{ include "uvarc-unified-service.fullname" . }}-ceph-pvc-data

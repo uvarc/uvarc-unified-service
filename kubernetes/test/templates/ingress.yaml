@@ -11,21 +11,20 @@ metadata:
     nginx.org/proxy-connect-timeout: "600s"
     nginx.org/proxy-read-timeout: "600s"
     nginx.org/proxy-send-timeout: "600s"
-  name: uvarc-unified-service-ingress
-  namespace: uvarc-unified-services
+  name: {{ include "uvarc-unified-service.fullname" . }}-ingress
 spec:
   rules:
-  - host: uvarc-unified-service.pods.uvarc.io
+  - host: {{ include "uvarc-unified-service.fullname" . }}.pods.uvarc.io
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: uvarc-unified-service
+            name: {{ include "uvarc-unified-service.fullname" . }}
             port:
               number: 80
   tls:
       - hosts:
-          - uvarc-unified-service.pods.uvarc.io
-        secretName: uvarc-unified-service-nginx-tls-ingress-secret
+          - {{ include "uvarc-unified-service.fullname" . }}.pods.uvarc.io
+        secretName: {{ include "uvarc-unified-service.fullname" . }}-nginx-tls-ingress-secret
