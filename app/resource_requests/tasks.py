@@ -38,10 +38,10 @@ class IntervalTasks:
                     app.logger.info(ticket_response)
                     group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing' if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending' else 'retiring'
                     if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
-                        group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
-                    elif 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
+                        group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {}
+                    if 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
                         group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = []
-                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(json.loads(ticket_response)['issueKey'])
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(str(json.loads(ticket_response)['issueKey']))
 
             uvarc_group_data_manager.set_group_info(
                 group_info_db
