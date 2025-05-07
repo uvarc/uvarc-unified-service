@@ -1,25 +1,22 @@
 import urllib
 import flask_restful
-from flask import jsonify, url_for
+from flask import abort, jsonify, request, url_for
 from flask_restful import reqparse
 
 from app import app
-from . import ldap_requests
+from . import core
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.ldap_requests.endpoints import LDAPUserInfoEndpoint
 
-
-api = UVARCUnifiedApi(ldap_requests)
+api = UVARCUnifiedApi(core)
 
 parser = flask_restful.reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
-    (LDAPUserInfoEndpoint, '/get_user_details'),
 ]
 
 
-@ldap_requests.route('/', methods=['GET'])
+@core.route('/', methods=['GET'])
 def root():
     output = {}
     for rule in app.url_map.iter_rules():

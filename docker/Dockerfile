@@ -1,6 +1,5 @@
-FROM python:3.12.6
+FROM python:3.12.6 AS base
 LABEL maintainer="rkc7h@virginia.edu"
-
 ENV NON_ROOT_USER=non_root_user
 ENV NON_ROOT_GID="103" \
     NON_ROOT_UID="1003" \
@@ -24,7 +23,7 @@ RUN chmod g+wx /var/log/
 ENV APP_LOC $NON_ROOT_WORK_DIR/uvarc_unified_service
 WORKDIR $APP_LOC
 RUN sudo mkdir -p $NON_ROOT_WORK_DIR && \
-    sudo mkdir -p $APP_LOC
+    sudo mkdir -p $APP_LOC && sudo mkdir -p $APP_LOC/bin
 RUN sudo mkdir  -p  /var/lib/nginx/body
 RUN sudo mkdir  -p  /var/lib/nginx/fastcgi
 RUN sudo mkdir  -p  /var/lib/nginx/proxy
@@ -32,7 +31,9 @@ RUN sudo mkdir  -p  /var/lib/nginx/uwsgi
 RUN sudo mkdir  -p  /var/lib/nginx/scgi
 RUN sudo chown  -R www-data  /var/lib/nginx
 RUN sudo chown  -R $NON_ROOT_USER /var/lib/nginx
+ADD ./bin/pull-newkey.sh ./bin/.
 
+FROM base as codebase
 ADD ./requirements.txt .
 RUN pip3 install -r requirements.txt
 RUN supervisord -v
@@ -50,6 +51,11 @@ RUN chgrp -R nonroot /etc/nginx && chown -R $NON_ROOT_USER /etc/nginx
 RUN chgrp -R nonroot /var/log/ && chown -R $NON_ROOT_USER /var/log/
 RUN cp nginx.conf /etc/nginx/nginx.conf && chmod -R g+wx /etc/nginx/
 RUN rm -rf /usr/bin/python2
+
+FROM codebase as tasks
+USER $NON_ROOT_USER
+
+FROM codebase as service
 EXPOSE 5000
 USER $NON_ROOT_USER
 CMD ["supervisord"]

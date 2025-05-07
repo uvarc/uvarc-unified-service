@@ -24,19 +24,33 @@ services:
     environment:
       - 'SETTINGS_JSON={
         "ENV": "local",
-        "MONGODB": {"HOSTS":["uvarc_unified_db"], "PORT":"27017"},
-        "JIRA_CLOUD": {"HOSTS":["varesearchhelp.atlassian.net"], "PORT":"443", "CLIENT_ID":"rc-jirabot@virginia.edu"},
+        "JIRA": {"HOSTS":["jira-dev.admin.virginia.edu"], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "WORKDAY": {"HOSTS":["intsprodapi.aws.virginia.edu"], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "SMTP": {"HOSTS":["postfix"], "PORT":"25", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "AWS": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECREY":""},
+        "MONGODB": {"HOSTS":["uvarc_unified_db"], "PORT":"27017", "CLIENT_ID":"", "CLIENT_SECREY":""},
+        "LDAP_PUBLIC": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "LDAP_PRIVATE":  {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "HPC_API": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "CORS_ENABLED":false,
         "DEBUG":true
         }'
-      - MONGO_USER=uvarc_unified_db_user
-      - MONGO_PASSWORD=uvarc_unified_db_pass  
-      - JIRA_CLOUD_CLIENT_SECRET=xyz
+      - JIRA_CLIENT_ID=xyz
+      - JIRA_CLIENT_SECRET=xyz
+      - WORKDAY_CLIENT_ID=xyz
+      - WORKDAY_CLIENT_SECRET=xyz
+      - SMTP_CLIENT_ID=xyz
       - SMTP_CLIENT_SECRET=xyz
       - AWS_CLIENT_ID=xyz
       - AWS_CLIENT_SECRET=xyz
+      - MONGO_USER=uvarc_unified_db_user
+      - MONGO_PASSWORD=uvarc_unified_db_pass
+      - LDAP_PUBLIC_CLIENT_ID=xyz
+      - LDAP_PUBLIC_CLIENT_SECRET=xyz
+      - LDAP_PRIVATE_CLIENT_ID=xyz
+      - LDAP_PRIVATE_CLIENT_SECRET=xyz
+      - HPC_API_CLIENT_ID=xyz
+      - HPC_API_CLIENT_SECRET=xyz
     volumes:
       - ./app:/opt/local/non_root_user/uvarc_unified_service/app
       - ./common_service_handlers:/opt/local/non_root_user/uvarc_unified_service/common_service_handlers

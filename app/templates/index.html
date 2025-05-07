@@ -1,0 +1,256 @@
+{% extends "base.html" %} {% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    
+    .container {
+        width: 80%;
+        margin: 0 auto;
+        padding-top: 20px;
+    }
+    
+    .tabs {
+        display: flex;
+        margin-bottom: 20px;
+    }
+    
+    .tab-button {
+        cursor: pointer;
+        border-radius: 1px;
+    }
+    
+    .tab-button.active {
+        background-color:rgb(76, 175, 117); /* Change to the color you want */
+        color: white;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 6px;
+        display: block;
+        color: #555;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+
+    button {
+        background-color: #5c6bc0;
+        color: white;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    .message-container {
+        text-align: center;
+        padding: 50px;
+        margin: 20px 0;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 500px;
+        box-sizing: border-box;
+    }
+
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+<body>
+    <div class="tabs">
+        <button class="tab-button" onclick="showForm(0)">Search PI UID</button>
+        <button class="tab-button" onclick="showForm(1)">Update UID</button>
+        <button class="tab-button" onclick="showForm(2)">Update Status</button>
+    </div>
+
+    <div id="form1" class="tab-content">
+        <h2>Search PI UID</h2>
+        <div id="response" style = "margin:10px"></div>
+            <form id="search_form">
+                <label for="group_name">Group Name:</label>
+                <input type="text" id="group_name" name="group_name" required>
+                <button type="submit">Search</button>
+            </form>
+    </div>
+
+    <div id="form2" class="tab-content" style="display:none;">
+        <h2>Update Group Owner UID</h2>
+        <div id="updateResponse" style = "margin:10px"></div>
+        <form id="update_uid_form">
+            <label for="group_name">Group Name:</label>
+            <input type="text" id="group_name_update" name="group_name" required>
+            
+            <label for="owner_uid">Owner UID:</label>
+            <input type="text" id="owner_uid" name="owner_uid" required>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div id="form3" class="tab-content" style="display:none;">
+        <div id="message" style="text-align: center; margin-top: 20px;">
+            <h2>{{ message }}</h2>
+        </div>
+        <h2>Update Resource Request Status</h2>
+        <form  id="update_status_form" action="/submit" method="POST">
+            <label for="ticket_id">Ticket ID:</label>
+            <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" required><br>
+
+            <label for="group_name">Group Name:</label>
+            <input type="text" id="group_name" name="group_name" value="{{ group_name }}" required><br>
+
+            <label for="resource_type">Resource Type:</label>
+            <select id="resource_type" name="resource_type" required>
+                <option value="hpc_service_units">HPC Service Units</option>
+                <option value="storage">Storage</option>
+            </select><br><br>
+
+            <label for="resource_name">Resource Name:</label>
+            <input type="text" id="resource_name" name="resource_name" value="{{ resource_name }}" required><br>
+
+            <label for="update_status">Update Status:</label>
+            <select id="update_status" name="update_status" required>
+                <option value="active">Active</option>
+                <option value="retired">Retired</option>
+                <option value="error">Error</option>
+            </select><br><br>
+
+            <label for="group_name">Update Comment:</label>
+            <input type="text" id="update_comment" name="update_comment" value="{{ update_comment }}" required><br>
+
+            <button type="submit">Submit</button>
+       </form>
+
+    </div>
+   
+
+</body>
+
+<script>
+    $(document).ready(function() {
+        showForm(0);  // This will make the first tab default
+    });
+
+    function showForm(tabIndex) {
+        // Hide all forms
+        const forms = document.querySelectorAll('.tab-content');
+        forms.forEach((form, index) => {
+            form.style.display = index === tabIndex ? 'block' : 'none';
+        });
+        $('#message').html('');
+        $('#response').html('');
+        $('#updateResponse').html('');
+        // Remove active class from all tab buttons
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => button.classList.remove('active'));
+        
+        // Add active class to the clicked tab button
+        tabButtons[tabIndex].classList.add('active');
+        const activeForm = forms[tabIndex].querySelector('form');
+        if (activeForm) {
+            activeForm.reset();
+        }
+    }
+
+    $('#search_form').submit(function(event) {
+        event.preventDefault(); 
+        const groupName = $('#group_name').val(); 
+        $.ajax({
+            url: '/uvarc/api/resource/rcadminform/group/' + groupName, 
+            type: "GET",
+            dataType: "json",
+            crossDomain: true,
+            headers: {
+                "accept": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            success: function(response) {
+                const data = response[0];
+                if ('is_owner_set' in data) {
+                    if(data.is_owner_set)
+                      $('#response').html('<div style="color: green;font-style: italic; font-size: 15px;">Owner UID: ' + data.owner_uid + '</div>');
+                    else
+                      $('#response').html('<div style="color: green;font-style: italic; font-size: 15px;"> No Owner is set for this group</div>');
+                } else {
+                    $('#response').html('<div style="color: red;font-style: italic; font-size: 15px;">'+ data.message + '</div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                $('#response').html('<div style="color: red;font-style: italic; font-size: 15px;">An error occurred while searching.</div>');
+            }
+        });
+    });
+
+    $('#update_uid_form').on('submit', function(event) {
+        event.preventDefault(); 
+        var groupName = $('#group_name_update').val();
+        var owner_uid = $('#owner_uid').val();
+        var data = {
+            owner_uid: owner_uid
+        };
+        $.ajax({
+            url: '/uvarc/api/resource/rcadminform/group/' + groupName,  
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                const data = response[0];
+                if('status' in data) {
+                  if(data.status == 'success')
+                    $('#updateResponse').html('<p style="color: green;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                  else
+                    $('#updateResponse').html('<p style="color: red;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                }
+            },
+            error: function(xhr, status, error) {
+                var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred';
+                $('#updateResponse').html('<div style="color: red;font-style: italic; font-size: 15px;">' + errorMessage + '</div>');
+        }
+        });
+    });
+  
+    $('#update_status_form').submit(function(event) {
+        event.preventDefault();
+        const formData = $(this).serialize();
+        $.ajax({
+            url: '/uvarc/api/resource/rcadminform/group/update',
+            type: 'PUT',
+            data: formData,
+            success: function(response) {
+                const data = response[0];
+                if('status' in data) {
+                  if(data.status == 'success')
+                    $('#updateResponse').html('<p style="color: green;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                  else
+                    $('#updateResponse').html('<p style="color: red;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                }
+            },
+            error: function(xhr, status, error) {
+                $('#message').html('<div style="color: red; font-style: italic; font-size: 15px;">An error occurred.</div>');
+            }
+        });
+    });
+
+</script>
+
+{% endblock %}

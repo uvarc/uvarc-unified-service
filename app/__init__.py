@@ -3,8 +3,9 @@ import os
 import signal
 
 from datetime import timedelta
-from flask import Flask, jsonify
+from flask import Flask, abort, jsonify, request
 from celery import Celery
+from flasgger import Swagger
 from celery.schedules import crontab
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
@@ -17,20 +18,19 @@ from flask_sso import SSO
 # from common_service_handlers.aws_service_handler import AWSServiceHandler
 # from common_service_handlers.kube_service_handler import KubeService
 # from common_service_handlers.email_service_handler import EmailService
+# from app.ldap_requests.business import LDAPSyncJobBusinessLogic
+from common_service_handlers.jira_service_handler import JiraServiceHandler
 from common_utils.rest_exception import RestException
 
 
-
-# def make_celery(app):
-#     celery = Celery(
-#         'EOD_TASKS',
-#         broker=app.config['CELERY_BROKER_URL']
-#     )
-#     celery.config_from_object(app.config)
-#     celery.Task = 
-#     # celery.conf.update(app.config)
-#     return celery
-
+template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "UVARC Unified services APIs",
+        "description": "This API provides an unified set of endpoints to support Research Computing automation needs.",
+        "version": "1.0"
+    }
+}
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -47,9 +47,14 @@ logging.basicConfig(filename='/var/log/uvarc_unified_service.log', level=log_lev
                     format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 # Enable CORS
-if (app.config['CORS_ENABLED']):
-    cors = CORS(app, resources={r"*": {"origins": "*"}})
-
+if app.config['CORS_ENABLED']:
+    cors = CORS(
+        app=app,
+        origins=app.config['CORS_ENABLED_ALLOWED_ORIGINS']
+        # supports_credentials=False
+    )
+else:
+    cors = CORS(app=app)
 
 # Flask-Marshmallow provides HATEOAS links
 ma = Marshmallow(app)
@@ -65,9 +70,10 @@ auth = HTTPTokenAuth('Bearer')
 
 # Password Encryption
 bcrypt = Bcrypt(app)
-mongo = PyMongo(app)
+mongo_service = PyMongo(app)
 # kube_service = KubeService(app)
 # aws_service = AWSServiceHandler(app)
+jira_service = JiraServiceHandler(app)
 
 limiter = Limiter(key_func=get_remote_address)
 limiter.init_app(app)
@@ -84,14 +90,29 @@ celery.conf.worker_send_task_events = True
 celery.conf.broker_connection_retry_on_startup = True
 celery.conf.update(app.config)
 
+#Swagger setup
+app.config['SWAGGER'] = {
+    'title': 'UVARC Unified services APIs',
+    'uiversion': 2,
+    'template': './resources/flasgger/swagger_ui.html'
+}
+swagger = Swagger(app, template=template)
+
 
 def handler(error, endpoint, values=''):
     print('URL Build error:' + str(error))
     return ''
-
-
 app.url_build_error_handlers.append(handler)
 
+
+# @app.before_request
+# def before_request():
+#     abort_flag = True
+#     for allowed_url in app.config['CORS_ENABLED_ALLOWED_ORIGINS']:
+#         if allowed_url in request.headers.get('Origin'):
+#             abort_flag = False
+#     if abort_flag:
+#         abort(401)
 
 # Handle errors consistently
 @app.errorhandler(RestException)
@@ -105,6 +126,10 @@ def handle_invalid_usage(error):
 def handle_404(error):
     return handle_invalid_usage(RestException(RestException.NOT_FOUND, 404))
 
+# @app.cli.command()
+# def initdb():
+#     ldap_sync = LDAPSyncJobBusinessLogic(app)
+#     ldap_sync.backfill_users_info()
 
 @app.cli.command()
 def stop():
@@ -117,14 +142,15 @@ def stop():
     else:
         print('Server is not running.')
 
+from app.core import core
 from app.resource_requests import allocation_requests
 from app.ticket_requests import ticket_requests
-from app.ldap_requests import ldap_requests
+app.register_blueprint(core)
 app.register_blueprint(allocation_requests)
 app.register_blueprint(ticket_requests)
-app.register_blueprint(ldap_requests)
 
-from app.ldap_requests import tasks
+
+from app.core import tasks
 from app.resource_requests import tasks
 from app.ticket_requests import tasks
 from common_utils import tasks

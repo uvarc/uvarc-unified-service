@@ -1,21 +1,25 @@
 import urllib
-import flask_restful
+# import flask_restful
 from flask import jsonify, url_for
 from flask_restful import reqparse
+# from flask_restx import reqparse
 
 from app import app
 from . import allocation_requests
 from common_utils.rest_exception import UVARCUnifiedApi
-from app.resource_requests.endpoints import StorageRequestEndpoint
+from app.resource_requests.endpoints import UVARCAdminFormInfoEndpoint, UVARCAdminFormStatusUpdateEndpoint, UVARCFDMValidorEndpoint, UVARCResourcRequestFormInfoEndpoint
 
 
 api = UVARCUnifiedApi(allocation_requests)
 
-parser = flask_restful.reqparse.RequestParser()
+parser = reqparse.RequestParser()
 parser.add_argument('resource')
 
 endpoints = [
-    (StorageRequestEndpoint, '/storasge_request'),
+    (UVARCAdminFormInfoEndpoint, '/rcadminform/group/<group_name>'),
+    (UVARCAdminFormStatusUpdateEndpoint, '/rcadminform/group/update'),
+    (UVARCFDMValidorEndpoint, '/rcwebform/fdm/verify'),
+    (UVARCResourcRequestFormInfoEndpoint, '/rcwebform/user/<uid>')
 ]
 
 

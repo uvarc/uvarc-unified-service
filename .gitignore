@@ -11,4 +11,10 @@ __pycache__
 /.DS_Store
 /celerybeat-schedule
 celerybeat-schedule.db
-data
+data/*.*
+data/mongodb
+data/billing
+data/dropbox
+data/dropbox/backfill
+connections.json
+scripts/legacy-generate-monthly-billing.py
