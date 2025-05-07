@@ -294,12 +294,12 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     {
                         "status": "success",
                         "message": 'Update resource request submitted successfully'
-                    }
+                    },
+                    200
                 )
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return make_response(
-                    response,
-                    200
+                    response
                 )
         except Exception as ex:
             response = jsonify(
@@ -411,12 +411,12 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                     {
                         "status": "success",
                         "message": 'Retire resource request submitted successfully'
-                    }
+                    },
+                    200
                 )
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return make_response(
-                    response,
-                    200
+                    response
                 )
         except Exception as ex:
             response = jsonify(
