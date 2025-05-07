@@ -13,3 +13,4 @@ __pycache__
 celerybeat-schedule.db
 data
 connections.json
+.idea
