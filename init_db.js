@@ -2,7 +2,7 @@ db = db.getSiblingDB("uvarc_unified_data_local");
 db.createUser({
   user: "uvarc_unified_db_user_local",
   pwd: "uvarc_unified_db_pass", // or cleartext password
-  roles: [{ role: "dbOwner", db: "uvarc_unified_data" }],
+  roles: [{ role: "dbOwner", db: "uvarc_unified_data_local" }],
 });
 
 db.createCollection('uvarc_users');
