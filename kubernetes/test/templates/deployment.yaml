@@ -18,10 +18,10 @@ spec:
       volumes:
         - name: uvarc-unified-service-ceph-data-test
           persistentVolumeClaim:
-            claimName: uvarc-unified-service-ceph-pvc-data
+            claimName: uvarc-unified-service-ceph-pvc-data-test
         - name: uvarc-unified-service-rc-staff-dtn-cephfs-data-test
           persistentVolumeClaim:
-            claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc
+            claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-test
       containers:
         - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
           #- image: "quay.io/accord/accord-service:develop"
