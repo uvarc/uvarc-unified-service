@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: uvarc-unified-service-celery-sync-ldap-data-task-test
+  name: uvarc-unified-service-celery-sync-ldap-data-test
 spec:
   schedule: "0 0 * * *"
   concurrencyPolicy: Forbid

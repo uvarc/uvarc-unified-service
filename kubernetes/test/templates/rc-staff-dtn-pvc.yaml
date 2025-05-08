@@ -11,7 +11,7 @@ spec:
       # This doesn't really matter for a static PV
       storage: 1Gi
   volumeMode: Filesystem
-  volumeName: uvarc-unified-service-rc-staff-dtn-cephfs-pv
+  volumeName: uvarc-unified-service-rc-staff-dtn-cephfs-pv-test
   storageClassName: csi-cephfs-sc
   selector:
     matchLabels:
