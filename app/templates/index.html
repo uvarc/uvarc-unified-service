@@ -240,9 +240,9 @@
                 const data = response[0];
                 if('status' in data) {
                   if(data.status == 'success')
-                    $('#updateResponse').html('<p style="color: green;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                    $('#message').html('<p style="color: green;font-style: italic; font-size: 15px;">' + data.message + '</p>');
                   else
-                    $('#updateResponse').html('<p style="color: red;font-style: italic; font-size: 15px;">' + data.message + '</p>');
+                    $('#message').html('<p style="color: red;font-style: italic; font-size: 15px;">' + data.message + '</p>');
                 }
             },
             error: function(xhr, status, error) {
