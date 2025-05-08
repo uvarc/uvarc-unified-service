@@ -72,11 +72,11 @@ class UVARCAdminFormInfoDataManager():
                 )
             else:
                 if tickets_info is None or len(tickets_info) == 0 or ticket_id not in tickets_info:
-                    raise Exception("Cannot process update request: Ticket id {ticket_id} not matched/found for this resource request".format(ticket_id=ticket_id))
+                    raise Exception("Cannot process update request: Ticket id {ticket_id} provided did not match/found for this resource request".format(ticket_id=ticket_id))
                 else:
                     raise Exception("Cannot process update request: Ticket id {ticket_id} provided is not the latest for this resource request".format(ticket_id=ticket_id))
         else:
-            raise Exception("Cannot process update request: Ticket id {ticket_id} not matched/found for this resource request".format(ticket_id=ticket_id))
+            raise Exception("Cannot process update request: Ticket id {ticket_id} did not match/found for this resource request".format(ticket_id=ticket_id))
 
 
 class UVARCResourcRequestFormInfoDataManager():
