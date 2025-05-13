@@ -52,7 +52,7 @@ jobs:
             ghcr.io/uvarc/${{ env.BUILD_PROJ }}:latest
 
       - name: Build and push service for main branch
-        if: github.ref != 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
           context: .
