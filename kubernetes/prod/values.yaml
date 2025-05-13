@@ -1,0 +1,4 @@
+image:
+  repository: ghcr.io/uvarc/uvarc-unified-service
+  pullPolicy: Always
+  tag: latest
