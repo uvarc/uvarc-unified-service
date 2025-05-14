@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: uvarc-unified-service-ceph-pvc-data-test
+  name: uvarc-unified-service-ceph-pvc-data-prod
   namespace: uvarc-unified-services
 spec:
   accessModes:

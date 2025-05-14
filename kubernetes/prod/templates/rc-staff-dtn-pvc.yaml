@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-test
+  name: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-prod
 spec:
   accessModes:
     - ReadWriteMany

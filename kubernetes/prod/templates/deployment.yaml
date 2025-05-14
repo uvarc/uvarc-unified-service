@@ -2,29 +2,29 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: uvarc-unified-service-test
+    app: uvarc-unified-service-prod
   name: uvarc-unified-service-deployment-test
   namespace: uvarc-unified-services
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: uvarc-unified-service-test
+      app: uvarc-unified-service-prod
   template:
     metadata:
       labels:
-        app: uvarc-unified-service-test
+        app: uvarc-unified-service-prod
     spec:
       volumes:
         - name: uvarc-unified-service-ceph-data-test
           persistentVolumeClaim:
-            claimName: uvarc-unified-service-ceph-pvc-data-test
+            claimName: uvarc-unified-service-ceph-pvc-data-prod
         - name: uvarc-unified-service-rc-staff-dtn-cephfs-data-test
           persistentVolumeClaim:
-            claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-test
+            claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-prod
       containers:
-        - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
-          name: uvarc-unified-service-test
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          name: uvarc-unified-service-prod
           imagePullPolicy: "Always"
           command:
             - /usr/bin/supervisord
@@ -44,7 +44,7 @@ spec:
               cpu: "1500m"
           envFrom:
             - configMapRef:
-                name: uvarc-unified-service-configmap-test
+                name: uvarc-unified-service-configmap-prod
           env:
             - name: JIRA_CLIENT_ID
               valueFrom:

@@ -1,7 +1,7 @@
 apiVersion: v2
 
 ################################### UPDATE NAME ###################################
-name: uvarc-unified-services-test
+name: uvarc-unified-services-prod
 ################################### UPDATE NAME ###################################
 
 description: A Helm chart for Kubernetes
