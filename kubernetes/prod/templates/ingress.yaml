@@ -11,7 +11,7 @@ metadata:
     nginx.org/proxy-connect-timeout: "600s"
     nginx.org/proxy-read-timeout: "600s"
     nginx.org/proxy-send-timeout: "600s"
-  name: uvarc-unified-service-ingress-test
+  name: uvarc-unified-service-ingress-prod
   namespace: uvarc-unified-services
 spec:
   rules:
@@ -28,4 +28,4 @@ spec:
   tls:
     - hosts:
         - uvarc-unified-service-prod.pods.uvarc.io
-      secretName: uvarc-unified-service-nginx-tls-ingress-secret-test
+      secretName: uvarc-unified-service-nginx-tls-ingress-secret-prod
