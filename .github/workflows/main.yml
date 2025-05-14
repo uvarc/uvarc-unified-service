@@ -78,7 +78,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/prod-')
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "[skip ci] Update Version to Helm - ${{ env.IMAGE_TAG }}"
+          commit_message: "[skip ci] Update Version to Helm - ${{ env.TAG_NAME }}"
           branch: main
           file_pattern: 'kubernetes/prod/values.yaml'
           commit_user_name: GitHub Actions Bot
