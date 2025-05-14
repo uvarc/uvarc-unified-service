@@ -15,17 +15,17 @@ metadata:
   namespace: uvarc-unified-services
 spec:
   rules:
-    - host: uvarc-unified-service-test.pods.uvarc.io
+    - host: uvarc-unified-service-prod.pods.uvarc.io
       http:
         paths:
           - pathType: Prefix
             path: "/"
             backend:
               service:
-                name: uvarc-unified-service-test
+                name: uvarc-unified-service-prod
                 port:
                   number: 80
   tls:
     - hosts:
-        - uvarc-unified-service-test.pods.uvarc.io
+        - uvarc-unified-service-prod.pods.uvarc.io
       secretName: uvarc-unified-service-nginx-tls-ingress-secret-test
