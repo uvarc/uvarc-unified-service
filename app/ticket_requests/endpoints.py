@@ -1,6 +1,6 @@
 # from app.resource_requests.business import UVARCAdminFormInfoDataManager
 from flask_restful import Resource
-from app import app
+from app import app,logging
 from flask import g, json, render_template, request, redirect, make_response, url_for, abort
 from flask import jsonify
 from datetime import datetime
@@ -159,6 +159,7 @@ class UVARCOfficeHoursFormEndpoint(Resource):
                 ticket_response, ticket_data = ticket_logic.create_officehour_ticket(form_data)
                 response = None
                 if not ticket_response:
+                    logging.error("Something went wrong!", exc_info=True)
                     response = make_response({"error": ticket_data}, 400)
                 else: 
                     response = make_response({"data": ticket_data}, 200) 
@@ -166,6 +167,8 @@ class UVARCOfficeHoursFormEndpoint(Resource):
                 return response
 
         except Exception as ex:
+            # add in logger that adds in stack trace [ex], so don't typecast it here
+            logging.error("Caught exception: %s", ex)
             return make_response(jsonify({"status": "error", "message": str(ex)}), 400)
         
     def options(self):
