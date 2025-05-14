@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: uvarc-unified-service-celery-sync-ldap-data-prod
+  name: uvarc-unified-service-sync-ldap-data-cronjob-prod
 spec:
   schedule: "0 0 * * *"
   concurrencyPolicy: Forbid
@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: main
-              image: ghcr.io/uvarc/uvarc-unified-service-tasks:latest
+              image: "{{ .Values.image.repository }}-tasks:{{ .Values.image.tag }}""
               imagePullPolicy: Always
               command:
                 - /bin/sh
