@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: main
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              image: ghcr.io/uvarc/uvarc-unified-service-tasks:latest
               imagePullPolicy: Always
               command:
                 - /bin/sh
