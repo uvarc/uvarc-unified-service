@@ -145,13 +145,13 @@ class LegacyRCBillingHandler:
 
     def stage_rc_all_pre_billing_files(self):
         source_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/gpfs-list"
-        destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing.csv'
+        destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing.csv'
         shutil.copyfile(source_file, destination_file)
         
     def __fetch_standard_storage_fdm_details(self):
         reverse_pop_list=[]
         header=None
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out.csv', 'r') as file:
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/rc-standard-storage-billing-feedback-hist.csv', 'r') as file:
             reader = csv.reader(file)
             header = next(reader)
             print("Header row:", header)
@@ -159,14 +159,14 @@ class LegacyRCBillingHandler:
                 reverse_pop_list.append(row)
 
         reverse_file_fp = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-reversed.csv', 'w', newline='')                
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-feedback-hist-reversed.csv', 'w', newline='')                
         reverse_writer = csv.writer(reverse_file_fp, delimiter=',', quotechar='"')
         reverse_writer.writerow(header)
         while reverse_pop_list:
             reverse_writer.writerow(reverse_pop_list.pop())
         
         share_name_fdm_lookup_dict = {}
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-reversed.csv', mode='r', encoding='utf-8') as csv_file:
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-feedback-hist-reversed.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for fdm_row in reversed(list(csv_reader)):
                 fdm_elements = fdm_row['Expense GLA'].split('>')
@@ -252,15 +252,18 @@ class LegacyRCBillingHandler:
                 ''
             ]
             # print(fdm_row)
-            share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
-            print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
-
+            if 'share_name' in fdm_row:
+                share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
+                print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
+            else:
+                print(fdm_row)
+                raise Exception('Error Occured')
         return share_name_fdm_lookup_dict
 
     def __fetch_project_storage_fdm_details(self):
         reverse_pop_list=[]
         header=None
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out.csv', 'r') as file:
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/rc-project-storage-billing-feedback-hist.csv', 'r') as file:
             reader = csv.reader(file)
             header = next(reader)
             print("Header row:", header)
@@ -268,7 +271,7 @@ class LegacyRCBillingHandler:
                 reverse_pop_list.append(row)
 
         reverse_file_fp = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out-reversed.csv', 'w', newline='')                
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-feedback-hist-reversed.csv', 'w', newline='')                
         reverse_writer = csv.writer(reverse_file_fp, delimiter=',', quotechar='"')
         reverse_writer.writerow(header)
         while reverse_pop_list:
@@ -276,7 +279,7 @@ class LegacyRCBillingHandler:
 
 
         share_name_fdm_lookup_dict = {}
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/project-share-name-out-reversed.csv', mode='r', encoding='utf-8') as csv_file:
+        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-feedback-hist-reversed.csv', mode='r', encoding='utf-8') as csv_file:
             # csv_reader = csv.DictReader(csv_file)
             # for fdm_row in reversed(list(csv_reader)):
             #     fdm_elements = fdm_row['Expense GLA'].split('>')
@@ -371,7 +374,7 @@ class LegacyRCBillingHandler:
                     PI_dict[PI].append(row)
                 else:
                     PI_dict[PI] = [row]
-        rc_standard_storage_billing_fp = open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing.csv', mode='w')
+        rc_standard_storage_billing_fp = open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing.csv', mode='w')
         rc_standard_storage_billing_fp.write("PI,Share Name,Project Name,Size\n")
         for PI in sorted(PI_dict.keys()):
             total = 0
@@ -396,9 +399,9 @@ class LegacyRCBillingHandler:
         data_row = [''] * len(header_row)
         data_row_not_found =  [''] * len(header_row_not_found)
         test_reporter_fp = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-standard-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         test_reporter_fp_not_found = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-standard-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
@@ -408,7 +411,7 @@ class LegacyRCBillingHandler:
             free_space = free_space_max
             pi_share_list = []
             pi_billing_row_list = []
-            with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing.csv', mode='r') as csv_file:
+            with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for billing_row in csv_reader:
                     # print(billing_row)
@@ -466,7 +469,7 @@ class LegacyRCBillingHandler:
 
     def __generate_gpfs_storage_pre_billing_file(self):
         source_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/gpfs-list"
-        destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing.csv'
+        destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing.csv'
         shutil.copyfile(source_file, destination_file)
 
     def generate_rc_project_storage_billing(self):
@@ -479,15 +482,15 @@ class LegacyRCBillingHandler:
         data_row = [''] * len(header_row)
         data_row_not_found =  [''] * len(header_row_not_found)
         test_reporter_fp = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-project-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         test_reporter_fp_not_found = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-project-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
             report_writer_not_found = csv.writer(test_reporter_fp_not_found, delimiter=',', quotechar='"')
             report_writer_not_found.writerow(list(header_row_not_found))
-            with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-project-storage-billing.csv', mode='r') as csv_file:
+            with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(f=csv_file, delimiter=':')
                 for billing_row in csv_reader:
                     # print(billing_row)
@@ -525,7 +528,7 @@ class LegacyRCBillingHandler:
         print('------------------------------------')
         header_row = ('Date', 'Company', 'Business Unit', 'Cost Center', 'Fund', 'Gift', 'Grant', 'Designated', 'Project', 'Program', 'Function', 'Activity', 'Assignee', 'Internal Reference', 'Location', 'Loan', 'Region', 'Override Amt', 'Owner', 'Description')
         test_reporter_fp = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/rc-ssz-paid-su-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-ssz-paid-su-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
