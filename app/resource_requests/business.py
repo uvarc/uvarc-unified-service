@@ -66,7 +66,8 @@ class UVARCAdminFormInfoDataManager():
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
                 else:
-                    raise Exception("Cannot update request status to {update_status}: The resource is not in a state to process updates".format(update_status=update_status))
+                    raise Exception("Cannot update request status to {update_status}: Based on ciurrent status of this request, this action is not allowed.".format(update_status=update_status))
+                # IntervalTasks.version_groups_info.delay()
                 uvarc_group_data_manager.set_group_info(
                     group_info_db
                 )
@@ -261,7 +262,8 @@ class UVARCResourcRequestFormInfoDataManager():
                         group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD
                     elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_instructional':
                         group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL
-
+                if 'request_processing_details' in group_info_db['resources'][resource_request_type][resource_request_id]:
+                    group_info['resources'][resource_request_type][resource_request_id]['request_processing_details'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
@@ -275,6 +277,7 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        # IntervalTasks.version_groups_info.delay()
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
@@ -291,6 +294,7 @@ class UVARCResourcRequestFormInfoDataManager():
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
         group_info_db, resource_request_id =  self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        # IntervalTasks.version_groups_info.delay()
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )

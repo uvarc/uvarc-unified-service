@@ -84,6 +84,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'ldap_requests_sync_ldap_data_task',
         'schedule': timedelta(minutes=30)
     },
+    # 'version_groups_info_task-interval': {
+    #     'task': 'version_groups_info_task',
+    #     'schedule': timedelta(seconds=30)
+    # }
 }
 
 

@@ -1,6 +1,6 @@
 import json
 from app import app, celery
-from app.core.business import UVARCGroupDataManager
+from app.core.business import UVARCGroupDataManager, UVARCGroupsDataManager
 from app.ticket_requests.business import UVARCSupportRequestsManager
 
 
@@ -47,9 +47,9 @@ class IntervalTasks:
                     group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing' if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending' else 'retiring'
                     if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
                         group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
-                    # if 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
-                    #     group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = []
-                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] + [(str(json.loads(ticket_response)['issueKey']))]
+                    if 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
+                        group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = []
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(str(json.loads(ticket_response)['issueKey']))
 
             uvarc_group_data_manager.set_group_info(
                 group_info_db
@@ -62,6 +62,17 @@ class IntervalTasks:
             print(ex)
             app.logger.exception(ex)
             raise Exception(ex)
+
+    @celery.task(name="version_groups_info_task")
+    def version_groups_info():
+        try:
+            app.logger.info("version_groups_info_task: Started")
+            UVARCGroupsDataManager().version_groups()
+            app.logger.info("version_groups_info_task: Ended")
+        except Exception as ex:
+            app.logger.info("version_groups_info_task: Failed")
+            print(ex)
+            app.logger.exception(ex)
 
     @celery.task(name="generate_and_transfer_resource_requests_billing_task")
     def generate_and_transfer_resource_requests_billing():

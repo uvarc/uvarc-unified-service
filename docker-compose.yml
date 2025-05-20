@@ -70,6 +70,7 @@ services:
       image: mongo
       restart: always
       container_name: uvarc_unified_db
+      # command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "./data/mongodb/keyfile"]
       ports:
         - 27017:27017
       networks:
