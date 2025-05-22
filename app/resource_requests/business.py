@@ -1,3 +1,4 @@
+import copy
 import json
 import bson
 import bson.json_util
@@ -48,7 +49,7 @@ class UVARCAdminFormInfoDataManager():
         group_info_db = uvarc_group_data_manager.get_group_info()
         if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type] and 'request_processing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'tickets_info' in group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']:
             tickets_info = group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']['tickets_info']
-            if tickets_info is not None and len(tickets_info) > 0 and ticket_id == tickets_info[len(tickets_info)-1]:
+            if tickets_info is not None and len(tickets_info) > 0 and ticket_id in tickets_info[len(tickets_info)-1]:
                 if group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring'] and update_status == 'active':
                     group_info_db['resources'][resource_request_type][resource_request_id]["active_date"] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]["expiry_date"] = None
@@ -62,9 +63,16 @@ class UVARCAdminFormInfoDataManager():
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
                 elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring'] and update_status == 'error':
-                    group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
-                    group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
-                    group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
+                    resource_request_hist = copy.deepcopy(group_info_db['resources'][resource_request_type][resource_request_id])
+                    resource_request_hist['update_date'] = datetime.now(timezone.utc)
+                    resource_request_hist['update_comment'] = update_comment
+                    resource_request_hist['request_status'] = update_status
+                    if tickets_info[len(tickets_info)-1][ticket_id] != None:
+                        group_info_db['resources'][resource_request_type][resource_request_id] = tickets_info[len(tickets_info)-1][ticket_id]
+                        group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']['tickets_info'].append({ticket_id: resource_request_hist})
+                    else:
+                        group_info_db['resources'][resource_request_type].pop(resource_request_id)
+
                 else:
                     raise Exception("Cannot update request status to {update_status}: Based on ciurrent status of this request, this action is not allowed.".format(update_status=update_status))
                 # IntervalTasks.version_groups_info.delay()
@@ -72,7 +80,7 @@ class UVARCAdminFormInfoDataManager():
                     group_info_db
                 )
             else:
-                if tickets_info is None or len(tickets_info) == 0 or ticket_id not in tickets_info:
+                if tickets_info is None or len(tickets_info) == 0 or ticket_id not in tickets_info[len(tickets_info)-1]:
                     raise Exception("Cannot process update request: Ticket id {ticket_id} provided did not match/found for this resource request".format(ticket_id=ticket_id))
                 else:
                     raise Exception("Cannot process update request: Ticket id {ticket_id} provided is not the latest for this resource request".format(ticket_id=ticket_id))
@@ -276,6 +284,7 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         # IntervalTasks.version_groups_info.delay()
         self.__uvarc_group_data_manager.set_group_info(
@@ -284,8 +293,9 @@ class UVARCResourcRequestFormInfoDataManager():
         IntervalTasks.process_pending_resource_request.delay(
             user_resource_request_info['group_name'],
             request_type, 
-            resource_request_type, 
-            'Rivanna'
+            resource_request_type,
+            'Rivanna',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
 
     def update_user_resource_su_request_info(self, user_resource_request_info):
@@ -293,6 +303,7 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id =  self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         # IntervalTasks.version_groups_info.delay()
         self.__uvarc_group_data_manager.set_group_info(
@@ -302,12 +313,14 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_request_info['group_name'],
             request_type, 
             resource_request_type, 
-            'Rivanna'
+            'Rivanna',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
 
     def retire_user_resource_su_request_info(self, group_name, resource_request_type, resource_request_id):
         self.__uvarc_group_data_manager = UVARCGroupDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         # if self.__uid == group_info_db['pi_uid']: or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
         if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
@@ -327,7 +340,8 @@ class UVARCResourcRequestFormInfoDataManager():
             group_name,
             'DELETE',
             resource_request_type,
-            'Rivanna'
+            'Rivanna',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
 
     def create_user_resource_storage_request_info(self, user_resource_request_info):
@@ -336,6 +350,7 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
@@ -344,7 +359,8 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_request_info['group_name'],
             request_type, 
             resource_request_type, 
-            'Storage'
+            'Storage',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
 
     def update_user_resource_storage_request_info(self, user_resource_request_info):
@@ -352,6 +368,7 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
@@ -360,12 +377,14 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_request_info['group_name'],
             request_type,
             resource_request_type,
-            'Storage'
+            'Storage',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
 
     def retire_user_resource_storage_request_info(self, group_name, resource_request_type, resource_request_id):
         self.__uvarc_group_data_manager = UVARCGroupDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         # if self.__uid == group_info_db['pi_uid'] or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
         if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
@@ -385,7 +404,8 @@ class UVARCResourcRequestFormInfoDataManager():
             group_name,
             'DELETE',
             resource_request_type,
-            'Storage'
+            'Storage',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
 
 

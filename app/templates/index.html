@@ -128,11 +128,11 @@
             <label for="resource_name">Resource Name:</label>
             <input type="text" id="resource_name" name="resource_name" value="{{ resource_name }}" required><br>
 
-            <label for="update_status">Update Status:</label>
+            <label for="update_status">Action to be taken:</label>
             <select id="update_status" name="update_status" required>
-                <option value="active">Active</option>
-                <option value="retired">Retired</option>
-                <option value="error">Error</option>
+                <option value="active">Activate</option>
+                <option value="retired">Retire</option>
+                <option value="error">Revert (Revert to previous state)</option>
             </select><br><br>
 
             <label for="group_name">Update Comment:</label>

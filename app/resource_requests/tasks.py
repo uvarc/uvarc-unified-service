@@ -6,7 +6,7 @@ from app.ticket_requests.business import UVARCSupportRequestsManager
 
 class IntervalTasks:
     @celery.task(name="process_pending_resource_request_task", autoretry_for=(Exception,), retry_backoff=60, retry_jitter=True, retry_kwargs={'max_retries': 5, 'countdown': 5})
-    def process_pending_resource_request(group_name, request_type, resource_request_type, support_request_type):
+    def process_pending_resource_request(group_name, request_type, resource_request_type, support_request_type, resource_request_hist):
         try:
             # Read, download files (if for preprocessing) and mark for scheduled preprocessing or processing in mongodb
             ticket_request_type = ''
@@ -49,7 +49,7 @@ class IntervalTasks:
                         group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
                     if 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
                         group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = []
-                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append(str(json.loads(ticket_response)['issueKey']))
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append({str(json.loads(ticket_response)['issueKey']): resource_request_hist})
 
             uvarc_group_data_manager.set_group_info(
                 group_info_db
