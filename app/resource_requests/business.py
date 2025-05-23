@@ -174,7 +174,7 @@ class UVARCResourcRequestFormInfoDataManager():
                 if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
                     raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
                 elif 'billing_details' not in group_info['resources'][resource_request_type][group_info['group_name']] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details'] or len(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['fdm_billing_info']) == 0:
-                    raise Exception('Cannot process the new resource request: FDM billing details are required but missing')
+                    raise Exception('Cannot process the new resource request: FDM billing details are required but missing for the paid tier resource request')
                 elif 'request_size' not in group_info['resources'][resource_request_type][group_info['group_name']]:
                     raise Exception('Cannot process the new resource request: request_size is missing')
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
@@ -209,7 +209,7 @@ class UVARCResourcRequestFormInfoDataManager():
                         if group_info['resources'][resource_request_type][resource_request_id]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
                             raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
                         elif 'billing_details' not in group_info['resources'][resource_request_type][resource_request_id] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][resource_request_id]['billing_details'] or len(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info']) == 0:
-                            raise Exception('Cannot process the update resource request: FDM billing details are required but missing')
+                            raise Exception('Cannot process the update resource request: FDM billing details are required but missing for the paid tier resource request')
                         elif 'request_size' not in group_info['resources'][resource_request_type][resource_request_id]:
                             raise Exception('Cannot process the new resource request: request_size is missing')
                     if 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details']:
