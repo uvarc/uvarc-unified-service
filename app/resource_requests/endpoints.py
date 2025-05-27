@@ -134,7 +134,6 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 response
             )
 
-
     def options(self, uid=None):
         """
         This is a resource request form endpoint that returns all data required for display and processing the form request!'

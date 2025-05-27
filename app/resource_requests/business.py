@@ -9,7 +9,7 @@ import requests
 from app import app
 from app.core.business import UVARCUserDataManager, UVARCGroupDataManager
 from common_service_handlers.workday_service_handler import WorkdayServiceHandler
-from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL, RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
+from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL, RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
 
 
 class UVARCAdminFormInfoDataManager():
@@ -155,6 +155,16 @@ class UVARCResourcRequestFormInfoDataManager():
             raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource reuest'.format(self.__uid))
         return True
 
+    def __get_pi_total_free_resource_distribution(self, resource_request_type, tier, pi_uid):
+        user_resource_request_info = UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()
+        free_resource_distribution_specified_count = 0
+        for group_info in user_resource_request_info['user_resources']:
+            if 'resources' in group_info and resource_request_type in group_info['resources'] and group_info['resources'][resource_request_type] is not None and len(group_info['resources'][resource_request_type]) > 0:
+                for resource_name in group_info['resources'][resource_request_type]:
+                    if 'tier' in group_info['resources'][resource_request_type][resource_name] and tier == group_info['resources'][resource_request_type][resource_name]['tier'] and 'billing_details' in group_info['resources'][resource_request_type][resource_name] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][resource_name]['billing_details'] and pi_uid in group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info']:
+                        free_resource_distribution_specified_count = free_resource_distribution_specified_count + int(group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info'][pi_uid])
+        return free_resource_distribution_specified_count
+
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
         self.__validate_user_resource_request_authorization(group_info_db, group_info['pi_uid'])
         if group_info['data_agreement_signed'] is False:
@@ -177,6 +187,12 @@ class UVARCResourcRequestFormInfoDataManager():
                     raise Exception('Cannot process the new resource request: FDM billing details are required but missing for the paid tier resource request')
                 elif 'request_size' not in group_info['resources'][resource_request_type][group_info['group_name']]:
                     raise Exception('Cannot process the new resource request: request_size is missing')
+                elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_standard' and 'billing_details' in group_info['resources'][resource_request_type][group_info['group_name']] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details'] and group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info'] is not None and len(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info']) > 0:
+                    for pi_uid in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info']:
+                        pi_total_free_resource_distribution = self.__get_pi_total_free_resource_distribution(resource_request_type, group_info['resources'][resource_request_type][group_info['group_name']]['tier'], pi_uid)
+                        increase_ammt = int(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info'][pi_uid])
+                        if (int(pi_total_free_resource_distribution) + increase_ammt) > RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD:
+                            raise Exception('Cannot process the new resource request: Requested free storage exceeds maximum free storage available ({balance_free_storage} TB) for the PI ({pi_uid}) for this resource'.format(balance_free_storage=(RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD-pi_total_free_resource_distribution_current_usage), pi_uid=pi_uid))
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 if len(group_info_db['resources'][resource_request_type]) > 0 and resource_request_id in group_info_db['resources'][resource_request_type]:
@@ -212,6 +228,15 @@ class UVARCResourcRequestFormInfoDataManager():
                             raise Exception('Cannot process the update resource request: FDM billing details are required but missing for the paid tier resource request')
                         elif 'request_size' not in group_info['resources'][resource_request_type][resource_request_id]:
                             raise Exception('Cannot process the new resource request: request_size is missing')
+                        elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard' and 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details'] and group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'] is not None and len(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']) > 0:
+                            for pi_uid in group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']:
+                                pi_total_free_resource_distribution_current_usage = 0
+                                pi_total_free_resource_distribution = self.__get_pi_total_free_resource_distribution(resource_request_type, group_info['resources'][resource_request_type][resource_request_id]['tier'],pi_uid)
+                                increase_ammt = int(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'][pi_uid])
+                                if group_info_db['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard' and 'billing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'free_resource_distribution_info' in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details'] and group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'] is not None and len(group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']) > 0 and pi_uid in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']:
+                                    pi_total_free_resource_distribution_current_usage = pi_total_free_resource_distribution - int(group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'][pi_uid])
+                                if (int(pi_total_free_resource_distribution_current_usage) + increase_ammt) > RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD:
+                                    raise Exception('Cannot process the new resource request: Requested free storage exceeds maximum free storage available ({balance_free_storage} TB) for the PI ({pi_uid}) for this resource'.format(balance_free_storage=(RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD-pi_total_free_resource_distribution_current_usage), pi_uid=pi_uid))
                     if 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details']:
                         fdm_tags_str_db_list = []
                         if 'billing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']:
