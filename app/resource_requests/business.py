@@ -163,7 +163,10 @@ class UVARCResourcRequestFormInfoDataManager():
                 if 'resources' in group_info and resource_request_type in group_info['resources'] and group_info['resources'][resource_request_type] is not None and len(group_info['resources'][resource_request_type]) > 0:
                     for resource_name in group_info['resources'][resource_request_type]:
                         if 'tier' in group_info['resources'][resource_request_type][resource_name] and tier == group_info['resources'][resource_request_type][resource_name]['tier'] and 'billing_details' in group_info['resources'][resource_request_type][resource_name] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][resource_name]['billing_details'] and pi_uid in group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info']:
-                            free_resource_distribution_specified_count = free_resource_distribution_specified_count + int(group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info'][pi_uid])
+                            if group_info['resources'][resource_request_type][resource_name]['status'] == 'active':
+                                free_resource_distribution_specified_count = free_resource_distribution_specified_count + int(group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info'][pi_uid])
+                            elif group_info['resources'][resource_request_type][resource_name]['status'] != 'retired':
+                                raise Exception('Please contact UVARC admin: Cannot validate free resource distribution info for PI ({pi_uid}) when resource ({resource_name}) request is in "{status}" state'.format(pi_uid=pi_uid, resource_name=resource_name, status=group_info['resources'][resource_request_type][resource_name]['status']))
         return free_resource_distribution_specified_count
 
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
