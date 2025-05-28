@@ -194,7 +194,7 @@ class UVARCResourcRequestFormInfoDataManager():
                             pi_total_free_resource_distribution = self.__get_pi_total_free_resource_distribution(resource_request_type, group_info['resources'][resource_request_type][group_info['group_name']]['tier'], pi_uid)
                             increase_ammt = int(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info'][pi_uid])
                             if (int(pi_total_free_resource_distribution) + increase_ammt) > RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD:
-                                raise Exception('Cannot process the new resource request: Requested free storage exceeds maximum free storage available ({balance_free_storage} TB) for the PI ({pi_uid}) for this resource'.format(balance_free_storage=(RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD-pi_total_free_resource_distribution_current_usage), pi_uid=pi_uid))
+                                raise Exception('Cannot process the new resource request: Requested free storage exceeds maximum free storage available ({balance_free_storage} TB) for the PI ({pi_uid}) for this resource'.format(balance_free_storage=(RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD-pi_total_free_resource_distribution), pi_uid=pi_uid))
                         else:
                             raise Exception('Cannot process the new resource request: You are not not PI on this project to set free resource distribution for this resource')
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
