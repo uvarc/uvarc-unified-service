@@ -51,7 +51,12 @@
         font-size: 14px;
         box-sizing: border-box;
     }
-
+    
+    .button-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
 
     button {
         background-color: #5c6bc0;
@@ -62,6 +67,10 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 16px;
+    }
+    .cancel-button {
+        background-color: #e0e0e0;
+        color: #333;
     }
     .message-container {
         text-align: center;
@@ -89,10 +98,13 @@
         <div id="response" style = "margin:10px"></div>
             <form id="search_form">
                 <label for="group_name">Group Name:</label>
-                <input type="text" id="group_name" name="group_name" required>
-                <button type="submit">Search</button>
+                <input type="text" id="group_name" name="group_name" required><br />
+                <div class="button-row">
+                    <button type="submit" class="submit-button">Search</button>
+                    <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
+                </div>
             </form>
-    </div>
+   </div>
 
     <div id="form2" class="tab-content" style="display:none;">
         <h2>Update Group Owner UID</h2>
@@ -102,9 +114,11 @@
             <input type="text" id="group_name_update" name="group_name" required>
             
             <label for="owner_uid">Owner UID:</label>
-            <input type="text" id="owner_uid" name="owner_uid" required>
-            
-            <button type="submit">Submit</button>
+            <input type="text" id="owner_uid" name="owner_uid" required> <br/>
+            <div class="button-row">
+                <button type="submit">Submit</button>
+                <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
+            </div>
         </form>
     </div>
     <div id="form3" class="tab-content" style="display:none;">
@@ -131,15 +145,17 @@
             <label for="update_status">Action to be taken:</label>
             <select id="update_status" name="update_status" required>
                 <option value="active">Activate/Approve Change</option>
-                <option value="retired">Retire</option>
+                <option value="retired" id="retire_option">Retire</option>
                 <option value="error">Revert (Revert to previous state)</option>
             </select><br><br>
 
             <label for="group_name">Update Comment:</label>
             <input type="text" id="update_comment" name="update_comment" value="{{ update_comment }}" required><br>
-
-            <button type="submit">Submit</button>
-       </form>
+            <div class="button-row">
+                <button type="submit">Submit</button>
+                <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
+            </div>
+        </form>
 
     </div>
    
@@ -150,6 +166,13 @@
     $(document).ready(function() {
         showForm(0);  // This will make the first tab default
     });
+
+    function cancelAndReset() {
+        const activeForm = document.querySelector('.tab-content[style*="display: block"] form');
+        if (activeForm) {
+            activeForm.reset(); // Reset the form fields
+        }
+    }
 
     function showForm(tabIndex) {
         // Hide all forms
@@ -250,6 +273,25 @@
             }
         });
     });
+
+    const resourceType = document.getElementById("resource_type");
+    const retireOption = document.getElementById("retire_option");
+
+    function toggleRetireOption() {
+        if (resourceType.value === "hpc_service_units") {
+            retireOption.style.display = "none";
+            if (retireOption.selected) {
+                document.getElementById("update_status").selectedIndex = 0; // Reset to first option
+            }
+        } else {
+            retireOption.style.display = "block";
+        }
+    }
+
+    resourceType.addEventListener("change", toggleRetireOption);
+
+    // Call it once on page load to initialize the state
+    window.addEventListener("DOMContentLoaded", toggleRetireOption);
 
 </script>
 
