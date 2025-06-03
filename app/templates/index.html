@@ -193,6 +193,9 @@
         if (activeForm) {
             activeForm.reset();
         }
+        if (tabIndex === 2) {
+            toggleRetireOption();
+        }
     }
 
     $('#search_form').submit(function(event) {
