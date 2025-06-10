@@ -1,3 +1,4 @@
+import re
 import boto3
 import csv
 import json
@@ -168,7 +169,7 @@ class LegacyRCBillingHandler:
         share_name_fdm_lookup_dict = {}
         with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-feedback-hist-reversed.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
-            for fdm_row in reversed(list(csv_reader)):
+            for fdm_row in csv_reader:
                 fdm_elements = fdm_row['Expense GLA'].split('>')
                 # print(fdm_row)
                 for index, raw_fdm_item in enumerate(fdm_elements):
@@ -208,15 +209,16 @@ class LegacyRCBillingHandler:
                 if ',' in share_name:
                     share_name = share_name.split(',')[0]
                 # print('{} : {}'.format(share_name, fdm_row['Charge Description']))
-
-                share_name_fdm_lookup_dict[share_name.strip().lower()] = fdm_elements
+                if 'Lukens_Data_Storage' in fdm_row['Charge Description']:
+                    print('{} : {}'.format(share_name, fdm_row['Charge Description']))
+                share_name_fdm_lookup_dict[re.sub(r'[^\x20-\x7E]', '', share_name.strip().lower())] = fdm_elements
                 # print(share_name_fdm_lookup_dict[share_name]
 
         with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing-not-found.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for fdm_row in list(csv_reader):
                 if fdm_row['Cost Center'] != '':
-                    share_name_fdm_lookup_dict[fdm_row['Share Name'].strip().lower()] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+                    share_name_fdm_lookup_dict[re.sub(r'[^\x20-\x7E]', '', fdm_row['Share Name'].strip().lower())] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
 
         # with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-new.csv', mode='r', encoding='utf-8') as csv_file:
         #     csv_reader = csv.DictReader(csv_file)
@@ -401,7 +403,7 @@ class LegacyRCBillingHandler:
         test_reporter_fp = open(
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         test_reporter_fp_not_found = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-not-found-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
@@ -484,7 +486,7 @@ class LegacyRCBillingHandler:
         test_reporter_fp = open(
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         test_reporter_fp_not_found = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-not-found'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing--'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
