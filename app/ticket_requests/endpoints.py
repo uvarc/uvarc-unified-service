@@ -205,6 +205,13 @@ class AdminPagesEndPoint(Resource):
         return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
 
 
+class AdminPagesEndPointWithTabId(Resource):
+    def get(self, tab_index=0):
+        return make_response(render_template('index.html', 
+                                             logo_url=app.config['RC_SMALL_LOGO_URL'],
+                                             tab_index=tab_index))
+
+
 class SendMesaageEndPoint(Resource):
     def post(self):
         data = request.get_json()
