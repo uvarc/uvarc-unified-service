@@ -145,12 +145,4 @@ class UVARCWorkshopSurveyDataManager:
             lambda x: [y for y in re.split(r',(?!\s)', x) if y.strip()]
         )
 
-        # write all surveys to mongo. if survey id already exists, update it with new data
-        for survey in survey_data.to_dict(orient='records'):
-            mongo_service.db.workshop_survey.update_one(
-                filter={'ResponseId': survey['ResponseId']},
-                update={'$set': survey},
-                upsert=True
-            )
-
         return survey_data.to_dict(orient='records')
