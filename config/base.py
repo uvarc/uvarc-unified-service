@@ -110,6 +110,28 @@ JIRA_CONN_INFO = {
     'PASSWORD': settings_info['JIRA']['CLIENT_SECRET']
 }
 
+QUALTRICS_CONN_INFO = {
+    'HOST': settings_info['QUALTRICS']['HOST'],
+    'PORT': settings_info['QUALTRICS']['PORT'],
+    'API_TOKEN': settings_info['QUALTRICS']['API_TOKEN']
+}
+
+LIBCAL_CONN_INFO = {
+    'LIBCAL_API_URL': settings_info['LIBCAL']['LIBCAL_API_URL'],
+    'HSL_API_URL': settings_info['LIBCAL']['HSL_API_URL'],
+    'LIBCAL_CLIENT_ID': settings_info['LIBCAL']['LIBCAL_CLIENT_ID'],
+    'LIBCAL_CLIENT_SECRET': settings_info['LIBCAL']['LIBCAL_CLIENT_SECRET'],
+    'HSL_CLIENT_ID': settings_info['LIBCAL']['HSL_CLIENT_ID'],
+    'HSL_CLIENT_SECRET': settings_info['LIBCAL']['HSL_CLIENT_SECRET']
+}
+
+WORKSHOP_SURVEY_ID = 'SV_6PDQmrw5AbCrVR4'
+LIBCAL_CATEGORY_ID = 58855
+GENERAL_CATEGORY_ID = 51597
+HSL_CATEGORY_ID = 29780
+HSL_CAL_ID = 5619
+RDS_CAL_ID = 4299
+
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 
 JIRA_PROJECTS = ('RIVANNA', 'IVY', 'GENERAL_SUPPORT',
