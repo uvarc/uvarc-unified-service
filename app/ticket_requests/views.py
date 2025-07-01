@@ -17,7 +17,7 @@ endpoints = [
     (UVARCOfficeHoursFormEndpoint, '/officehours/create_ticket'),
     (AdminPagesEndPoint, '/admin/mgmt'),
     (AdminPagesEndPointWithTabId, '/admin/mgmt/<int:tab_index>'),
-    (GroupClaimEndPoint, '/PI/claim-group')
+    (GroupClaimEndPoint, '/pi/claim-group')
 ]
 
 
