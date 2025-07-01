@@ -212,25 +212,6 @@ class AdminPagesEndPointWithTabId(Resource):
                                              tab_index=tab_index))
 
 
-class SendMesaageEndPoint(Resource):
-    def post(self):
-        data = request.get_json()
-        try:
-            response = UVARCSupportRequestsManager().set_queue_message(data)
-            return {'message': 'Message sent to queue successfully!', 'MessageId': response['MessageId']}, 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-
-class ReceiveMesaageEndPoint(Resource):
-    def get(self):
-        try:
-            response = UVARCSupportRequestsManager().receive_message()
-            return response
-        except Exception as e:
-            return make_response(jsonify({"error": str(e)}), 500)
-
-
 class GroupClaimEndPoint(Resource):
     def post(self):
         uid = request.args.get('uid')
