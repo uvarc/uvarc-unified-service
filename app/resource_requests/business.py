@@ -94,15 +94,19 @@ class UVARCResourcRequestFormInfoDataManager():
 
     def get_user_resource_request_info(self):
         self.__uvarc_user_data_manager = UVARCUserDataManager(uid=self.__uid, upsert=True, refresh=True)
-        
+
         print(self.__uvarc_user_data_manager.get_user_groups_info())
 
         return {
             'is_user_admin':  True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else False,
             'is_user_resource_request_elligible': True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
-            'user_groups': self.__uvarc_user_data_manager.get_owner_groups_info(),
+            'owner_groups': self.__uvarc_user_data_manager.get_owner_groups_info(),
             'user_resources': self.__transfer_db_data_to_user_resource_request_info(list(self.__uvarc_user_data_manager.get_user_resources_info()))
         }
+
+    def get_user_groups_info(self):
+        self.__uvarc_user_data_manager = UVARCUserDataManager(uid=self.__uid, upsert=True, refresh=True)
+        return self.__uvarc_user_data_manager.get_user_groups_info()
 
     def __transfer_db_data_to_user_resource_request_info(self, user_resources_info):
         for user_resource_info in user_resources_info:
@@ -392,8 +396,8 @@ class UVARCResourcRequestFormInfoDataManager():
         )
         IntervalTasks.process_pending_resource_request.delay(
             user_resource_request_info['group_name'],
-            request_type, 
-            resource_request_type, 
+            request_type,
+            resource_request_type,
             'Storage',
             resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
         )
