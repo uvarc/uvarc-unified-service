@@ -27,6 +27,12 @@ def fetch_connections_info():
             settings["LDAP_PRIVATE"]['CLIENT_SECRET'] = os.environ['LDAP_PRIVATE_CLIENT_SECRET']
             settings["HPC_API"]['CLIENT_ID'] = os.environ['HPC_API_CLIENT_ID']
             settings["HPC_API"]['CLIENT_SECRET'] = os.environ['HPC_API_CLIENT_SECRET']
+            settings["QUALTRICS"]['CLIENT_ID'] = os.environ['QUALTRICS_CLIENT_ID']
+            settings["QUALTRICS"]['CLIENT_SECRET'] = os.environ['QUALTRICS_CLIENT_SECRET']
+            settings["LIBCAL"]['CLIENT_ID'] = os.environ['LIBCAL_CLIENT_ID']
+            settings["LIBCAL"]['CLIENT_SECRET'] = os.environ['LIBCAL_CLIENT_SECRET']
+            settings["HSL_API"]['CLIENT_ID'] = os.environ['HSL_API_CLIENT_ID']
+            settings["HSL_API"]['CLIENT_SECRET'] = os.environ['HSL_API_CLIENT_SECRET']
         except Exception as ex:
             print('REQUIRED CREDENTIAL MISSING FROm THE ENV: {}'.format(str(ex)))
             raise ex

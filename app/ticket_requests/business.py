@@ -134,6 +134,36 @@ class UVARCSupportRequestsManager:
                     key, value)])
         return desc_str
 
+    def create_group_claim_request(self, data):
+        group = data.get('group')
+        uid = data.get('uid')
+        request_type = 'General'
+        jira_service_handler = JiraServiceHandler(app)
+        is_rc_project = True
+        claim_url = "https://uvarc-unified-service-test.pods.uvarc.io/uvarc/api/ticket/admin/mgmt/1?group_name=%s&owner_uid=%s" % (
+                 group, uid)
+        project_ticket_route =\
+                app.config['JIRA_CATEGORY_PROJECT_ROUTE_DICT'][
+                    request_type]
+        desc_str = (
+                   "User : %s\n"
+                   "Group : %s\n"
+                   "Please click the link below to claim the group and submit\n"
+                   "%s\n"
+                   ) % (uid, group, claim_url)
+
+        ticket_response = jira_service_handler.create_new_ticket(
+                reporter=uid,
+                project_name=project_ticket_route[0],
+                request_type=project_ticket_route[1],
+                summary='RC Resource Request: PI Group Claim',
+                desc=desc_str,
+                is_rc_project=is_rc_project
+        )
+
+        app.logger.info(ticket_response)
+        print('Ticket Response: ' + str(ticket_response))
+        return ticket_response
 
     # def set_queue_message(self, data):
     #     aws_service = AWSServiceHandler(app)

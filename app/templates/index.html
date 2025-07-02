@@ -51,7 +51,12 @@
         font-size: 14px;
         box-sizing: border-box;
     }
-
+    
+    .button-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
 
     button {
         background-color: #5c6bc0;
@@ -62,6 +67,10 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 16px;
+    }
+    .cancel-button {
+        background-color: #e0e0e0;
+        color: #333;
     }
     .message-container {
         text-align: center;
@@ -89,22 +98,27 @@
         <div id="response" style = "margin:10px"></div>
             <form id="search_form">
                 <label for="group_name">Group Name:</label>
-                <input type="text" id="group_name" name="group_name" required>
-                <button type="submit">Search</button>
+                <input type="text" id="group_name_search" name="group_name_search" required><br />
+                <div class="button-row">
+                    <button type="submit" class="submit-button">Search</button>
+                    <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
+                </div>
             </form>
-    </div>
+   </div>
 
     <div id="form2" class="tab-content" style="display:none;">
         <h2>Update Group Owner UID</h2>
         <div id="updateResponse" style = "margin:10px"></div>
         <form id="update_uid_form">
             <label for="group_name">Group Name:</label>
-            <input type="text" id="group_name_update" name="group_name" required>
+            <input type="text" id="group_name_update" name="group_name_update" required>
             
             <label for="owner_uid">Owner UID:</label>
-            <input type="text" id="owner_uid" name="owner_uid" required>
-            
-            <button type="submit">Submit</button>
+            <input type="text" id="owner_uid" name="owner_uid" required> <br/>
+            <div class="button-row">
+                <button type="submit">Submit</button>
+                <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
+            </div>
         </form>
     </div>
     <div id="form3" class="tab-content" style="display:none;">
@@ -117,7 +131,7 @@
             <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" required><br>
 
             <label for="group_name">Group Name:</label>
-            <input type="text" id="group_name" name="group_name" value="{{ group_name }}" required><br>
+            <input type="text" id="group_name_status" name="group_name_status" value="{{ group_name }}" required><br>
 
             <label for="resource_type">Resource Type:</label>
             <select id="resource_type" name="resource_type" required>
@@ -131,15 +145,17 @@
             <label for="update_status">Action to be taken:</label>
             <select id="update_status" name="update_status" required>
                 <option value="active">Activate/Approve Change</option>
-                <option value="retired">Retire</option>
+                <option value="retired" id="retire_option">Retire</option>
                 <option value="error">Revert (Revert to previous state)</option>
             </select><br><br>
 
-            <label for="group_name">Update Comment:</label>
+            <label for="comment">Update Comment:</label>
             <input type="text" id="update_comment" name="update_comment" value="{{ update_comment }}" required><br>
-
-            <button type="submit">Submit</button>
-       </form>
+            <div class="button-row">
+                <button type="submit">Submit</button>
+                <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
+            </div>
+        </form>
 
     </div>
    
@@ -148,10 +164,36 @@
 
 <script>
     $(document).ready(function() {
-        showForm(0);  // This will make the first tab default
+        const tabIndex = getTabIndexFromPath();
+        showForm(tabIndex);
     });
+    
+    function getTabIndexFromPath() {
+        const pathSegments = window.location.pathname.split('/');
+        const lastSegment = pathSegments[pathSegments.length - 1];
+        const tabIndex = parseInt(lastSegment);
+        return isNaN(tabIndex) ? 0 : tabIndex;
+    }
+
+    function getUrlParams() {
+        const params = {};
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        for (const [key, value] of urlParams.entries()) {
+            params[key] = decodeURIComponent(value);
+        }
+        return params;
+    }
+    
+    function cancelAndReset() {
+        const activeForm = document.querySelector('.tab-content[style*="display: block"] form');
+        if (activeForm) {
+            activeForm.reset(); // Reset the form fields
+        }
+    }
 
     function showForm(tabIndex) {
+        const params = getUrlParams();
         // Hide all forms
         const forms = document.querySelectorAll('.tab-content');
         forms.forEach((form, index) => {
@@ -169,6 +211,42 @@
         const activeForm = forms[tabIndex].querySelector('form');
         if (activeForm) {
             activeForm.reset();
+        }
+        // Populate fields based on tab
+    if (tabIndex === 0 && params.group_name) {
+        document.getElementById('group_name_search').value = params.group_name;
+    }
+    if (tabIndex === 1) {
+        if (params.group_name) {
+            document.getElementById('group_name_update').value = params.group_name;
+        }
+        if (params.owner_uid) {
+            document.getElementById('owner_uid').value = params.owner_uid;
+        }
+    }
+    if (tabIndex === 2) {
+        if (params.group_name) {
+            document.getElementById('group_name_status').value = params.group_name;
+        }
+        if (params.ticket_id) {
+            document.getElementById('ticket_id').value = params.ticket_id;
+        }
+        if (params.resource_type) {
+            document.getElementById('resource_type').value = params.resource_type;
+        }
+        if (params.resource_name) {
+            document.getElementById('resource_name').value = params.resource_name;
+        }
+        if (params.update_status) {
+            document.getElementById('update_status').value = params.update_status;
+        }
+        if (params.update_comment) {
+            document.getElementById('update_comment').value = params.update_comment;
+        }
+    }
+
+        if (tabIndex === 2) {
+            toggleRetireOption();
         }
     }
 
@@ -250,6 +328,25 @@
             }
         });
     });
+
+    const resourceType = document.getElementById("resource_type");
+    const retireOption = document.getElementById("retire_option");
+
+    function toggleRetireOption() {
+        if (resourceType.value === "hpc_service_units") {
+            retireOption.style.display = "none";
+            if (retireOption.selected) {
+                document.getElementById("update_status").selectedIndex = 0; // Reset to first option
+            }
+        } else {
+            retireOption.style.display = "block";
+        }
+    }
+
+    resourceType.addEventListener("change", toggleRetireOption);
+
+    // Call it once on page load to initialize the state
+    window.addEventListener("DOMContentLoaded", toggleRetireOption);
 
 </script>
 

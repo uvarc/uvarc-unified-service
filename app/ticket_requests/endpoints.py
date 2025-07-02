@@ -205,24 +205,37 @@ class AdminPagesEndPoint(Resource):
         return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
 
 
-class SendMesaageEndPoint(Resource):
+class AdminPagesEndPointWithTabId(Resource):
+    def get(self, tab_index=0):
+        return make_response(render_template('index.html', 
+                                             logo_url=app.config['RC_SMALL_LOGO_URL'],
+                                             tab_index=tab_index))
+
+
+class GroupClaimEndPoint(Resource):
     def post(self):
-        data = request.get_json()
+        uid = request.args.get('uid')
+        group = request.args.get('group')
+        
+        data = {'uid': uid, 'group': group}
+        if not data or 'group' not in data or 'uid' not in data:
+            return {"error": "Missing required fields: 'group' and 'uid'"}, 400
+
         try:
-            response = UVARCSupportRequestsManager().set_queue_message(data)
-            return {'message': 'Message sent to queue successfully!', 'MessageId': response['MessageId']}, 200
+            response = UVARCSupportRequestsManager().create_group_claim_request(data)
+            
+            if isinstance(response, str):
+                response = json.loads(response)
+
+            return make_response(jsonify(
+                {
+                    'status': '200 OK',
+                    'ticket_id': response['issueKey'],
+                    'message': 'Group claim request successfully submitted'
+                }
+            ), 200)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-
-
-class ReceiveMesaageEndPoint(Resource):
-    def get(self):
-        try:
-            response = UVARCSupportRequestsManager().receive_message()
-            return response
-        except Exception as e:
-            return make_response(jsonify({"error": str(e)}), 500)
-
 
 # class GetLDAPUserInfoEndpoint(Resource):
 #     def get(self):
