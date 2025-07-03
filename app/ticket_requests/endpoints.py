@@ -223,8 +223,8 @@ class GroupClaimEndPoint(Resource):
                 group_name = request_payload.get('group_name')
                 support_request_type = 'General'
                 ticket_request_payload = {
-                    'uid': uid if uid is not None and uid is not '' else make_response(jsonify({"status": "error", "message": "Cannot process the PI's claim request: UserID is required"}), 400),
-                    'grpup_name':  group_name if group_name is not None and group_name is not '' else make_response(jsonify({"status": "error", "message": "Cannot process the claim request: Group Name is required"}), 400),
+                    'uid': uid if uid is not None and uid != '' else make_response(jsonify({"status": "error", "message": "Cannot process the PI's claim request: UserID is required"}), 400),
+                    'grpup_name':  group_name if group_name is not None and group_name != '' else make_response(jsonify({"status": "error", "message": "Cannot process the claim request: Group Name is required"}), 400),
                     'request_type': 'PI Group Claim',
                     'claim_approval_url': "{host_url}uvarc/api/ticket/admin/mgmt/1?group_name={group_name}&owner_uid={uid}".format(host_url=request.host_url, group_name=group_name, uid=uid),
                 }
