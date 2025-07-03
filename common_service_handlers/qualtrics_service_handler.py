@@ -11,7 +11,7 @@ class QualtricsServiceHandler:
         return 'https://{}:{}/API/v3/'.format(
             app.config['QUALTRICS_CONN_INFO']['HOST'],
             app.config['QUALTRICS_CONN_INFO']['PORT']
-        ), app.config['QUALTRICS_CONN_INFO']['API_TOKEN']
+        ), app.config['QUALTRICS_CONN_INFO']['PASSWORD']
 
     def get_survey(self, survey_id):
         try:

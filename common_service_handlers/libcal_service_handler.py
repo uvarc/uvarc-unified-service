@@ -79,8 +79,8 @@ event_fields = [
 class LibcalServiceHandler:
     def __init__(self, app):
         self.app = app
-        self.libcal_url = app.config["LIBCAL_CONN_INFO"]["LIBCAL_API_URL"]
-        self.hsl_url = app.config["LIBCAL_CONN_INFO"]["HSL_API_URL"]
+        self.libcal_url = self.__get_host_info("LIBCAL_CONN_INFO")
+        self.hsl_url = self.__get_host_info("HSL_API_CONN_INFO")
         self.libcal_category_id = app.config["LIBCAL_CATEGORY_ID"]
         self.general_category_id = app.config["GENERAL_CATEGORY_ID"]
         self.hsl_category_id = app.config["HSL_CATEGORY_ID"]
@@ -100,16 +100,21 @@ class LibcalServiceHandler:
 
         self.refresh_tokens()
 
+    def __get_host_info(self, info_field):
+        return 'https://{}:{}/1.1/'.format(
+            self.app.config[info_field]["HOST"],
+            self.app.config[info_field]["PORT"]
+        )
     
     def refresh_tokens(self):
         client_ids = {
-            "libcal": self.app.config["LIBCAL_CONN_INFO"]["LIBCAL_CLIENT_ID"],
-            "hsl": self.app.config["LIBCAL_CONN_INFO"]["HSL_CLIENT_ID"]
+            "libcal": self.app.config["LIBCAL_CONN_INFO"]["CLIENT_ID"],
+            "hsl": self.app.config["HSL_API_CONN_INFO"]["CLIENT_ID"]
         }
 
         client_secrets = {
-            "libcal": self.app.config["LIBCAL_CONN_INFO"]["LIBCAL_CLIENT_SECRET"],
-            "hsl": self.app.config["LIBCAL_CONN_INFO"]["HSL_CLIENT_SECRET"]
+            "libcal": self.app.config["LIBCAL_CONN_INFO"]["PASSWORD"],
+            "hsl": self.app.config["HSL_API_CONN_INFO"]["PASSWORD"]
         }
 
         self.libcal_token = self.get_token(

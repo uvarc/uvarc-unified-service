@@ -117,18 +117,24 @@ JIRA_CONN_INFO = {
 }
 
 QUALTRICS_CONN_INFO = {
-    'HOST': settings_info['QUALTRICS']['HOST'],
+    'HOST': settings_info['QUALTRICS']['HOSTS'][0],
     'PORT': settings_info['QUALTRICS']['PORT'],
-    'API_TOKEN': settings_info['QUALTRICS']['API_TOKEN']
+    'CLIENT_ID': settings_info['QUALTRICS']['CLIENT_ID'],
+    'PASSWORD': settings_info['QUALTRICS']['CLIENT_SECRET']
 }
 
 LIBCAL_CONN_INFO = {
-    'LIBCAL_API_URL': settings_info['LIBCAL']['LIBCAL_API_URL'],
-    'HSL_API_URL': settings_info['LIBCAL']['HSL_API_URL'],
-    'LIBCAL_CLIENT_ID': settings_info['LIBCAL']['LIBCAL_CLIENT_ID'],
-    'LIBCAL_CLIENT_SECRET': settings_info['LIBCAL']['LIBCAL_CLIENT_SECRET'],
-    'HSL_CLIENT_ID': settings_info['LIBCAL']['HSL_CLIENT_ID'],
-    'HSL_CLIENT_SECRET': settings_info['LIBCAL']['HSL_CLIENT_SECRET']
+    'HOST': settings_info['LIBCAL']['HOSTS'][0],
+    'PORT': settings_info['LIBCAL']['PORT'],
+    'CLIENT_ID': settings_info['LIBCAL']['CLIENT_ID'],
+    'PASSWORD': settings_info['LIBCAL']['CLIENT_SECRET']
+}
+
+HSL_API_CONN_INFO = {
+    'HOST': settings_info['HSL_API']['HOSTS'][0],
+    'PORT': settings_info['HSL_API']['PORT'],
+    'CLIENT_ID': settings_info['HSL_API']['CLIENT_ID'],
+    'PASSWORD': settings_info['HSL_API']['CLIENT_SECRET']
 }
 
 WORKSHOP_SURVEY_ID = 'SV_6PDQmrw5AbCrVR4'
