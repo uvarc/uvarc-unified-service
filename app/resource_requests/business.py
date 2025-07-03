@@ -9,7 +9,7 @@ import requests
 from app import app
 from app.core.business import UVARCUserDataManager, UVARCGroupDataManager
 from common_service_handlers.workday_service_handler import WorkdayServiceHandler
-from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL, RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
+from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL, RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_REQUESTS_DELEGATES_INFO, RESOURCE_TYPES
 
 
 class UVARCAdminFormInfoDataManager():
@@ -95,13 +95,21 @@ class UVARCResourcRequestFormInfoDataManager():
     def get_user_resource_request_info(self):
         self.__uvarc_user_data_manager = UVARCUserDataManager(uid=self.__uid, upsert=True, refresh=True)
 
-        print(self.__uvarc_user_data_manager.get_user_groups_info())
+        # print(self.__uvarc_user_data_manager.get_user_groups_info())
+        owner_groups = self.__uvarc_user_data_manager.get_owner_groups_info()
+        user_resources = list(self.__uvarc_user_data_manager.get_user_resources_info())
+        for group_name in RESOURCE_REQUESTS_DELEGATES_INFO:
+            if self.__uid in RESOURCE_REQUESTS_DELEGATES_INFO[group_name] and group_name not in owner_groups:
+                group_info = UVARCGroupDataManager(group_name, upsert=True, refresh=True).get_group_info()
+                if 'resources' in group_info and 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '':
+                    user_resources.append(group_info)
+                    owner_groups.append(group_name)
 
         return {
             'is_user_admin':  True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else False,
             'is_user_resource_request_elligible': True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
-            'owner_groups': self.__uvarc_user_data_manager.get_owner_groups_info(),
-            'user_resources': self.__transfer_db_data_to_user_resource_request_info(list(self.__uvarc_user_data_manager.get_user_resources_info()))
+            'owner_groups': owner_groups,
+            'user_resources': self.__transfer_db_data_to_user_resource_request_info(user_resources)
         }
 
     def get_user_groups_info(self):

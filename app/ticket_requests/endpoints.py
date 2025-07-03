@@ -214,28 +214,81 @@ class AdminPagesEndPointWithTabId(Resource):
 
 class GroupClaimEndPoint(Resource):
     def post(self):
-        uid = request.args.get('uid')
-        group = request.args.get('group')
-        
-        data = {'uid': uid, 'group': group}
-        if not data or 'group' not in data or 'uid' not in data:
-            return {"error": "Missing required fields: 'group' and 'uid'"}, 400
-
         try:
-            response = UVARCSupportRequestsManager().create_group_claim_request(data)
-            
-            if isinstance(response, str):
-                response = json.loads(response)
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                request_payload = request.get_json()
+                uid = request_payload.get('uid')
+                group_name = request_payload.get('group_name')
+                support_request_type = 'General'
+                ticket_request_payload = {
+                    'uid': uid if uid is not None and uid is not '' else make_response(jsonify({"status": "error", "message": "Cannot process the PI's claim request: UserID is required"}), 400),
+                    'grpup_name':  group_name if group_name is not None and group_name is not '' else make_response(jsonify({"status": "error", "message": "Cannot process the claim request: Group Name is required"}), 400),
+                    'request_type': 'PI Group Claim',
+                    'claim_approval_url': "{host_url}uvarc/api/ticket/admin/mgmt/1?group_name={group_name}&owner_uid={uid}".format(host_url=request.host_url, group_name=group_name, uid=uid),
+                }
 
+                ticket_response = UVARCSupportRequestsManager().create_support_request(
+                    support_request_type,
+                    ticket_request_payload
+                )
+                if isinstance(ticket_response, str):
+                    ticket_response = json.loads(ticket_response)
+
+                response = jsonify(
+                    {
+                        "status": "success",
+                        'message': 'Group claim request (TicketID: {ticket_id}) successfully submitted'.format(ticket_id=ticket_response['issueKey'])
+                    },
+                    200
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response
+                )
+        except Exception as ex:
+            response = jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
+
+    def options(self):
+        """
+        This is the office hours preflight option call'
+        ---
+        responses:
+            200:
+                description: Returns 200 for a preflight options call
+        """
+        try:
+
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                response = jsonify({})
+                response.headers.add('Origin', request.host_url)
+                response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
+                response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
+        except Exception as ex:
             return make_response(jsonify(
                 {
-                    'status': '200 OK',
-                    'ticket_id': response['issueKey'],
-                    'message': 'Group claim request successfully submitted'
+                    "status": "error",
+                    "message": str(ex)
                 }
-            ), 200)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            ), 400)
+
+
 
 # class GetLDAPUserInfoEndpoint(Resource):
 #     def get(self):
