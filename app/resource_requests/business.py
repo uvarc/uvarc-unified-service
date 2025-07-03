@@ -159,9 +159,9 @@ class UVARCResourcRequestFormInfoDataManager():
     def __validate_user_resource_request_authorization(self, group_info_db, pi_uid, request_type):
         if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
             raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
-        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid and (request_type != 'UPDATE' and group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO and self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO['group_name']):
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid and (request_type != 'UPDATE' or group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO or self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO['group_name']):
             raise Exception('Cannot process the request: The requestor {} does not match the pi/delegate uid for the group {} to authorize this request'.format(self.__uid, group_info_db['group_name']))
-        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid and (request_type != 'UPDATE' and group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO and self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO['group_name']):
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid and (request_type != 'UPDATE' or group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO or self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO['group_name']):
             raise Exception('Cannot process the request: The submitter {} does not match the pi/delegate uid for the group {}'.format(self.__uid, group_info_db['group_name']))
         elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
             raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource request'.format(self.__uid))
