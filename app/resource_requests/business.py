@@ -156,15 +156,15 @@ class UVARCResourcRequestFormInfoDataManager():
             fdm_tags_str_list.append(self.__generate_fdm_tag_str_from_dict(fdm_tag_dict))
         return fdm_tags_str_list
 
-    def __validate_user_resource_request_authorization(self, group_info_db, pi_uid):
+    def __validate_user_resource_request_authorization(self, group_info_db, pi_uid, request_type):
         if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
             raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
-        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid:
-            raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the group {}'.format(self.__uid, group_info_db['group_name']))
-        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid:
-            raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the group {}'.format(self.__uid, group_info_db['group_name']))
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid and (request_type != 'UPDATE' and group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO and self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO['group_name']):
+            raise Exception('Cannot process the request: The requestor {} does not match the pi/delegate uid for the group {} to authorize this request'.format(self.__uid, group_info_db['group_name']))
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid and (request_type != 'UPDATE' and group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO and self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO['group_name']):
+            raise Exception('Cannot process the request: The submitter {} does not match the pi/delegate uid for the group {}'.format(self.__uid, group_info_db['group_name']))
         elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
-            raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource reuest'.format(self.__uid))
+            raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource request'.format(self.__uid))
         return True
 
     def __get_pi_total_free_resource_distribution(self, resource_request_type, tier, pi_uid):
@@ -182,7 +182,7 @@ class UVARCResourcRequestFormInfoDataManager():
         return free_resource_distribution_specified_count
 
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
-        self.__validate_user_resource_request_authorization(group_info_db, group_info['pi_uid'])
+        self.__validate_user_resource_request_authorization(group_info_db, group_info['pi_uid'], request_type)
         if group_info['data_agreement_signed'] is False:
             raise Exception('Cannot process the request: The data agreement was not signed by requestor {}'.format(self.__uid))
 
