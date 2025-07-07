@@ -204,7 +204,6 @@ class JiraServiceHandler:
                     "child": {"value": additional_data['storagePlatform2']}
                 }
 
-
         if components:
             payload["requestFieldValues"]["components"] = []
             for component in components.split(";"):
