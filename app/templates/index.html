@@ -98,7 +98,7 @@
         <div id="response" style = "margin:10px"></div>
             <form id="search_form">
                 <label for="group_name">Group Name:</label>
-                <input type="text" id="group_name_search" name="group_name_search" required><br />
+                <input type="text" id="group_name" name="group_name" required><br />
                 <div class="button-row">
                     <button type="submit" class="submit-button">Search</button>
                     <button type="button" class="cancel-button" onclick="cancelAndReset()">Cancel</button>
@@ -111,7 +111,7 @@
         <div id="updateResponse" style = "margin:10px"></div>
         <form id="update_uid_form">
             <label for="group_name">Group Name:</label>
-            <input type="text" id="group_name_update" name="group_name_update" required>
+            <input type="text" id="group_name" name="group_name" required>
             
             <label for="owner_uid">Owner UID:</label>
             <input type="text" id="owner_uid" name="owner_uid" required> <br/>
@@ -131,7 +131,7 @@
             <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" required><br>
 
             <label for="group_name">Group Name:</label>
-            <input type="text" id="group_name_status" name="group_name_status" value="{{ group_name }}" required><br>
+            <input type="text" id="group_name" name="group_name" value="{{ group_name }}" required><br>
 
             <label for="resource_type">Resource Type:</label>
             <select id="resource_type" name="resource_type" required>
@@ -214,11 +214,11 @@
         }
         // Populate fields based on tab
     if (tabIndex === 0 && params.group_name) {
-        document.getElementById('group_name_search').value = params.group_name;
+        document.getElementById('group_name').value = params.group_name;
     }
     if (tabIndex === 1) {
         if (params.group_name) {
-            document.getElementById('group_name_update').value = params.group_name;
+            document.getElementById('group_name').value = params.group_name;
         }
         if (params.owner_uid) {
             document.getElementById('owner_uid').value = params.owner_uid;
@@ -226,7 +226,7 @@
     }
     if (tabIndex === 2) {
         if (params.group_name) {
-            document.getElementById('group_name_status').value = params.group_name;
+            document.getElementById('group_name').value = params.group_name;
         }
         if (params.ticket_id) {
             document.getElementById('ticket_id').value = params.ticket_id;
@@ -281,7 +281,7 @@
 
     $('#update_uid_form').on('submit', function(event) {
         event.preventDefault(); 
-        var groupName = $('#group_name_update').val();
+        var groupName = $('#group_name').val();
         var owner_uid = $('#owner_uid').val();
         var data = {
             owner_uid: owner_uid
