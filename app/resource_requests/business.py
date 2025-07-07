@@ -101,7 +101,7 @@ class UVARCResourcRequestFormInfoDataManager():
         for group_name in RESOURCE_REQUESTS_DELEGATES_INFO:
             if self.__uid in RESOURCE_REQUESTS_DELEGATES_INFO[group_name] and group_name not in owner_groups:
                 group_info = UVARCGroupDataManager(group_name, upsert=True, refresh=True).get_group_info()
-                if 'resources' in group_info and 'pi_uid' in group_info_db and group_info_db['pi_uid'] is not None and group_info_db['pi_uid'].strip() != '':
+                if 'resources' in group_info and 'pi_uid' in group_info and group_info['pi_uid'] is not None and group_info['pi_uid'].strip() != '':
                     user_resources.append(group_info)
                     owner_groups.append(group_name)
 
