@@ -6,7 +6,7 @@ from app.ticket_requests.business import UVARCSupportRequestsManager
 
 class IntervalTasks:
     @celery.task(name="process_pending_resource_request_task", autoretry_for=(Exception,), retry_backoff=60, retry_jitter=True, retry_kwargs={'max_retries': 5, 'countdown': 5})
-    def process_pending_resource_request(group_name, request_type, resource_request_type, support_request_type, resource_request_hist):
+    def process_pending_resource_request(group_name, request_type, resource_request_type, support_request_type, resource_request_hist, resource_requestor_uid):
         try:
             # Read, download files (if for preprocessing) and mark for scheduled preprocessing or processing in mongodb
             ticket_request_type = ''
@@ -30,7 +30,8 @@ class IntervalTasks:
                         'project_description': group_info_db['project_desc'],
                         'resource_type': resource_request_type,
                         'resource_name': resource_name,
-                        'request_type': ticket_request_type
+                        'request_type': ticket_request_type,
+                        'resource_requestor_uid': resource_requestor_uid
                     }
                     if resource_request_type == 'hpc_service_units':
                         ticket_request_payload['request_count'] = group_info_db['resources'][resource_request_type][resource_name]['request_count']

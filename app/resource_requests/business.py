@@ -342,7 +342,8 @@ class UVARCResourcRequestFormInfoDataManager():
             request_type, 
             resource_request_type,
             'Rivanna',
-            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def update_user_resource_su_request_info(self, user_resource_request_info):
@@ -361,7 +362,8 @@ class UVARCResourcRequestFormInfoDataManager():
             request_type, 
             resource_request_type, 
             'Rivanna',
-            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def retire_user_resource_su_request_info(self, group_name, resource_request_type, resource_request_id):
@@ -388,7 +390,8 @@ class UVARCResourcRequestFormInfoDataManager():
             'DELETE',
             resource_request_type,
             'Rivanna',
-            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def create_user_resource_storage_request_info(self, user_resource_request_info):
@@ -407,7 +410,8 @@ class UVARCResourcRequestFormInfoDataManager():
             request_type,
             resource_request_type,
             'Storage',
-            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def update_user_resource_storage_request_info(self, user_resource_request_info):
@@ -425,7 +429,8 @@ class UVARCResourcRequestFormInfoDataManager():
             request_type,
             resource_request_type,
             'Storage',
-            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def retire_user_resource_storage_request_info(self, group_name, resource_request_type, resource_request_id):
@@ -452,7 +457,8 @@ class UVARCResourcRequestFormInfoDataManager():
             'DELETE',
             resource_request_type,
             'Storage',
-            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
 
