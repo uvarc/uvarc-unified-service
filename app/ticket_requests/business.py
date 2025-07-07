@@ -119,7 +119,7 @@ class UVARCSupportRequestsManager:
 
         ticket_response = jira_service_handler.create_new_ticket(
             reporter=request_info_dict['uid'],
-            participants=request_info_dict['resource_requestor_uid'] if 'resource_requestor_uid' in request_info_dict and request_info_dict['resource_requestor_uid'] is not None and request_info_dict['resource_requestor_uid'] != '' and request_info_dict['uid'] != request_info_dict['uid'] else None,
+            participants=request_info_dict['resource_requestor_uid'] if 'resource_requestor_uid' in request_info_dict and request_info_dict['resource_requestor_uid'] is not None and request_info_dict['resource_requestor_uid'] != '' and request_info_dict['uid'] != request_info_dict['resource_requestor_uid'] else None,
             project_name=project_ticket_route[0],
             request_type=project_ticket_route[1],
             components=attrib_to_var['components'],
