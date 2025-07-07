@@ -101,7 +101,7 @@ class UVARCResourcRequestFormInfoDataManager():
         for group_name in RESOURCE_REQUESTS_DELEGATES_INFO:
             if self.__uid in RESOURCE_REQUESTS_DELEGATES_INFO[group_name] and group_name not in owner_groups:
                 group_info = UVARCGroupDataManager(group_name, upsert=True, refresh=True).get_group_info()
-                if 'resources' in group_info and 'pi_uid' in group_info and group_info['pi_uid'] is not None and group_info['pi_uid'].strip() != '':
+                if 'group_members' in group_info and group_info['group_members'] is not None and group_info['group_members'] != '' and self.__uid in group_info['group_members'] and 'resources' in group_info and 'pi_uid' in group_info and group_info['pi_uid'] is not None and group_info['pi_uid'].strip() != '':
                     user_resources.append(group_info)
                     owner_groups.append(group_name)
 
@@ -157,6 +157,8 @@ class UVARCResourcRequestFormInfoDataManager():
         return fdm_tags_str_list
 
     def __validate_user_resource_request_authorization(self, group_info_db, pi_uid, request_type):
+        if 'group_members' not in group_info_db or group_info_db['group_members'] is None or group_info_db['group_members'] == '' or self.__uid not in group_info_db['group_members']:
+            raise Exception('Cannot process the resource request: Requestor is not part of the group ({group_name}) to allow this change'.format(group_name=group_info_db['group_name']))
         if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
             raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
         elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid and (request_type != 'UPDATE' or group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO or self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO[group_info_db['group_name']]):

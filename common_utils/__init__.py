@@ -17,7 +17,7 @@ RESOURCE_REQUESTS_ADMINS_INFO = {
 
 RESOURCE_REQUESTS_DELEGATES_INFO = {
     'rc-staff-temp': ['cyj7aj', 'jus2yw'],
-    'nudge4': ['jus2yw'],
+    'nudge4': ['cyj7aj', 'jus2yw'],
     'hpc_build': ['nem2p']
 }
 
