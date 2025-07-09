@@ -301,6 +301,7 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][group_info['group_name']]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
             elif request_type == 'UPDATE':
                 group_info_db['pi_uid'] = group_info['pi_uid']
@@ -324,6 +325,7 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
 
             return group_info_db, resource_request_id
@@ -378,6 +380,7 @@ class UVARCResourcRequestFormInfoDataManager():
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
                 group_info_db['resources'][resource_request_type][resource_request_id]['expiry_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
                 self.__uvarc_group_data_manager.set_group_info(
                     group_info_db
@@ -446,6 +449,7 @@ class UVARCResourcRequestFormInfoDataManager():
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
                 group_info_db['resources'][resource_request_type][resource_request_id]["expiry_date"] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
                 self.__uvarc_group_data_manager.set_group_info(
                     group_info_db
