@@ -111,7 +111,7 @@
         <div id="updateResponse" style = "margin:10px"></div>
         <form id="update_uid_form">
             <label for="group_name">Group Name:</label>
-            <input type="text" id="group_name" name="group_name" required>
+            <input type="text" id="group_name_for_update" name="group_name_for_update" required>
             
             <label for="owner_uid">Owner UID:</label>
             <input type="text" id="owner_uid" name="owner_uid" required> <br/>
@@ -163,6 +163,18 @@
 </body>
 
 <script>
+    const hostname = window.location.hostname;
+    let serviceHost = '';
+    if (hostname.includes('staging-onprem.rc.virginia.edu') || hostname.includes('staging.rc.virginia.edu') || hostname.includes('localhost')) {
+      serviceHost = 'https://staging-onprem.rc.virginia.edu';
+    } else if (hostname === 'rc.virginia.edu') {
+      serviceHost = 'https://rc.virginia.edu';
+    } else {
+        const errorMsg = `Unknown environment: ${hostname}. Cannot determine service host.`;
+       console.error(errorMsg);
+    }
+    const formUrl = `${serviceHost}/form/combined-request-form/`;
+
     $(document).ready(function() {
         const tabIndex = getTabIndexFromPath();
         showForm(tabIndex);
@@ -190,6 +202,8 @@
         if (activeForm) {
             activeForm.reset(); // Reset the form fields
         }
+        // Redirect to the URL
+        window.location.href = formUrl;
     }
 
     function showForm(tabIndex) {
@@ -281,7 +295,7 @@
 
     $('#update_uid_form').on('submit', function(event) {
         event.preventDefault(); 
-        var groupName = $('#group_name').val();
+        var groupName = $('#group_name_for_update').val();
         var owner_uid = $('#owner_uid').val();
         var data = {
             owner_uid: owner_uid
