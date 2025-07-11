@@ -148,7 +148,7 @@ class LegacyRCBillingHandler:
         source_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/gpfs-list"
         destination_file = '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing.csv'
         shutil.copyfile(source_file, destination_file)
-        
+
     def __fetch_standard_storage_fdm_details(self):
         reverse_pop_list=[]
         header=None
@@ -165,7 +165,7 @@ class LegacyRCBillingHandler:
         reverse_writer.writerow(header)
         while reverse_pop_list:
             reverse_writer.writerow(reverse_pop_list.pop())
-        
+
         share_name_fdm_lookup_dict = {}
         with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing-feedback-hist-reversed.csv', mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file)
@@ -486,7 +486,7 @@ class LegacyRCBillingHandler:
         test_reporter_fp = open(
             '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         test_reporter_fp_not_found = open(
-            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing--'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
+            '/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-project-storage-billing-not-found-'+datetime.now().strftime("%Y%m%d%H%M%S")+'.csv', 'w', newline='')
         try:
             report_writer = csv.writer(test_reporter_fp, delimiter=',', quotechar='"')
             report_writer.writerow(list(header_row))
