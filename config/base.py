@@ -116,6 +116,34 @@ JIRA_CONN_INFO = {
     'PASSWORD': settings_info['JIRA']['CLIENT_SECRET']
 }
 
+QUALTRICS_CONN_INFO = {
+    'HOST': settings_info['QUALTRICS']['HOSTS'][0],
+    'PORT': settings_info['QUALTRICS']['PORT'],
+    'CLIENT_ID': settings_info['QUALTRICS']['CLIENT_ID'],
+    'PASSWORD': settings_info['QUALTRICS']['CLIENT_SECRET']
+}
+
+LIBCAL_CONN_INFO = {
+    'HOST': settings_info['LIBCAL']['HOSTS'][0],
+    'PORT': settings_info['LIBCAL']['PORT'],
+    'CLIENT_ID': settings_info['LIBCAL']['CLIENT_ID'],
+    'PASSWORD': settings_info['LIBCAL']['CLIENT_SECRET']
+}
+
+HSL_API_CONN_INFO = {
+    'HOST': settings_info['HSL_API']['HOSTS'][0],
+    'PORT': settings_info['HSL_API']['PORT'],
+    'CLIENT_ID': settings_info['HSL_API']['CLIENT_ID'],
+    'PASSWORD': settings_info['HSL_API']['CLIENT_SECRET']
+}
+
+WORKSHOP_SURVEY_ID = 'SV_6PDQmrw5AbCrVR4'
+LIBCAL_CATEGORY_ID = 58855
+GENERAL_CATEGORY_ID = 51597
+HSL_CATEGORY_ID = 29780
+HSL_CAL_ID = 5619
+RDS_CAL_ID = 4299
+
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 
 JIRA_PROJECTS = ('RIVANNA', 'IVY', 'GENERAL_SUPPORT',
