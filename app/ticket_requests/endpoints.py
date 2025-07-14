@@ -5,7 +5,7 @@ from flask import g, json, render_template, request, redirect, make_response, ur
 from flask import jsonify
 from datetime import datetime
 from app import mongo_service
-from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager
+from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager, determine_form_url
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 from common_utils import cors_check
 from common_utils.business import UVARCUserInfoManager
@@ -202,14 +202,16 @@ class UVARCOfficeHoursFormEndpoint(Resource):
 
 class AdminPagesEndPoint(Resource):
     def get(self):
-        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
+        form_url = determine_form_url(request.host)
+        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'], form_url=form_url))
 
 
 class AdminPagesEndPointWithTabId(Resource):
     def get(self, tab_index=0):
+        form_url = determine_form_url(request.host)
         return make_response(render_template('index.html', 
                                              logo_url=app.config['RC_SMALL_LOGO_URL'],
-                                             tab_index=tab_index))
+                                             tab_index=tab_index, form_url=form_url))
 
 
 class GroupClaimEndPoint(Resource):

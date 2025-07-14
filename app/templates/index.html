@@ -163,18 +163,8 @@
 </body>
 
 <script>
-    const hostname = window.location.hostname;
-    let serviceHost = '';
-    if (hostname.includes('staging-onprem.rc.virginia.edu') || hostname.includes('staging.rc.virginia.edu') || hostname.includes('localhost')) {
-      serviceHost = 'https://staging-onprem.rc.virginia.edu';
-    } else if (hostname === 'rc.virginia.edu') {
-      serviceHost = 'https://rc.virginia.edu';
-    } else {
-        const errorMsg = `Unknown environment: ${hostname}. Cannot determine service host.`;
-       console.error(errorMsg);
-    }
-    const formUrl = `${serviceHost}/form/combined-request-form/`;
-
+    const formUrl =  "{{ form_url }}";;
+    
     $(document).ready(function() {
         const tabIndex = getTabIndexFromPath();
         showForm(tabIndex);
