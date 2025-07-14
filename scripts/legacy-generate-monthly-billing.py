@@ -209,17 +209,17 @@ class LegacyRCBillingHandler:
                 if ',' in share_name:
                     share_name = share_name.split(',')[0]
                 # print('{} : {}'.format(share_name, fdm_row['Charge Description']))
-                if 'Lukens_Data_Storage' in fdm_row['Charge Description']:
+                if 'uvabx' in fdm_row['Charge Description']:
                     print('{} : {}'.format(share_name, fdm_row['Charge Description']))
                 share_name_fdm_lookup_dict[re.sub(r'[^\x20-\x7E]', '', share_name.strip().lower())] = fdm_elements
                 # print(share_name_fdm_lookup_dict[share_name]
-
-        with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing-not-found.csv', mode='r', encoding='utf-8') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for fdm_row in list(csv_reader):
-                if fdm_row['Cost Center'] != '':
-                    share_name_fdm_lookup_dict[re.sub(r'[^\x20-\x7E]', '', fdm_row['Share Name'].strip().lower())] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
-
+        print(share_name_fdm_lookup_dict['uvabx'])
+        # with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/rc-standard-storage-billing-not-found.csv', mode='r', encoding='utf-8') as csv_file:
+        #     csv_reader = csv.DictReader(csv_file)
+        #     for fdm_row in list(csv_reader):
+        #         if fdm_row['Cost Center'] != '':
+        #             share_name_fdm_lookup_dict[re.sub(r'[^\x20-\x7E]', '', fdm_row['Share Name'].strip().lower())] = [fdm_row['Company'], fdm_row['Business Unit'], fdm_row['Cost Center'], fdm_row['Fund'], fdm_row['Gift'], fdm_row['Grant'], fdm_row['Designated'], fdm_row['Project'], fdm_row['Program'], fdm_row['Function'], fdm_row['Activity'], fdm_row['Assignee'], '', '', '', '']
+        # print(share_name_fdm_lookup_dict['uvabx'])
         # with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/billing/standard-share-name-out-new.csv', mode='r', encoding='utf-8') as csv_file:
         #     csv_reader = csv.DictReader(csv_file)
         #     for fdm_row in list(csv_reader):
@@ -255,6 +255,8 @@ class LegacyRCBillingHandler:
             ]
             # print(fdm_row)
             if 'share_name' in fdm_row:
+                if fdm_row['share_name'].strip().lower() == 'uvabx':
+                    print(fdm_row)
                 share_name_fdm_lookup_dict[fdm_row['share_name'].strip().lower()] = fdm_elements
                 print('{} : {}'.format(fdm_row['share_name'].strip().lower(), fdm_row))
             else:
@@ -288,7 +290,7 @@ class LegacyRCBillingHandler:
             #     for index, raw_fdm_item in enumerate(fdm_elements):
             #         fdm_elements[index] = fdm_elements[index].strip()
             #     share_name = fdm_row['Share Name']
-        # return share_name_fdm_lookup_dict
+            # return share_name_fdm_lookup_dict
 
             csv_reader = csv.DictReader(csv_file)
             for fdm_row in csv_reader:
@@ -413,6 +415,8 @@ class LegacyRCBillingHandler:
             free_space = free_space_max
             pi_share_list = []
             pi_billing_row_list = []
+            fdm = self.__all_fdm_lookup_dict['standard_storage_fdm_info']['uvabx']
+            print(fdm)
             with open('/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/wip/rc-standard-storage-billing.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for billing_row in csv_reader:
@@ -436,6 +440,8 @@ class LegacyRCBillingHandler:
                                 # print(pi_billing_row)
                                 billing_row_disscount_size = free_space_max * self.__percent_share_ratio(int(pi_billing_row['Size']), int(billing_row['Project Name']))
                                 if pi_billing_row['Share Name'].strip().lower() in self.__all_fdm_lookup_dict['standard_storage_fdm_info'] and len(self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()]) > 3:
+                                    if pi_billing_row['Share Name'].strip().lower() == 'uvabx':
+                                        pass
                                     if free_space > 0:
                                         orginalsize = int(pi_billing_row['Size'])
                                         pi_billing_row['Size'] = int(pi_billing_row['Size']) - billing_row_disscount_size
