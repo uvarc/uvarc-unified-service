@@ -17,14 +17,16 @@ class UVARCWorkshopAttendanceVisualizationEndpoint(Resource):
                 response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return response
+                return response
         except Exception as ex:
-            return make_response(jsonify(
+            response = make_response(jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
                 }
             ), 400)
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
 
     def get(self):
         try:
@@ -32,9 +34,13 @@ class UVARCWorkshopAttendanceVisualizationEndpoint(Resource):
                 abort(401)
             else:
                 data_helper = UVARCWorkshopVisualizationDataManager()
-                return data_helper.merge_workshop_attendance_data(data_helper.get_workshop_data(), data_helper.get_attendance_data()), 200
+                response = make_response(jsonify(data_helper.merge_workshop_attendance_data(data_helper.get_workshop_data(), data_helper.get_attendance_data())), 200)
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return response
         except Exception as e:
-            return {"error": str(e)}, 500
+            response = make_response({"error": str(e)}, 500)
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
 
 class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
     
@@ -49,14 +55,16 @@ class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
                 response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return response
+                return response
         except Exception as ex:
-            return make_response(jsonify(
+            response = make_response(jsonify(
                 {
                     "status": "error",
                     "message": str(ex)
                 }
             ), 400)
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
 
     def get(self):
         try:
@@ -64,7 +72,11 @@ class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
                 abort(401)
             else:
                 data_helper = UVARCWorkshopSurveyDataManager(app.config['WORKSHOP_SURVEY_ID'])
-                return data_helper.get_workshop_survey_data(), 200
+                response = make_response(jsonify(data_helper.get_workshop_survey_data()), 200)
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return response
         except Exception as e:
-            return {"error": str(e)}, 500
+            response = make_response({"error": str(e)}, 500)
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
 
