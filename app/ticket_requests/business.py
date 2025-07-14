@@ -142,3 +142,12 @@ class UVARCSupportRequestsManager:
                 desc_str = ''.join([desc_str, '{}: {}\n'.format(
                     key, value)])
         return desc_str
+
+
+def determine_form_url(hostname):
+    if 'test' in hostname or 'localhost' in hostname:
+        return 'https://staging-onprem.rc.virginia.edu/form/combined-request-form/'
+    elif hostname == 'uvarc-unified-service.pods.uvarc.io':
+        return 'https://rc.virginia.edu/form/combined-request-form/'
+    else:
+        return '/error/unsupported-environment'

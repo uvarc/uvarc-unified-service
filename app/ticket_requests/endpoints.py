@@ -5,7 +5,7 @@ from flask import g, json, render_template, request, redirect, make_response, ur
 from flask import jsonify
 from datetime import datetime
 from app import mongo_service
-from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager
+from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager, determine_form_url
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 from common_utils import cors_check
 from common_utils.business import UVARCUserInfoManager
@@ -198,15 +198,6 @@ class UVARCOfficeHoursFormEndpoint(Resource):
                     "message": str(ex)
                 }
             ), 400)
-
-
-def determine_form_url(hostname):
-    if 'test' in hostname or 'localhost' in hostname:
-        return 'https://staging-onprem.rc.virginia.edu/form/combined-request-form/'
-    elif hostname == 'uvarc-unified-service.pods.uvarc.io':
-        return 'https://rc.virginia.edu/form/combined-request-form/'
-    else:
-        return '/error/unsupported-environment'
 
 
 class AdminPagesEndPoint(Resource):
