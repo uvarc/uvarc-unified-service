@@ -200,16 +200,27 @@ class UVARCOfficeHoursFormEndpoint(Resource):
             ), 400)
 
 
+def determine_form_url(hostname):
+    if 'test' in hostname or 'localhost' in hostname:
+        return 'https://staging-onprem.rc.virginia.edu/form/combined-request-form/'
+    elif hostname == 'uvarc-unified-service.pods.uvarc.io':
+        return 'https://rc.virginia.edu/form/combined-request-form/'
+    else:
+        return '/error/unsupported-environment'
+
+
 class AdminPagesEndPoint(Resource):
     def get(self):
-        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
+        form_url = determine_form_url(request.host)
+        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'], form_url=form_url))
 
 
 class AdminPagesEndPointWithTabId(Resource):
     def get(self, tab_index=0):
+        form_url = determine_form_url(request.host)
         return make_response(render_template('index.html', 
                                              logo_url=app.config['RC_SMALL_LOGO_URL'],
-                                             tab_index=tab_index))
+                                             tab_index=tab_index, form_url=form_url))
 
 
 class GroupClaimEndPoint(Resource):
