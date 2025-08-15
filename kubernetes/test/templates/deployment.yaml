@@ -143,3 +143,38 @@ spec:
                   name: uvarc-unified-service-secret-test
                   key: HPC_API_CLIENT_SECRET
 
+            - name: QUALTRICS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: uvarc-unified-service-secret-test
+                  key: QUALTRICS_CLIENT_ID
+
+            - name: QUALTRICS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: uvarc-unified-service-secret-test
+                  key: QUALTRICS_CLIENT_SECRET
+
+            - name: LIBCAL_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: uvarc-unified-service-secret-test
+                  key: LIBCAL_CLIENT_ID
+
+            - name: LIBCAL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: uvarc-unified-service-secret-test
+                  key: LIBCAL_CLIENT_SECRET
+
+            - name: HSL_API_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: uvarc-unified-service-secret-test
+                  key: HSL_API_CLIENT_ID
+
+            - name: HSL_API_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: uvarc-unified-service-secret-test
+                  key: HSL_API_CLIENT_SECRET
