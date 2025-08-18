@@ -1,0 +1,31 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    #    nginx.org/websocket-services: "uvarc-unified-service"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: rc-hpc-sectigo-clusterissuer
+    nginx.org/proxy-connect-timeout: "600s"
+    nginx.org/proxy-read-timeout: "600s"
+    nginx.org/proxy-send-timeout: "600s"
+  name: uvarc-unified-service-ingress-test-rancher
+  namespace: uvarc-unified-services
+spec:
+  rules:
+    - host: uvarc-unified-service-test.k8s.rc.virginia.edu
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: uvarc-unified-service-test
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - uvarc-unified-service-test.k8s.rc.virginia.edu
+      secretName: uvarc-unified-service-nginx-tls-ingress-secret-test-rancher
