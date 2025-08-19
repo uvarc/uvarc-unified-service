@@ -27,6 +27,12 @@ def fetch_connections_info():
             settings["LDAP_PRIVATE"]['CLIENT_SECRET'] = os.environ['LDAP_PRIVATE_CLIENT_SECRET']
             settings["HPC_API"]['CLIENT_ID'] = os.environ['HPC_API_CLIENT_ID']
             settings["HPC_API"]['CLIENT_SECRET'] = os.environ['HPC_API_CLIENT_SECRET']
+            settings["QUALTRICS"]['CLIENT_ID'] = os.environ['QUALTRICS_CLIENT_ID'] if 'QUALTRICS_CLIENT_ID' in os.environ else None
+            settings["QUALTRICS"]['CLIENT_SECRET'] = os.environ['QUALTRICS_CLIENT_SECRET'] if 'QUALTRICS_CLIENT_SECRET' in os.environ else None
+            settings["LIBCAL"]['CLIENT_ID'] = os.environ['LIBCAL_CLIENT_ID'] if 'LIBCAL_CLIENT_ID' in os.environ else None
+            settings["LIBCAL"]['CLIENT_SECRET'] = os.environ['LIBCAL_CLIENT_SECRET'] if 'LIBCAL_CLIENT_SECRET' in os.environ else None
+            settings["HSL_API"]['CLIENT_ID'] = os.environ['HSL_API_CLIENT_ID'] if 'HSL_API_CLIENT_ID' in os.environ else None
+            settings["HSL_API"]['CLIENT_SECRET'] = os.environ['HSL_API_CLIENT_SECRET'] if 'HSL_API_CLIENT_SECRET' in os.environ else None
         except Exception as ex:
             print('REQUIRED CREDENTIAL MISSING FROm THE ENV: {}'.format(str(ex)))
             raise ex
@@ -63,9 +69,9 @@ AWS_CONN_INFO = {
 
 ENV_NAME = settings_info['ENV']
 if ENV_NAME == 'prod':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io', 'https://usermeetings.pods.uvarc.io']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io', 'https://usermeetings.pods.uvarc.io', 'https://uvarc-unified-service-prod.pods.uvarc.io']
 elif ENV_NAME == 'test':
-    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io', 'https://usermeetings.pods.uvarc.io']
+    CORS_ENABLED_ALLOWED_ORIGINS = ['https://staging.rc.virginia.edu', 'https://staging-onprem.rc.virginia.edu', 'https://uvarc-api.pods.uvarc.io', 'https://usermeetings.pods.uvarc.io', 'https://uvarc-unified-service-test.pods.uvarc.io']
 else:
     CORS_ENABLED_ALLOWED_ORIGINS = ['http://localhost:5000', 'http://localhost:3000']
 
@@ -84,6 +90,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'ldap_requests_sync_ldap_data_task',
         'schedule': timedelta(minutes=30)
     },
+    # 'version_groups_info_task-interval': {
+    #     'task': 'version_groups_info_task',
+    #     'schedule': timedelta(seconds=30)
+    # }
 }
 
 
@@ -105,6 +115,34 @@ JIRA_CONN_INFO = {
     'CLIENT_ID': settings_info['JIRA']['CLIENT_ID'],
     'PASSWORD': settings_info['JIRA']['CLIENT_SECRET']
 }
+
+QUALTRICS_CONN_INFO = {
+    'HOST': settings_info['QUALTRICS']['HOSTS'][0],
+    'PORT': settings_info['QUALTRICS']['PORT'],
+    'CLIENT_ID': settings_info['QUALTRICS']['CLIENT_ID'],
+    'PASSWORD': settings_info['QUALTRICS']['CLIENT_SECRET']
+}
+
+LIBCAL_CONN_INFO = {
+    'HOST': settings_info['LIBCAL']['HOSTS'][0],
+    'PORT': settings_info['LIBCAL']['PORT'],
+    'CLIENT_ID': settings_info['LIBCAL']['CLIENT_ID'],
+    'PASSWORD': settings_info['LIBCAL']['CLIENT_SECRET']
+}
+
+HSL_API_CONN_INFO = {
+    'HOST': settings_info['HSL_API']['HOSTS'][0],
+    'PORT': settings_info['HSL_API']['PORT'],
+    'CLIENT_ID': settings_info['HSL_API']['CLIENT_ID'],
+    'PASSWORD': settings_info['HSL_API']['CLIENT_SECRET']
+}
+
+WORKSHOP_SURVEY_ID = 'SV_6PDQmrw5AbCrVR4'
+LIBCAL_CATEGORY_ID = 58855
+GENERAL_CATEGORY_ID = 51597
+HSL_CATEGORY_ID = 29780
+HSL_CAL_ID = 5619
+RDS_CAL_ID = 4299
 
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 

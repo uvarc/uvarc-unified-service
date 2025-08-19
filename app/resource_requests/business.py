@@ -1,3 +1,4 @@
+import copy
 import json
 import bson
 import bson.json_util
@@ -8,7 +9,7 @@ import requests
 from app import app
 from app.core.business import UVARCUserDataManager, UVARCGroupDataManager
 from common_service_handlers.workday_service_handler import WorkdayServiceHandler
-from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL, RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_TYPES
+from common_utils import RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL, RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD, RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD, RESOURCE_REQUESTS_SERVICE_UNITS_TIERS, RESOURCE_REQUESTS_STORAGE_TIERS, RESOURCE_REQUESTS_ADMINS_INFO, RESOURCE_REQUESTS_DELEGATES_INFO, RESOURCE_TYPES
 
 
 class UVARCAdminFormInfoDataManager():
@@ -48,7 +49,7 @@ class UVARCAdminFormInfoDataManager():
         group_info_db = uvarc_group_data_manager.get_group_info()
         if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type] and 'request_processing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'tickets_info' in group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']:
             tickets_info = group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']['tickets_info']
-            if tickets_info is not None and len(tickets_info) > 0 and ticket_id == tickets_info[len(tickets_info)-1]:
+            if tickets_info is not None and len(tickets_info) > 0 and ticket_id in tickets_info[len(tickets_info)-1]:
                 if group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring'] and update_status == 'active':
                     group_info_db['resources'][resource_request_type][resource_request_id]["active_date"] = datetime.now(timezone.utc)
                     group_info_db['resources'][resource_request_type][resource_request_id]["expiry_date"] = None
@@ -62,16 +63,24 @@ class UVARCAdminFormInfoDataManager():
                     group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
                     group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
                 elif group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] in ['processing', 'retiring'] and update_status == 'error':
-                    group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
-                    group_info_db['resources'][resource_request_type][resource_request_id]['update_comment'] = update_comment
-                    group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = update_status
+                    resource_request_hist = copy.deepcopy(group_info_db['resources'][resource_request_type][resource_request_id])
+                    resource_request_hist['update_date'] = datetime.now(timezone.utc)
+                    resource_request_hist['update_comment'] = update_comment
+                    resource_request_hist['request_status'] = update_status
+                    if tickets_info[len(tickets_info)-1][ticket_id] != None:
+                        group_info_db['resources'][resource_request_type][resource_request_id] = tickets_info[len(tickets_info)-1][ticket_id]
+                        group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']['tickets_info'].append({ticket_id: resource_request_hist})
+                    else:
+                        group_info_db['resources'][resource_request_type].pop(resource_request_id)
+
                 else:
-                    raise Exception("Cannot update request status to {update_status}: The resource is not in a state to process updates".format(update_status=update_status))
+                    raise Exception("Cannot update request status to {update_status}: Based on ciurrent status of this request, this action is not allowed.".format(update_status=update_status))
+                # IntervalTasks.version_groups_info.delay()
                 uvarc_group_data_manager.set_group_info(
                     group_info_db
                 )
             else:
-                if tickets_info is None or len(tickets_info) == 0 or ticket_id not in tickets_info:
+                if tickets_info is None or len(tickets_info) == 0 or ticket_id not in tickets_info[len(tickets_info)-1]:
                     raise Exception("Cannot process update request: Ticket id {ticket_id} provided did not match/found for this resource request".format(ticket_id=ticket_id))
                 else:
                     raise Exception("Cannot process update request: Ticket id {ticket_id} provided is not the latest for this resource request".format(ticket_id=ticket_id))
@@ -85,15 +94,27 @@ class UVARCResourcRequestFormInfoDataManager():
 
     def get_user_resource_request_info(self):
         self.__uvarc_user_data_manager = UVARCUserDataManager(uid=self.__uid, upsert=True, refresh=True)
-        
-        print(self.__uvarc_user_data_manager.get_user_groups_info())
+
+        # print(self.__uvarc_user_data_manager.get_user_groups_info())
+        owner_groups = self.__uvarc_user_data_manager.get_owner_groups_info()
+        user_resources = list(self.__uvarc_user_data_manager.get_user_resources_info())
+        for group_name in RESOURCE_REQUESTS_DELEGATES_INFO:
+            if self.__uid in RESOURCE_REQUESTS_DELEGATES_INFO[group_name] and group_name not in owner_groups:
+                group_info = UVARCGroupDataManager(group_name, upsert=True, refresh=True).get_group_info()
+                if 'group_members' in group_info and group_info['group_members'] is not None and group_info['group_members'] != '' and self.__uid in group_info['group_members'] and 'resources' in group_info and 'pi_uid' in group_info and group_info['pi_uid'] is not None and group_info['pi_uid'].strip() != '':
+                    user_resources.append(group_info)
+                    owner_groups.append(group_name)
 
         return {
             'is_user_admin':  True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else False,
             'is_user_resource_request_elligible': True if self.__uid in RESOURCE_REQUESTS_ADMINS_INFO else self.__uvarc_user_data_manager.is_user_resource_request_elligible(),
-            'user_groups': self.__uvarc_user_data_manager.get_owner_groups_info(),
-            'user_resources': self.__transfer_db_data_to_user_resource_request_info(list(self.__uvarc_user_data_manager.get_user_resources_info()))
+            'owner_groups': owner_groups,
+            'user_resources': self.__transfer_db_data_to_user_resource_request_info(user_resources)
         }
+
+    def get_user_groups_info(self):
+        self.__uvarc_user_data_manager = UVARCUserDataManager(uid=self.__uid, upsert=True, refresh=True)
+        return self.__uvarc_user_data_manager.get_user_groups_info()
 
     def __transfer_db_data_to_user_resource_request_info(self, user_resources_info):
         for user_resource_info in user_resources_info:
@@ -135,19 +156,35 @@ class UVARCResourcRequestFormInfoDataManager():
             fdm_tags_str_list.append(self.__generate_fdm_tag_str_from_dict(fdm_tag_dict))
         return fdm_tags_str_list
 
-    def __validate_user_resource_request_authorization(self, group_info_db, pi_uid):
+    def __validate_user_resource_request_authorization(self, group_info_db, pi_uid, request_type):
+        if 'group_members' not in group_info_db or group_info_db['group_members'] is None or group_info_db['group_members'] == '' or self.__uid not in group_info_db['group_members']:
+            raise Exception('Cannot process the resource request: Requestor is not part of the group ({group_name}) to allow this change'.format(group_name=group_info_db['group_name']))
         if 'pi_uid' not in group_info_db or group_info_db['pi_uid'] is None or group_info_db['pi_uid'] == '':
             raise Exception('Cannot process the resource request: Please contact research computing user services dept to claim the owneship of the group for furthur processing')
-        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid:
-            raise Exception('Cannot process the request: The requestor {} does not match the pi uid for the group {}'.format(self.__uid, group_info_db['group_name']))
-        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid:
-            raise Exception('Cannot process the request: The submitter {} does not match the pi uid for the group {}'.format(self.__uid, group_info_db['group_name']))
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != pi_uid and (request_type != 'UPDATE' or group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO or self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO[group_info_db['group_name']]):
+            raise Exception('Cannot process the request: The requestor {} does not match the pi/delegate uid for the group {} to authorize this request'.format(self.__uid, group_info_db['group_name']))
+        elif 'pi_uid' in group_info_db and group_info_db['pi_uid'] != '' and group_info_db['pi_uid'] != self.__uid and (request_type != 'UPDATE' or group_info_db['group_name'] not in RESOURCE_REQUESTS_DELEGATES_INFO or self.__uid not in RESOURCE_REQUESTS_DELEGATES_INFO[group_info_db['group_name']]):
+            raise Exception('Cannot process the request: The submitter {} does not match the pi/delegate uid for the group {}'.format(self.__uid, group_info_db['group_name']))
         elif UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()['is_user_resource_request_elligible'] is False:
-            raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource reuest'.format(self.__uid))
+            raise Exception('Cannot process the request: The requestor {} is not eligible to submit the resource request'.format(self.__uid))
         return True
 
+    def __get_pi_total_free_resource_distribution(self, resource_request_type, tier, pi_uid):
+        user_resource_request_info = UVARCResourcRequestFormInfoDataManager(pi_uid).get_user_resource_request_info()
+        free_resource_distribution_specified_count = 0
+        for group_info in user_resource_request_info['user_resources']:
+            if pi_uid == group_info['pi_uid']:
+                if 'resources' in group_info and resource_request_type in group_info['resources'] and group_info['resources'][resource_request_type] is not None and len(group_info['resources'][resource_request_type]) > 0:
+                    for resource_name in group_info['resources'][resource_request_type]:
+                        if 'tier' in group_info['resources'][resource_request_type][resource_name] and tier == group_info['resources'][resource_request_type][resource_name]['tier'] and 'billing_details' in group_info['resources'][resource_request_type][resource_name] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][resource_name]['billing_details'] and pi_uid in group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info']:
+                            if group_info['resources'][resource_request_type][resource_name]['request_status'] == 'active':
+                                free_resource_distribution_specified_count = free_resource_distribution_specified_count + int(group_info['resources'][resource_request_type][resource_name]['billing_details']['free_resource_distribution_info'][pi_uid])
+                            elif group_info['resources'][resource_request_type][resource_name]['request_status'] != 'retired':
+                                raise Exception('Please contact UVARC admin: Cannot validate free resource distribution info for PI ({pi_uid}) when resource ({resource_name}) request is in "{status}" state'.format(pi_uid=pi_uid, resource_name=resource_name, status=group_info['resources'][resource_request_type][resource_name]['request_status']))
+        return free_resource_distribution_specified_count
+
     def __validate_user_resource_request_info(self, group_info, group_info_db, resource_request_type, request_type):
-        self.__validate_user_resource_request_authorization(group_info_db, group_info['pi_uid'])
+        self.__validate_user_resource_request_authorization(group_info_db, group_info['pi_uid'], request_type)
         if group_info['data_agreement_signed'] is False:
             raise Exception('Cannot process the request: The data agreement was not signed by requestor {}'.format(self.__uid))
 
@@ -165,9 +202,18 @@ class UVARCResourcRequestFormInfoDataManager():
                 if group_info['resources'][resource_request_type][group_info['group_name']]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
                     raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
                 elif 'billing_details' not in group_info['resources'][resource_request_type][group_info['group_name']] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details'] or len(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['fdm_billing_info']) == 0:
-                    raise Exception('Cannot process the new resource request: FDM billing details are required but missing')
+                    raise Exception('Cannot process the new resource request: FDM billing details are required but missing for the paid tier resource request')
                 elif 'request_size' not in group_info['resources'][resource_request_type][group_info['group_name']]:
                     raise Exception('Cannot process the new resource request: request_size is missing')
+                elif group_info['resources'][resource_request_type][group_info['group_name']]['tier'] == 'ssz_standard' and 'billing_details' in group_info['resources'][resource_request_type][group_info['group_name']] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details'] and group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info'] is not None and len(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info']) > 0:
+                    for pi_uid in group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info']:
+                        if pi_uid == group_info_db['pi_uid']:
+                            pi_total_free_resource_distribution = self.__get_pi_total_free_resource_distribution(resource_request_type, group_info['resources'][resource_request_type][group_info['group_name']]['tier'], pi_uid)
+                            increase_ammt = int(group_info['resources'][resource_request_type][group_info['group_name']]['billing_details']['free_resource_distribution_info'][pi_uid])
+                            if (int(pi_total_free_resource_distribution) + increase_ammt) > RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD:
+                                raise Exception('Cannot process the new resource request: Requested free storage exceeds maximum free storage available ({balance_free_storage} TB) for the PI ({pi_uid}) for this resource'.format(balance_free_storage=(RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD-pi_total_free_resource_distribution), pi_uid=pi_uid))
+                        else:
+                            raise Exception('Cannot process the new resource request: You are not not PI on this project to set free resource distribution for this resource')
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources']:
                 resource_request_id = group_info['group_name'] + '-' + group_info['resources'][resource_request_type][group_info['group_name']]['tier']
                 if len(group_info_db['resources'][resource_request_type]) > 0 and resource_request_id in group_info_db['resources'][resource_request_type]:
@@ -200,9 +246,21 @@ class UVARCResourcRequestFormInfoDataManager():
                         if group_info['resources'][resource_request_type][resource_request_id]['tier'] not in RESOURCE_REQUESTS_STORAGE_TIERS:
                             raise Exception('Cannot process the new resource request: Unsupported storage request tier was provided')
                         elif 'billing_details' not in group_info['resources'][resource_request_type][resource_request_id] or 'fdm_billing_info' not in group_info['resources'][resource_request_type][resource_request_id]['billing_details'] or len(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['fdm_billing_info']) == 0:
-                            raise Exception('Cannot process the update resource request: FDM billing details are required but missing')
+                            raise Exception('Cannot process the update resource request: FDM billing details are required but missing for the paid tier resource request')
                         elif 'request_size' not in group_info['resources'][resource_request_type][resource_request_id]:
                             raise Exception('Cannot process the new resource request: request_size is missing')
+                        elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard' and 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'free_resource_distribution_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details'] and group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'] is not None and len(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']) > 0:
+                            for pi_uid in group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']:
+                                if pi_uid == group_info_db['pi_uid']:
+                                    pi_total_free_resource_distribution_current_usage = 0
+                                    pi_total_free_resource_distribution = self.__get_pi_total_free_resource_distribution(resource_request_type, group_info['resources'][resource_request_type][resource_request_id]['tier'],pi_uid)
+                                    increase_ammt = int(group_info['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'][pi_uid])
+                                    if group_info_db['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_standard' and 'billing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'free_resource_distribution_info' in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details'] and group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'] is not None and len(group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']) > 0 and pi_uid in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info']:
+                                        pi_total_free_resource_distribution_current_usage = pi_total_free_resource_distribution - int(group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']['free_resource_distribution_info'][pi_uid])
+                                    if (int(pi_total_free_resource_distribution_current_usage) + increase_ammt) > RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD:
+                                        raise Exception('Cannot process the update resource request: Requested free storage exceeds maximum free storage available ({balance_free_storage} TB) for the PI ({pi_uid}) for this resource'.format(balance_free_storage=(RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD-pi_total_free_resource_distribution_current_usage), pi_uid=pi_uid))
+                                else:
+                                    raise Exception('Cannot process the update resource request: You are not not PI on this project to set free resource distribution for this resource')
                     if 'billing_details' in group_info['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info['resources'][resource_request_type][resource_request_id]['billing_details']:
                         fdm_tags_str_db_list = []
                         if 'billing_details' in group_info_db['resources'][resource_request_type][resource_request_id] and 'fdm_billing_info' in group_info_db['resources'][resource_request_type][resource_request_id]['billing_details']:
@@ -243,6 +301,7 @@ class UVARCResourcRequestFormInfoDataManager():
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][group_info['group_name']]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
             elif request_type == 'UPDATE':
                 group_info_db['pi_uid'] = group_info['pi_uid']
@@ -261,10 +320,12 @@ class UVARCResourcRequestFormInfoDataManager():
                         group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD
                     elif group_info['resources'][resource_request_type][resource_request_id]['tier'] == 'ssz_instructional':
                         group_info['resources'][resource_request_type][resource_request_id]['request_count'] = RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL
-
+                if 'request_processing_details' in group_info_db['resources'][resource_request_type][resource_request_id]:
+                    group_info['resources'][resource_request_type][resource_request_id]['request_processing_details'] = group_info_db['resources'][resource_request_type][resource_request_id]['request_processing_details']
                 group_info_db['resources'][resource_request_type][resource_request_id] = group_info['resources'][resource_request_type][resource_request_id]
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_date'] = request_date
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'pending'
 
             return group_info_db, resource_request_id
@@ -274,15 +335,19 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        # IntervalTasks.version_groups_info.delay()
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
         IntervalTasks.process_pending_resource_request.delay(
             user_resource_request_info['group_name'],
             request_type, 
-            resource_request_type, 
-            'Rivanna'
+            resource_request_type,
+            'Rivanna',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def update_user_resource_su_request_info(self, user_resource_request_info):
@@ -290,7 +355,9 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'UPDATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id =  self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        # IntervalTasks.version_groups_info.delay()
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
         )
@@ -298,17 +365,22 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_request_info['group_name'],
             request_type, 
             resource_request_type, 
-            'Rivanna'
+            'Rivanna',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def retire_user_resource_su_request_info(self, group_name, resource_request_type, resource_request_id):
+        request_type = 'DELETE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         # if self.__uid == group_info_db['pi_uid']: or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
-        if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
+        if self.__validate_user_resource_request_authorization(group_info_db, self.__uid, request_type) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
                 group_info_db['resources'][resource_request_type][resource_request_id]['expiry_date'] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
                 self.__uvarc_group_data_manager.set_group_info(
                     group_info_db
@@ -323,7 +395,9 @@ class UVARCResourcRequestFormInfoDataManager():
             group_name,
             'DELETE',
             resource_request_type,
-            'Rivanna'
+            'Rivanna',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def create_user_resource_storage_request_info(self, user_resource_request_info):
@@ -332,22 +406,7 @@ class UVARCResourcRequestFormInfoDataManager():
         request_type = 'CREATE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
-        group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
-        self.__uvarc_group_data_manager.set_group_info(
-            group_info_db
-        )
-        IntervalTasks.process_pending_resource_request.delay(
-            user_resource_request_info['group_name'],
-            request_type, 
-            resource_request_type, 
-            'Storage'
-        )
-
-    def update_user_resource_storage_request_info(self, user_resource_request_info):
-        resource_request_type = 'storage'
-        request_type = 'UPDATE'
-        self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
-        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
         self.__uvarc_group_data_manager.set_group_info(
             group_info_db
@@ -356,17 +415,41 @@ class UVARCResourcRequestFormInfoDataManager():
             user_resource_request_info['group_name'],
             request_type,
             resource_request_type,
-            'Storage'
+            'Storage',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
+        )
+
+    def update_user_resource_storage_request_info(self, user_resource_request_info):
+        resource_request_type = 'storage'
+        request_type = 'UPDATE'
+        self.__uvarc_group_data_manager = UVARCGroupDataManager(user_resource_request_info['group_name'], upsert=True, refresh=True)
+        group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
+        group_info_db, resource_request_id = self.__transfer_user_resource_request_info_to_db(user_resource_request_info, group_info_db, resource_request_type, request_type)
+        self.__uvarc_group_data_manager.set_group_info(
+            group_info_db
+        )
+        IntervalTasks.process_pending_resource_request.delay(
+            user_resource_request_info['group_name'],
+            request_type,
+            resource_request_type,
+            'Storage',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
     def retire_user_resource_storage_request_info(self, group_name, resource_request_type, resource_request_id):
+        request_type = 'DELETE'
         self.__uvarc_group_data_manager = UVARCGroupDataManager(group_name, upsert=True, refresh=True)
         group_info_db = self.__uvarc_group_data_manager.get_group_info()
+        resource_request_hist = copy.deepcopy(group_info_db)
         # if self.__uid == group_info_db['pi_uid'] or ('delegates_uid' in group_info_db and self.__uid in group_info_db['delegates_uid']):
-        if self.__validate_user_resource_request_authorization(group_info_db, self.__uid) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
+        if self.__validate_user_resource_request_authorization(group_info_db, self.__uid, request_type) and group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] == 'active':
             if 'resources' in group_info_db and resource_request_type in group_info_db['resources'] and resource_request_id in group_info_db['resources'][resource_request_type]:
                 group_info_db['resources'][resource_request_type][resource_request_id]["expiry_date"] = datetime.now(timezone.utc)
                 group_info_db['resources'][resource_request_type][resource_request_id]['update_date'] = datetime.now(timezone.utc)
+                group_info_db['resources'][resource_request_type][resource_request_id]["update_by_uid"] = self.__uid
                 group_info_db['resources'][resource_request_type][resource_request_id]['request_status'] = 'expired'
                 self.__uvarc_group_data_manager.set_group_info(
                     group_info_db
@@ -381,7 +464,9 @@ class UVARCResourcRequestFormInfoDataManager():
             group_name,
             'DELETE',
             resource_request_type,
-            'Storage'
+            'Storage',
+            resource_request_hist['resources'][resource_request_type][resource_request_id] if resource_request_id in resource_request_hist['resources'][resource_request_type] else None,
+            self.__uid
         )
 
 

@@ -99,8 +99,22 @@ class UVARCGroupsDataManager:
     def __init__(self):
         pass
 
-    def get_all_pending_resources(self):
-        pass
+    def version_groups(self):
+        # Enable full document lookup for updates
+        pipeline = [{"$set": {"operationType": "$operationType", "fullDocumentBeforeChange": "$fullDocumentBeforeChange", "documentKey": "$documentKey", "updateDescription": "$updateDescription", "fullDocument": "$fullDocument"}}]
+
+        # # Open change stream
+        with mongo_service.db.uvarc_groups.watch(pipeline=pipeline, full_document='updateLookup') as stream:
+            while stream.alive:
+                change = stream.next()
+                if change is not None:
+                    print("Change document:", change)
+                    if change['operationType'] == 'update':
+                        before_doc = change['fullDocumentBeforeChange']
+                        after_doc = change['fullDocument']
+                        print("Document before update:", before_doc)
+                        print("Document after update:", after_doc)
+
 
 class UVARCUsersGroupsSyncManager:
     def __init__(self):

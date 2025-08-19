@@ -134,7 +134,6 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 response
             )
 
-
     def options(self, uid=None):
         """
         This is a resource request form endpoint that returns all data required for display and processing the form request!'
@@ -342,11 +341,18 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
             if cors_check(app, request.headers.get('Origin')):
                 abort(401)
             else:
-                
-                response = jsonify(
-                    UVARCResourcRequestFormInfoDataManager(uid).get_user_resource_request_info(),
-                    200
-                )
+                if 'user_groups_info' in request.args and request.args['user_groups_info'] == 'true':
+                    response = jsonify(
+                        {
+                            'user_groups': UVARCResourcRequestFormInfoDataManager(uid).get_user_groups_info()
+                        },
+                        200
+                    )
+                else:
+                    response = jsonify(
+                        UVARCResourcRequestFormInfoDataManager(uid).get_user_resource_request_info(),
+                        200
+                    )
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return make_response(
                     response

@@ -5,7 +5,7 @@ from flask import g, json, render_template, request, redirect, make_response, ur
 from flask import jsonify
 from datetime import datetime
 from app import mongo_service
-from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager
+from app.ticket_requests.business import UVARCUsersOfficeHoursDataManager, UVARCSupportRequestsManager, determine_form_url
 RC_SMALL_LOGO_URL = 'https://staging.rc.virginia.edu/images/logos/uva_rc_logo_full_340x129.png'
 from common_utils import cors_check
 from common_utils.business import UVARCUserInfoManager
@@ -202,26 +202,95 @@ class UVARCOfficeHoursFormEndpoint(Resource):
 
 class AdminPagesEndPoint(Resource):
     def get(self):
-        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL']))
+        form_url = determine_form_url(request.host)
+        return make_response(render_template('index.html', logo_url=app.config['RC_SMALL_LOGO_URL'], form_url=form_url))
 
 
-class SendMesaageEndPoint(Resource):
+class AdminPagesEndPointWithTabId(Resource):
+    def get(self, tab_index=0):
+        form_url = determine_form_url(request.host)
+        return make_response(render_template('index.html', 
+                                             logo_url=app.config['RC_SMALL_LOGO_URL'],
+                                             tab_index=tab_index, form_url=form_url))
+
+
+class GroupClaimEndPoint(Resource):
     def post(self):
-        data = request.get_json()
         try:
-            response = UVARCSupportRequestsManager().set_queue_message(data)
-            return {'message': 'Message sent to queue successfully!', 'MessageId': response['MessageId']}, 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                request_payload = request.get_json()
+                uid = request_payload.get('uid')
+                group_name = request_payload.get('group_name')
+                support_request_type = 'General'
+                ticket_request_payload = {
+                    'uid': uid if uid is not None and uid != '' else make_response(jsonify({"status": "error", "message": "Cannot process the PI's claim request: UserID is required"}), 400),
+                    'grpup_name':  group_name if group_name is not None and group_name != '' else make_response(jsonify({"status": "error", "message": "Cannot process the claim request: Group Name is required"}), 400),
+                    'request_type': 'PI Group Claim',
+                    'request_title': 'PI Group Claim Request'
+                    # 'claim_approval_url': "{host_url}uvarc/api/ticket/admin/mgmt/1?group_name={group_name}&owner_uid={uid}".format(host_url=request.host_url, group_name=group_name, uid=uid),
+                }
 
+                ticket_response = UVARCSupportRequestsManager().create_support_request(
+                    support_request_type,
+                    ticket_request_payload
+                )
+                if isinstance(ticket_response, str):
+                    ticket_response = json.loads(ticket_response)
 
-class ReceiveMesaageEndPoint(Resource):
-    def get(self):
+                response = jsonify(
+                    {
+                        "status": "success",
+                        'message': 'Group claim request (TicketID: {ticket_id}) successfully submitted'.format(ticket_id=ticket_response['issueKey'])
+                    },
+                    200
+                )
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                return make_response(
+                    response
+                )
+        except Exception as ex:
+            response = jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                },
+                400
+            )
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return make_response(
+                response
+            )
+
+    def options(self):
+        """
+        This is the office hours preflight option call'
+        ---
+        responses:
+            200:
+                description: Returns 200 for a preflight options call
+        """
         try:
-            response = UVARCSupportRequestsManager().receive_message()
+
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                response = jsonify({})
+                response.headers.add('Origin', request.host_url)
+                response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin'))
+                response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
             return response
-        except Exception as e:
-            return make_response(jsonify({"error": str(e)}), 500)
+        except Exception as ex:
+            return make_response(jsonify(
+                {
+                    "status": "error",
+                    "message": str(ex)
+                }
+            ), 400)
+
 
 
 # class GetLDAPUserInfoEndpoint(Resource):

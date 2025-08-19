@@ -5,19 +5,29 @@ RESOURCE_REQUESTS_ADMINS_INFO = {
     'rkc7h',
     'kc2bj',
     'cyj7aj',
-    'nem2p',
-    'cyj7aj',
     'jf2dg',
     'clm8v',
     'jus2yw',
-    'khs3z'
+    'khs3z',
+    'mb5wt',
+    'cmd7ag',
+    'xve5kj',
+    'egg3xa'
 }
+
+RESOURCE_REQUESTS_DELEGATES_INFO = {
+    'rc-staff-temp': ['cyj7aj', 'jus2yw'],
+    'nudge4': ['jus2yw'],
+    'hpc_build': ['nem2p']
+}
+
 RESOURCE_REQUESTS_SERVICE_UNITS_TIERS = ['ssz_standard', 'ssz_instructional', 'ssz_paid', 'hsz_standard', 'hsz_paid']
 RESOURCE_REQUESTS_STORAGE_TIERS = ['ssz_standard', 'ssz_project', 'hsz_standard', 'hsz_project']
 RESOURCE_REQUESTS_STATUS_TYPES = ['pending', 'processing', 'active', 'expired', 'retiring', 'retired', 'error']
 RESOURCE_TYPES = ['hpc_service_units', 'storage']
-RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD = 1000000
+RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_STANDARD = 10000000
 RESOURCE_REQUEST_FREE_SERVICE_UNITS_SSZ_INSTRUCTIONAL = 100000
+RESOURCE_REQUEST_FREE_STORAGE_SSZ_STANDARD = 10  # In TB
 
 
 def synchronized(f):

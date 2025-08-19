@@ -107,10 +107,19 @@ class UVARCSupportRequestsManager:
         except Exception as ex:
             app.log_exception(ex)
             print(ex)
+        if 'resource_requestor_uid' in request_info_dict and request_info_dict['resource_requestor_uid'] is not None and request_info_dict['resource_requestor_uid'] != '':
+            try:
+                jira_service_handler.create_new_customer(
+                    name=request_info_dict['resource_requestor_uid'],
+                    email='{}@virginia.edu'.format(request_info_dict['resource_requestor_uid'])
+                )
+            except Exception as ex:
+                app.log_exception(ex)
+                print(ex)
 
         ticket_response = jira_service_handler.create_new_ticket(
             reporter=request_info_dict['uid'],
-            participants=attrib_to_var['participants'],
+            participants=[request_info_dict['resource_requestor_uid']] if 'resource_requestor_uid' in request_info_dict and request_info_dict['resource_requestor_uid'] is not None and request_info_dict['resource_requestor_uid'] != '' and request_info_dict['uid'] != request_info_dict['resource_requestor_uid'] else None,
             project_name=project_ticket_route[0],
             request_type=project_ticket_route[1],
             components=attrib_to_var['components'],
@@ -135,54 +144,10 @@ class UVARCSupportRequestsManager:
         return desc_str
 
 
-    # def set_queue_message(self, data):
-    #     aws_service = AWSServiceHandler(app)
-    #     sqs = aws_service.get_resource('sqs')
-    #     queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
-    #     response = queue.send_message(
-    #             MessageBody=json.dumps(
-    #                     {
-    #                       'group_name': data['group_name'],
-    #                       'resource_request_type': data['resource_request_type'],
-    #                       'resource_request_id': data['resource_request_id'],
-    #                       'status': data['status']
-    #                     }
-    #                 ))
-    #     print(response)
-    #     return response
-
-    # def receive_message(self):
-    #     try:
-    #         aws_service = AWSServiceHandler(app)
-    #         sqs = aws_service.get_resource('sqs')
-    #         queue = sqs.get_queue_by_name(QueueName=app.config['QUEUE_NAME'])
-    #         messages = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=20, VisibilityTimeout=10)
-    #         if len(messages) > 0:
-    #             for message in messages:
-    #                 message_obj = json.loads(message.body)
-    #                 if message_obj.get('status') == 'pending':
-    #                     #mocking data
-    #                     form_data = {'email': 'cyj7aj@virginia.edu', 'name': 'raji', 'uid': 'cyj7aj', 'category': 'Storage',
-    #                            'department': '', 'cost-center': 'CC1260', 'company_id': 'UVA_207', 'business_unit': 'BU01',
-    #                            'fund': 'FD068', 'grant': '', 'gift': '', 'program': '', 'project': 'PJ02322', 'designated': '',
-    #                            'function': 'FN009', 'activity': '', 'assignee':'988443044', 'components': '', 'participants': None}
-    #                     message_obj.update(form_data)
-    #                     response = json.loads(self.process_support_request(message_obj))
-    #                     if response['issueKey']:
-    #                          # after creating ticket, delete the message from the queue 
-    #                         message.delete()
-    #                         return make_response(jsonify({"ticket_id": response['issueKey']}), 201)
-    #                     else:
-    #                         return make_response(jsonify({"error": "Failed to create Jira ticket."}), 500)
-    #                 else:
-    #                     print(message)
-    #         else:
-    #             message_obj = {
-    #                 'status': 'error',
-    #                 'message': 'No messages available in the queue.'
-    #              }
-    #             return message_obj
-             
-    #     except Exception as e:
-    #         print(f"Unexpected error: {str(e)}")
-    #         return make_response(jsonify({"error": "An unexpected error occurred."}), 500)
+def determine_form_url(hostname):
+    if 'test' in hostname or 'localhost' in hostname:
+        return 'https://staging-onprem.rc.virginia.edu/form/combined-request-form/'
+    elif hostname == 'uvarc-unified-service.pods.uvarc.io':
+        return 'https://rc.virginia.edu/form/combined-request-form/'
+    else:
+        return '/error/unsupported-environment'

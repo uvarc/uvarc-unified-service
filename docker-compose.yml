@@ -32,6 +32,9 @@ services:
         "LDAP_PUBLIC": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "LDAP_PRIVATE":  {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "HPC_API": {"HOSTS":[""], "PORT":"", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "QUALTRICS": {"HOSTS":[""], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "LIBCAL": {"HOSTS":[""], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
+        "HSL_API": {"HOSTS":[""], "PORT":"443", "CLIENT_ID":"", "CLIENT_SECRET":""},
         "CORS_ENABLED":false,
         "DEBUG":true
         }'
@@ -51,6 +54,12 @@ services:
       - LDAP_PRIVATE_CLIENT_SECRET=xyz
       - HPC_API_CLIENT_ID=xyz
       - HPC_API_CLIENT_SECRET=xyz
+      - QUALTRICS_CLIENT_ID=xyz
+      - QUALTRICS_CLIENT_SECRET=xyz
+      - LIBCAL_CLIENT_ID=xyz
+      - LIBCAL_CLIENT_SECRET=xyz
+      - HSL_API_CLIENT_ID=xyz
+      - HSL_API_CLIENT_SECRET=xyz
     volumes:
       - ./app:/opt/local/non_root_user/uvarc_unified_service/app
       - ./common_service_handlers:/opt/local/non_root_user/uvarc_unified_service/common_service_handlers
@@ -70,6 +79,7 @@ services:
       image: mongo
       restart: always
       container_name: uvarc_unified_db
+      # command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "./data/mongodb/keyfile"]
       ports:
         - 27017:27017
       networks:

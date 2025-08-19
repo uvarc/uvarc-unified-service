@@ -1,12 +1,12 @@
 import json
 from app import app, celery
-from app.core.business import UVARCGroupDataManager
+from app.core.business import UVARCGroupDataManager, UVARCGroupsDataManager
 from app.ticket_requests.business import UVARCSupportRequestsManager
 
 
 class IntervalTasks:
     @celery.task(name="process_pending_resource_request_task", autoretry_for=(Exception,), retry_backoff=60, retry_jitter=True, retry_kwargs={'max_retries': 5, 'countdown': 5})
-    def process_pending_resource_request(group_name, request_type, resource_request_type, support_request_type):
+    def process_pending_resource_request(group_name, request_type, resource_request_type, support_request_type, resource_request_hist, resource_requestor_uid):
         try:
             # Read, download files (if for preprocessing) and mark for scheduled preprocessing or processing in mongodb
             ticket_request_type = ''
@@ -30,7 +30,8 @@ class IntervalTasks:
                         'project_description': group_info_db['project_desc'],
                         'resource_type': resource_request_type,
                         'resource_name': resource_name,
-                        'request_type': ticket_request_type
+                        'request_type': ticket_request_type,
+                        'resource_requestor_uid': resource_requestor_uid
                     }
                     if resource_request_type == 'hpc_service_units':
                         ticket_request_payload['request_count'] = group_info_db['resources'][resource_request_type][resource_name]['request_count']
@@ -47,9 +48,9 @@ class IntervalTasks:
                     group_info_db['resources'][resource_request_type][resource_name]['request_status'] = 'processing' if group_info_db['resources'][resource_request_type][resource_name]['request_status'] == 'pending' else 'retiring'
                     if 'request_processing_details' not in group_info_db['resources'][resource_request_type][resource_name]:
                         group_info_db['resources'][resource_request_type][resource_name]['request_processing_details'] = {'tickets_info': []}
-                    # if 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
-                    #     group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = []
-                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] + [(str(json.loads(ticket_response)['issueKey']))]
+                    if 'tickets_info' not in group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']:
+                        group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'] = []
+                    group_info_db['resources'][resource_request_type][resource_name]['request_processing_details']['tickets_info'].append({str(json.loads(ticket_response)['issueKey']): resource_request_hist})
 
             uvarc_group_data_manager.set_group_info(
                 group_info_db
@@ -62,6 +63,17 @@ class IntervalTasks:
             print(ex)
             app.logger.exception(ex)
             raise Exception(ex)
+
+    @celery.task(name="version_groups_info_task")
+    def version_groups_info():
+        try:
+            app.logger.info("version_groups_info_task: Started")
+            UVARCGroupsDataManager().version_groups()
+            app.logger.info("version_groups_info_task: Ended")
+        except Exception as ex:
+            app.logger.info("version_groups_info_task: Failed")
+            print(ex)
+            app.logger.exception(ex)
 
     @celery.task(name="generate_and_transfer_resource_requests_billing_task")
     def generate_and_transfer_resource_requests_billing():
