@@ -1,4 +1,4 @@
 image:
   repository: ghcr.io/uvarc/uvarc-unified-service
   pullPolicy: Always
-  tag: prod-0.2.3
+  tag: prod-0.4.0
