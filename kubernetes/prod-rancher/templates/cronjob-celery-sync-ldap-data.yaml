@@ -1,0 +1,145 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: uvarc-unified-service-sync-ldap-data-cronjob-prod
+spec:
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: main
+              image: "{{ .Values.image.repository }}-tasks:{{ .Values.image.tag }}"
+              imagePullPolicy: Always
+              command:
+                - /bin/sh
+                - -c
+                - celery -A app.celery call ldap_requests_sync_ldap_data_task
+              resources:
+                requests:
+                  memory: "1000Mi"
+                  cpu: "500m"
+                limits:
+                  memory: "1000Mi"
+                  cpu: "500m"
+              envFrom:
+                - configMapRef:
+                    name: uvarc-unified-service-configmap-prod
+              env:
+                - name: JIRA_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: JIRA_CLIENT_ID
+
+                - name: JIRA_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: JIRA_CLIENT_SECRET
+
+                - name: WORKDAY_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: WORKDAY_CLIENT_ID
+
+                - name: WORKDAY_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: WORKDAY_CLIENT_SECRET
+
+                - name: SMTP_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: SMTP_CLIENT_ID
+
+                - name: SMTP_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: SMTP_CLIENT_SECRET
+
+                - name: AWS_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: AWS_CLIENT_ID
+
+                - name: AWS_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: AWS_CLIENT_SECRET
+
+                - name: MONGO_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: MONGO_USER
+
+                - name: MONGO_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: MONGO_PASSWORD
+
+                - name: LDAP_PUBLIC_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: LDAP_PUBLIC_CLIENT_ID
+
+                - name: LDAP_PUBLIC_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: LDAP_PUBLIC_CLIENT_SECRET
+
+                - name: LDAP_PRIVATE_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: LDAP_PRIVATE_CLIENT_ID
+
+                - name: LDAP_PRIVATE_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: LDAP_PRIVATE_CLIENT_SECRET
+
+                - name: HPC_API_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: HPC_API_CLIENT_ID
+
+                - name: HPC_API_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: HPC_API_CLIENT_SECRET
+                - name: WORKDAY_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: WORKDAY_CLIENT_ID
+
+                - name: WORKDAY_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: uvarc-unified-service-secret-prod
+                      key: WORKDAY_CLIENT_SECRET
+
+              volumeMounts:
+                - name: uvarc-unified-service-ceph-data-prod
+                  mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
+          restartPolicy: OnFailure
+          volumes:
+            - name: uvarc-unified-service-ceph-data-prod
+              persistentVolumeClaim:
+                claimName: uvarc-unified-service-ceph-pvc-data
