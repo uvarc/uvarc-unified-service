@@ -336,10 +336,19 @@ class UVARCUsersGroupsSyncManager:
 
     def backfill_groups_hist_info(self):
         if 'uvarc_groups' not in mongo_service.db.list_collection_names() or mongo_service.db.uvarc_groups.count_documents({}) == 0:
-            with open('data/dropbox/backfill/groups_info.csv', mode='r') as csv_file:
+            with open('data/backfill/groups_info.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for group_info in csv_reader:
                     self.create_group_info(group_info)
+
+    def backfill_allocations_hist_info(self):
+        with open('data/backfill/ssz_allocations_standard.csv', mode='r') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for allocation_info in csv_reader:
+                print(allocation_info)
+
+    def backfill_storage_hist_info(self):
+        pass
 
     def create_user_info(self, user):
         app.logger.info('Creating new user with UID: {} '.format(user['uid']))

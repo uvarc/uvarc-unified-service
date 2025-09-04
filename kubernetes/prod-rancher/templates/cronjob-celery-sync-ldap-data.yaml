@@ -166,4 +166,4 @@ spec:
           volumes:
             - name: uvarc-unified-service-ceph-data-prod
               persistentVolumeClaim:
-                claimName: uvarc-unified-service-ceph-pvc-data
+                claimName: uvarc-unified-service-ceph-pvc-data-prod

@@ -18,6 +18,7 @@ data/dropbox
 data/wip
 data/archive
 data/dropbox/backfill
+data/backfill
 connections.json
 scripts/legacy-generate-monthly-billing.py
 .idea
