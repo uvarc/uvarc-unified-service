@@ -29,9 +29,6 @@ spec:
         - name: uvarc-unified-service-ceph-data-prod
           persistentVolumeClaim:
             claimName: uvarc-unified-service-ceph-pvc-data-prod
-        - name: uvarc-unified-service-rc-staff-dtn-cephfs-data-prod
-          persistentVolumeClaim:
-            claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-prod
       containers:
         - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           name: uvarc-unified-service-prod
@@ -41,9 +38,7 @@ spec:
 
           volumeMounts:
             - name: uvarc-unified-service-ceph-data-prod
-              mountPath: /opt/local/non_root_user/uvarc_unified_service/data/dropbox
-            - name: uvarc-unified-service-rc-staff-dtn-cephfs-data-prod
-              mountPath: /opt/local/non_root_user/uvarc_unified_service/data/billing
+              mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
 
           resources:
             requests:
