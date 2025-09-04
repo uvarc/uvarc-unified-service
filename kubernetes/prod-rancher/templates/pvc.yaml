@@ -10,7 +10,7 @@ spec:
   resources:
     requests:
       # This doesn't really matter for a static PV
-      storage: 100Gi
+      storage: 1Gi
   volumeMode: Filesystem
   volumeName: uvarc-unified-service-ceph-pv-data-prod
   storageClassName: csi-cephfs-sc
