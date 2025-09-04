@@ -19,9 +19,6 @@ spec:
         - name: uvarc-unified-service-ceph-data-test
           persistentVolumeClaim:
             claimName: uvarc-unified-service-ceph-pvc-data-test
-        - name: uvarc-unified-service-rc-staff-dtn-cephfs-data-test
-          persistentVolumeClaim:
-            claimName: uvarc-unified-service-rc-staff-dtn-cephfs-pvc-test
       containers:
         - image: "ghcr.io/uvarc/uvarc-unified-service:develop"
           #- image: "quay.io/accord/accord-service:develop"
@@ -32,9 +29,7 @@ spec:
 
           volumeMounts:
             - name: uvarc-unified-service-ceph-data-test
-              mountPath: /opt/local/non_root_user/uvarc_unified_service/data/dropbox
-            - name: uvarc-unified-service-rc-staff-dtn-cephfs-data-test
-              mountPath: /opt/local/non_root_user/uvarc_unified_service/data/billing
+              mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
 
           resources:
             requests:
