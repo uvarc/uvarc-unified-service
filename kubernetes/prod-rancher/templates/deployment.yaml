@@ -6,6 +6,16 @@ metadata:
   name: uvarc-unified-service-deployment-prod
   namespace: uvarc-unified-services
 spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: k8s-app
+            operator: In
+            values:
+            - tenant0-egw
+        topologyKey: kubernetes.io/hostname
   replicas: 1
   selector:
     matchLabels:
