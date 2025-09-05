@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from flask import request, make_response, jsonify
+from flask import request, make_response, jsonify, abort
 from app import app
 from app.workshop_visualization.business import UVARCWorkshopVisualizationDataManager, UVARCWorkshopSurveyDataManager
 from common_utils import cors_check
@@ -66,7 +66,7 @@ class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return response
 
-    def get(self):
+    def post(self):
         try:
             if cors_check(app, request.headers.get('Origin')):
                 abort(401)
