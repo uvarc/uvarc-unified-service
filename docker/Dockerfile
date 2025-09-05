@@ -5,7 +5,7 @@ ENV NON_ROOT_GID="103" \
     NON_ROOT_UID="1003" \
     NON_ROOT_WORK_DIR=/opt/local/${NON_ROOT_USER} \
     NON_ROOT_HOME_DIR=/home/${NON_ROOT_USER}
-RUN groupadd -g 65532 nonroot && useradd -m -s $NON_ROOT_HOME_DIR -u 65532 $NON_ROOT_USER -g nonroot
+RUN groupadd -g 25547 nonroot && useradd -m -s $NON_ROOT_HOME_DIR -u 25547 $NON_ROOT_USER -g nonroot
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends nginx supervisor\
