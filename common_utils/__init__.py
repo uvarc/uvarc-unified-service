@@ -12,7 +12,8 @@ RESOURCE_REQUESTS_ADMINS_INFO = {
     'mb5wt',
     'cmd7ag',
     'xve5kj',
-    'egg3xa'
+    'egg3xa',
+    'kah3f'
 }
 
 RESOURCE_REQUESTS_DELEGATES_INFO = {

@@ -341,13 +341,13 @@ class UVARCUsersGroupsSyncManager:
                 for group_info in csv_reader:
                     self.create_group_info(group_info)
 
-    def backfill_allocations_hist_info(self):
+    def build_allocations_hist_info(self):
         with open('data/backfill/ssz_allocations_standard.csv', mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for allocation_info in csv_reader:
                 print(allocation_info)
 
-    def backfill_storage_hist_info(self):
+    def build_storage_hist_info(self):
         pass
 
     def create_user_info(self, user):
