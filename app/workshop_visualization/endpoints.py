@@ -1,6 +1,7 @@
 from flask_restful import Resource
 from flask import request, make_response, jsonify, abort
 from app import app
+import logging
 from app.workshop_visualization.business import UVARCWorkshopVisualizationDataManager, UVARCWorkshopSurveyDataManager
 from common_utils import cors_check
 
@@ -71,9 +72,12 @@ class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
             if cors_check(app, request.headers.get('Origin')):
                 abort(401)
             else:
+                logging.info(f"Fetching survey data for survey ID: {app.config['WORKSHOP_SURVEY_ID']}")
                 data_helper = UVARCWorkshopSurveyDataManager(app.config['WORKSHOP_SURVEY_ID'])
+                logging.info(f"Fetched survey data: {len(data_helper.get_workshop_survey_data())}")
                 response = make_response(jsonify(data_helper.get_workshop_survey_data()), 200)
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
+                logging.info(f"Response length: {len(response.get_data(as_text=True))}")
                 return response
         except Exception as e:
             response = make_response({"error": str(e)}, 500)
