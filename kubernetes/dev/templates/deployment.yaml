@@ -42,99 +42,134 @@ spec:
         - configMapRef:
             name: uvarc-unified-service-configmap
         env:
-        - name: JIRA_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: JIRA_CLIENT_ID
+          - name: JIRA_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: JIRA_CLIENT_ID
 
-        - name: JIRA_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: JIRA_CLIENT_SECRET
+          - name: JIRA_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: JIRA_CLIENT_SECRET
 
-        - name: WORKDAY_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: WORKDAY_CLIENT_ID
+          - name: WORKDAY_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: WORKDAY_CLIENT_ID
 
-        - name: WORKDAY_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: WORKDAY_CLIENT_SECRET
+          - name: WORKDAY_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: WORKDAY_CLIENT_SECRET
 
-        - name: SMTP_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: SMTP_CLIENT_ID
+          - name: SMTP_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: SMTP_CLIENT_ID
 
-        - name: SMTP_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: SMTP_CLIENT_SECRET
+          - name: SMTP_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: SMTP_CLIENT_SECRET
 
-        - name: AWS_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: AWS_CLIENT_ID
+          - name: AWS_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: AWS_CLIENT_ID
 
-        - name: AWS_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: AWS_CLIENT_SECRET
+          - name: AWS_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: AWS_CLIENT_SECRET
 
-        - name: MONGO_USER
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: MONGO_USER
+          - name: MONGO_USER
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: MONGO_USER
 
-        - name: MONGO_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: MONGO_PASSWORD
+          - name: MONGO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: MONGO_PASSWORD
 
-        - name: LDAP_PUBLIC_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: LDAP_PUBLIC_CLIENT_ID
+          - name: LDAP_PUBLIC_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: LDAP_PUBLIC_CLIENT_ID
 
-        - name: LDAP_PUBLIC_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: LDAP_PUBLIC_CLIENT_SECRET
+          - name: LDAP_PUBLIC_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: LDAP_PUBLIC_CLIENT_SECRET
 
-        - name: LDAP_PRIVATE_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: LDAP_PRIVATE_CLIENT_ID
+          - name: LDAP_PRIVATE_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: LDAP_PRIVATE_CLIENT_ID
 
-        - name: LDAP_PRIVATE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: LDAP_PRIVATE_CLIENT_SECRET
+          - name: LDAP_PRIVATE_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: LDAP_PRIVATE_CLIENT_SECRET
 
-        - name: HPC_API_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: HPC_API_CLIENT_ID
+          - name: HPC_API_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: HPC_API_CLIENT_ID
 
-        - name: HPC_API_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: uvarc-unified-service-secret
-              key: HPC_API_CLIENT_SECRET
+          - name: HPC_API_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: HPC_API_CLIENT_SECRET
 
+          - name: QUALTRICS_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: QUALTRICS_CLIENT_ID
+
+          - name: QUALTRICS_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: QUALTRICS_CLIENT_SECRET
+
+          - name: LIBCAL_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: LIBCAL_CLIENT_ID
+
+          - name: LIBCAL_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: LIBCAL_CLIENT_SECRET
+
+          - name: HSL_API_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: HSL_API_CLIENT_ID
+
+          - name: HSL_API_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: uvarc-unified-service-secret
+                key: HSL_API_CLIENT_SECRET
