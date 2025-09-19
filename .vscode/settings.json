@@ -6,5 +6,8 @@
   ],
   "python.analysis.extraPaths": [
     ".venv/lib/python3.12/site-packages"
+  ],
+  "cursorpyright.analysis.extraPaths": [
+    ".venv/lib/python3.12/site-packages"
   ]
 }
