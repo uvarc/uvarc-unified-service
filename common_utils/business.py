@@ -1,6 +1,5 @@
 from app import mongo_service
-import pytz
-from datetime import datetime
+from datetime import datetime, timezone
 
 class UVARCUserInfoManager:
     def __init__(self):
@@ -33,20 +32,18 @@ class UVARCUserInfoManager:
         return user
 
     def __format_dates_for_output(self, user):
-        if "date_of_query" in user and isinstance(user["date_of_query"], str):
-            user["date_of_query"] = datetime.strptime(user["date_of_query"], '%Y-%m-%dT%H:%M:%SZ')
+        if "date_of_query" in user:
+            if isinstance(user["date_of_query"], str):
+                user["date_of_query"] = datetime.strptime(user["date_of_query"], '%Y-%m-%dT%H:%M:%SZ')
+                user["date_of_query"] = user["date_of_query"].replace(tzinfo=timezone.utc)
         if "update_time" in user and isinstance(user["update_time"], str):
-            user["update_time"] = datetime.strptime(user["update_time"], '%Y-%m-%dT%H:%M:%SZ')
-        if "pwdLastSet" in user and isinstance(user["pwdLastSet"], str):
-            user["pwdLastSet"] = datetime.strptime(user["pwdLastSet"], '%Y-%m-%dT%H:%M:%SZ')
-        
-        user["date_of_query"] = pytz.utc.localize(user["date_of_query"]).astimezone(
-            pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
-        user["update_time"] = pytz.utc.localize(user["update_time"]).astimezone(
-            pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
-        if user["pwdLastSet"] != "":
-            user["pwdLastSet"] = pytz.utc.localize(user["pwdLastSet"]).astimezone(
-                pytz.timezone('GMT')).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            if isinstance(user["update_time"], str):
+                user["update_time"] = datetime.strptime(user["update_time"], '%Y-%m-%dT%H:%M:%SZ')
+                user["update_time"] = user["update_time"].replace(tzinfo=timezone.utc)
+        if "pwdLastSet" in user:
+            if isinstance(user["pwdLastSet"], str):
+                user["pwdLastSet"] = datetime.strptime(user["pwdLastSet"], '%Y-%m-%dT%H:%M:%SZ')
+            user["pwdLastSet"] = user["pwdLastSet"].replace(tzinfo=timezone.utc)
 
         return user
 
