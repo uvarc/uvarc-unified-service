@@ -159,9 +159,9 @@ spec:
                     secretKeyRef:
                       name: uvarc-unified-service-secret
                       key: HSL_API_CLIENT_SECRET
-            volumeMounts:
-              - name: uvarc-unified-service-ceph-data
-                mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
+              volumeMounts:
+                - name: uvarc-unified-service-ceph-data
+                  mountPath: /opt/local/non_root_user/uvarc_unified_service/data/
           restartPolicy: OnFailure
           volumes:
             - name: uvarc-unified-service-ceph-data
