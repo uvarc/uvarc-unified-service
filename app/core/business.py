@@ -7,6 +7,7 @@ from deepdiff import DeepDiff
 from app import app, mongo_service
 from common_service_handlers.ldap_service_handler import PrivateLDAPServiceHandler, PublicLDAPServiceHandler
 from common_utils import synchronized
+import re
 
 
 class UVARCUserDataManager:
@@ -140,6 +141,7 @@ class UVARCUsersGroupsSyncManager:
             "Rivanna_Status",
             "date_of_query"
         ]
+        self.__group_hist_info = {}
 
     def __del__(self):
         self.close()
@@ -263,10 +265,10 @@ class UVARCUsersGroupsSyncManager:
     @synchronized
     def backfill_users_hist_info(self):
         # Read CSV File
-        backfill_users_hist_info = pd.read_csv("data/dropbox/backfill/users_info.csv")
+        backfill_users_hist_info = pd.read_csv("data/backfill/users_info.csv")
 
         # Only repopulate the database if there are no documents in there currently
-        if mongo_service.db.uvarc_users.count_documents({}) == 0:
+        if 'uvarc_users' not in mongo_service.db.list_collection_names() or mongo_service.db.uvarc_users.count_documents({}) == 0:
             # convert to datatime object
             backfill_users_hist_info["date_of_query"] = pd.to_datetime(
                 backfill_users_hist_info["date_of_query"])
@@ -335,20 +337,114 @@ class UVARCUsersGroupsSyncManager:
             mongo_service.db.uvarc_users.insert_many(backfill_users_info)
 
     def backfill_groups_hist_info(self):
+        # self.__group_hist_info = list(set(self.__group_hist_info))
         if 'uvarc_groups' not in mongo_service.db.list_collection_names() or mongo_service.db.uvarc_groups.count_documents({}) == 0:
+            self.build_allocations_hist_info()
+            self.build_storage_hist_info()
             with open('data/backfill/groups_info.csv', mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for group_info in csv_reader:
-                    self.create_group_info(group_info)
+                    if group_info['group_name'].strip() not in self.__group_hist_info:
+                        self.__group_hist_info[group_info['group_name'].strip()] = {
+                            'hpc_service_units': {'ssz_standard': None, 'ssz_instructional': None, 'ssz_paid': None, 'hsz_standard': None, 'hsz_paid': None },
+                            'storage': {'ssz_standard': None, 'ssz_project': None, 'hsz_standard': None, 'hsz_project': None}
+                        }
+            for group_name in sorted(self.__group_hist_info):
+                self.create_group_info({'group_name': group_name, 'resources': self.__group_hist_info[group_name]})
 
     def build_allocations_hist_info(self):
-        with open('data/backfill/ssz_allocations_standard.csv', mode='r') as csv_file:
+        with open('data/backfill/ssz_allocations.csv', mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for allocation_info in csv_reader:
                 print(allocation_info)
+                if allocation_info['Group'] not in self.__group_hist_info:
+                    self.__group_hist_info[allocation_info['Group'].strip()] = {
+                        'hpc_service_units': {'ssz_standard': None, 'ssz_instructional': None, 'ssz_paid': None, 'hsz_standard': None, 'hsz_paid': None },
+                        'storage': {'ssz_standard': None, 'ssz_project': None, 'hsz_standard': None, 'hsz_project': None}
+                    }
+                elif 'hpc_service_units' not in self.__group_hist_info[allocation_info['Group']]:
+                    self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units'] = {'ssz_standard': None, 'ssz_instructional': None, 'ssz_paid': None, 'hsz_standard': None, 'hsz_paid': None }
+
+                if allocation_info['Type'].strip() == 'standard':
+                    if self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_standard'] == None:
+                        self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_standard'] = [allocation_info]
+                    else:
+                        print(self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_standard'])
+                        continue
+                        # raise Exception('Standard allocation duplicates found')
+                elif allocation_info['Type'].strip() == 'purchase':
+                    if self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_paid'] == None:
+                        self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_paid'] = [allocation_info]
+                    else:
+                        print(self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_paid'])
+                        continue
+                        # raise Exception('Paid allocation duplicates found')
+                elif allocation_info['Type'].strip() == 'instructional':
+                    if self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_instructional'] == None:
+                        self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_instructional'] = [allocation_info]
+                    else:
+                        print(self.__group_hist_info[allocation_info['Group'].strip()]['hpc_service_units']['ssz_instructional'])
+                        continue
+                        # raise Exception('Instructional allocation duplicates found')
 
     def build_storage_hist_info(self):
-        pass
+        with open('data/backfill/rc-standard-storage-billing.csv', mode='r') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for storage_info in csv_reader:
+                print(storage_info)
+                storage_info['Description'] = storage_info['Description'].encode("ascii", "ignore").decode()
+                pattern = re.compile(r'^(\w+),.*?\((\d+\.\d+)\s+TB free\+(\d+\.\d+)\s+TB billed=(\d+)\s+TB total\)')
+                match = pattern.search(storage_info['Description'])
+                if match:
+                    storage_info['pi'], free_space, billed_space, storage_info['request_size'] = match.groups()
+                pattern = r'TB\s*(.*?)\s*research standard storage'
+                match = re.search(pattern, storage_info['Description'], re.IGNORECASE)
+                if match:
+                    split_list = match.group(1).split(' /')
+                    if len(split_list) == 2:
+                        storage_info['Group'], storage_info['resource_name'] = split_list
+                    elif len(split_list) == 1:
+                        storage_info['Group'] = storage_info['resource_name'] = split_list[0].replace('/', '')
+                if storage_info['Group'].strip() not in self.__group_hist_info:
+                    self.__group_hist_info[storage_info['Group'].strip()] = {
+                        'hpc_service_units': {'ssz_standard': None, 'ssz_instructional': None, 'ssz_paid': None, 'hsz_standard': None, 'hsz_paid': None},
+                        'storage': {'ssz_standard': None, 'ssz_project': None, 'hsz_standard': None, 'hsz_project': None}
+                    }
+                elif 'storage' not in self.__group_hist_info[storage_info['Group'].strip()]:
+                    self.__group_hist_info[storage_info['Group'].strip()]['storage'] = {'ssz_standard': None, 'ssz_project': None, 'hsz_standard': None, 'hsz_project': None}
+
+                if self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_standard'] == None:
+                    self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_standard'] = [storage_info]
+                else:
+                    print(self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_standard'])
+                    continue
+
+        with open('data/backfill/rc-project-storage-billing.csv', mode='r') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for storage_info in csv_reader:
+                print(storage_info)
+                storage_info['Description'] = storage_info['Description'].encode("ascii", "ignore").decode()
+                pattern = re.compile(r'(?P<id>.*?),\s+(?P<size>.*?)\s+TB\s*(?P<group_name>.*?)\s*/(?P<share_name>.*?)\s*research project storage')
+                if 'GutIntelligenceLab' in storage_info['Description']:
+                    pass
+                match = pattern.search(storage_info['Description'])
+                if match:
+                    storage_info['pi'],  storage_info['request_size'], storage_info['Group'], storage_info['resource_name'] = match.groups()
+                if storage_info['Group'].strip() not in self.__group_hist_info:
+                    self.__group_hist_info[storage_info['Group'].strip()] = {
+                        'hpc_service_units': {'ssz_standard': None, 'ssz_instructional': None, 'ssz_paid': None, 'hsz_standard': None, 'hsz_paid': None},
+                        'storage': {'ssz_standard': None, 'ssz_project': None, 'hsz_standard': None, 'hsz_project': None}
+                    }
+                elif 'storage' not in self.__group_hist_info[storage_info['Group'].strip()]:
+                    self.__group_hist_info[storage_info['Group'].strip()]['storage'] = {'ssz_standard': None, 'ssz_project': None, 'hsz_standard': None, 'hsz_project': None}
+
+                if self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_project'] == None:
+                    self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_project'] = [storage_info]
+                elif 'partial pymt' in storage_info['Description']:
+                    self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_project'].append(storage_info)
+                else:
+                    print(self.__group_hist_info[storage_info['Group'].strip()]['storage']['ssz_project'])
+                    continue
 
     def create_user_info(self, user):
         app.logger.info('Creating new user with UID: {} '.format(user['uid']))
@@ -501,4 +597,3 @@ class UVARCUsersGroupsSyncManager:
                     },
                     False
                 )
-
