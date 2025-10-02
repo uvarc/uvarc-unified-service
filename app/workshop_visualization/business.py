@@ -1,10 +1,9 @@
 import ast
 import datetime
 import pandas as pd
-from app import app
+from app import app, mongo_service
 from common_service_handlers.libcal_service_handler import LibcalServiceHandler
 from common_service_handlers.qualtrics_service_handler import QualtricsServiceHandler
-from common_utils.business import UVARCUserInfoManager
 import re
 
 class UVARCWorkshopVisualizationDataManager:
@@ -60,27 +59,6 @@ class UVARCWorkshopVisualizationDataManager:
         # DataFrame with registrations, optional: filter by user
         reg_df = libcal.get_multiple_registrations(event_ids)
 
-        all_uids = reg_df['uid'].unique()
-        ldap_helper = UVARCUserInfoManager()
-        ldap_info = [ldap_helper.get_user_info(uid) for uid in all_uids]
-        ldap_info = [{
-            'department': info['department'],
-            'school': info['school'],
-            'uid': info['uid']
-        } for info in ldap_info if info is not None]
-
-        # add department and school info to reg_df
-        ldap_df = pd.DataFrame(ldap_info)
-        reg_df = pd.merge(reg_df, ldap_df, left_on='uid', right_on='uid', how='left', copy=False)
-
-        # convert NaN to empty string
-        reg_df['department'] = reg_df['department'].fillna('')
-        reg_df['school'] = reg_df['school'].fillna('')
-
-        # strip idenifiers from reg_df
-        identifiers = ['first_name', 'last_name', 'email', 'uid']
-        reg_df = reg_df.drop(columns=identifiers, axis=1, inplace=False)
-
         non_numeric_df = libcal.non_numeric(combined_df)
         reg_df = pd.merge(reg_df, non_numeric_df, left_on="event_id", right_on="id", how="inner", copy=False)
 
@@ -125,7 +103,7 @@ class UVARCWorkshopVisualizationDataManager:
         workshop_data['tags'] = list(workshop_data['tags'] + workshop_data['category'])
 
         return workshop_data.to_dict(orient='records')
-    
+
 class UVARCWorkshopSurveyDataManager:
     def __init__(self, survey_id):
         self.survey_id = survey_id
