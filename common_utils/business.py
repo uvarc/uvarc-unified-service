@@ -33,17 +33,23 @@ class UVARCUserInfoManager:
 
     def __format_dates_for_output(self, user):
         if "date_of_query" in user:
-            if isinstance(user["date_of_query"], str):
+            if user["date_of_query"] == '':
+                del user["date_of_query"]
+            elif isinstance(user["date_of_query"], str):
                 user["date_of_query"] = datetime.strptime(user["date_of_query"], '%Y-%m-%dT%H:%M:%SZ')
                 user["date_of_query"] = user["date_of_query"].replace(tzinfo=timezone.utc)
-        if "update_time" in user and isinstance(user["update_time"], str):
-            if isinstance(user["update_time"], str):
+        if "update_time" in user:
+            if user["update_time"] == '':
+                del user["update_time"]
+            elif isinstance(user["update_time"], str):
                 user["update_time"] = datetime.strptime(user["update_time"], '%Y-%m-%dT%H:%M:%SZ')
                 user["update_time"] = user["update_time"].replace(tzinfo=timezone.utc)
         if "pwdLastSet" in user:
-            if isinstance(user["pwdLastSet"], str):
+            if user["pwdLastSet"] == '':
+                del user["pwdLastSet"]
+            elif isinstance(user["pwdLastSet"], str):
                 user["pwdLastSet"] = datetime.strptime(user["pwdLastSet"], '%Y-%m-%dT%H:%M:%SZ')
-            user["pwdLastSet"] = user["pwdLastSet"].replace(tzinfo=timezone.utc)
+                user["pwdLastSet"] = user["pwdLastSet"].replace(tzinfo=timezone.utc)
 
         return user
 
