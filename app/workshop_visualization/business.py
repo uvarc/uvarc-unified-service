@@ -5,6 +5,7 @@ from app import app
 from common_service_handlers.libcal_service_handler import LibcalServiceHandler
 from common_service_handlers.qualtrics_service_handler import QualtricsServiceHandler
 from common_utils.business import UVARCUserInfoManager
+import logging
 import re
 
 class UVARCWorkshopVisualizationDataManager:
@@ -62,12 +63,17 @@ class UVARCWorkshopVisualizationDataManager:
 
         all_uids = reg_df['uid'].unique()
         ldap_helper = UVARCUserInfoManager()
+
+        logging.info(f"Fetching LDAP info for {len(all_uids)} unique UIDs")
+
         ldap_info = [ldap_helper.get_user_info(uid) for uid in all_uids]
         ldap_info = [{
             'department': info['department'],
             'school': info['school'],
             'uid': info['uid']
         } for info in ldap_info if info is not None]
+
+        logging.info(f"Fetched LDAP info for {len(ldap_info)} UIDs")
 
         # add department and school info to reg_df
         ldap_df = pd.DataFrame(ldap_info)
@@ -77,12 +83,14 @@ class UVARCWorkshopVisualizationDataManager:
         reg_df['department'] = reg_df['department'].fillna('')
         reg_df['school'] = reg_df['school'].fillna('')
 
+        non_numeric_df = libcal.non_numeric(combined_df)
+        reg_df = pd.merge(reg_df, non_numeric_df, left_on="event_id", right_on="id", how="inner", copy=False)
+
         # strip idenifiers from reg_df
         identifiers = ['first_name', 'last_name', 'email', 'uid']
         reg_df = reg_df.drop(columns=identifiers, axis=1, inplace=False)
 
-        non_numeric_df = libcal.non_numeric(combined_df)
-        reg_df = pd.merge(reg_df, non_numeric_df, left_on="event_id", right_on="id", how="inner", copy=False)
+        logging.info(f"Final attendance DataFrame length: {len(reg_df)}")
 
         return reg_df
 
@@ -110,13 +118,13 @@ class UVARCWorkshopVisualizationDataManager:
             'Containers': ['docker', 'kubernetes', 'container'],
             'Slurm': ['slurm'],
             'CLI': ['command line', 'cli', 'shell scripting'],
-            'HPC Core': ['11890719', '11890924', '12423016', '12423080', '12889799', '13832854', '13838434', '14584244', '14584667'],
+            'HPC Core': ['High Performance Computing from a Terminal Window', 'High Performance Computing Best Practices', 'Introduction to the Command Line for HPC', 'Introduction to Writing Slurm Job Scripts for HPC', 'Introduction to UVA\'s HPC System from the Terminal'],
             'Bioinformatics': ['bioinformatics', 'drug discovery'],
         }
 
         # add tags to data based on title and description
         workshop_data['tags'] = workshop_data['description'].str.split('Prerequisites:').str[0]
-        workshop_data['tags'] = workshop_data['title'].str.lower() + ' ' + workshop_data['tags'].str.lower() + ' ' + workshop_data['id'].astype(str)
+        workshop_data['tags'] = workshop_data['title'] + workshop_data['title'].str.lower() + ' ' + workshop_data['tags'].str.lower() + ' ' + workshop_data['id'].astype(str)
         workshop_data['tags'] = workshop_data['tags'].apply(lambda x: [tag for tag, keywords in tags.items() if any(keyword in x for keyword in keywords)])
 
         workshop_data['category'] = workshop_data['category'].apply(lambda x: [y['name'] for y in ast.literal_eval(str(x))])
