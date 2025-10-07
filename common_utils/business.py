@@ -23,7 +23,7 @@ class UVARCUserInfoManager:
     def __school_conversion(self, user):
         prev_school = user["school"]
         if prev_school != "":
-            if self.__correlations[prev_school]:
+            if prev_school in self.__correlations and self.__correlations[prev_school]:
                 user["school"] = self.__correlations[prev_school]
             else:
                 user["school"] = "Other"

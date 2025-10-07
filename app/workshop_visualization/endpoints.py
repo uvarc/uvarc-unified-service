@@ -20,6 +20,7 @@ class UVARCWorkshopAttendanceVisualizationEndpoint(Resource):
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return response
         except Exception as ex:
+            logging.exception("Error in OPTIONS /workshops/attendance")
             response = make_response(jsonify(
                 {
                     "status": "error",
@@ -39,6 +40,7 @@ class UVARCWorkshopAttendanceVisualizationEndpoint(Resource):
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return response
         except Exception as e:
+            logging.exception("Error in GET /workshops/attendance")
             response = make_response({"error": str(e)}, 500)
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return response
@@ -58,6 +60,7 @@ class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 return response
         except Exception as ex:
+            logging.exception("Error in OPTIONS /workshops/survey")
             response = make_response(jsonify(
                 {
                     "status": "error",
@@ -80,6 +83,7 @@ class UVARCWorkshopSurveyVisualizationEndpoint(Resource):
                 logging.info(f"Response length: {len(response.get_data(as_text=True))}")
                 return response
         except Exception as e:
+            logging.exception("Error in POST /workshops/survey")
             response = make_response({"error": str(e)}, 500)
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return response
