@@ -367,11 +367,11 @@ class LegacyRCBillingHandler:
 
     def __generate_ceph_storage_pre_billing_file(self):
         RS_file = "/Users/ravichamakuri/UVAProjects/uvarc-unified-service/data/dropbox/ceph-list"
-        
+        standard_storage_free_space = self.__standard_storage_free_space * 1024
         PI_dict = {}
         with open(RS_file, "r") as fp:
             for row in (line.split(":") for line in fp):
-                if "TB" not in row[3]:
+                if "GB" not in row[3]:
                     continue
                 PI = row[7]
                 if PI in PI_dict:
@@ -385,12 +385,12 @@ class LegacyRCBillingHandler:
             for row in PI_dict[PI]:
                 row[3] = row[3][:-2].strip() # remove trailing " TB"
                 total += int(row[3])
-            if total > self.__standard_storage_free_space:
+            if total > standard_storage_free_space:
                 for row in PI_dict[PI]:
                     print(",".join((PI, row[0], row[6], row[3])))
                     rc_standard_storage_billing_fp.write(",".join((PI, row[0], row[6], row[3]))+'\n')
-                print(",".join((PI, "total", str(total), str(total - self.__standard_storage_free_space))))
-                rc_standard_storage_billing_fp.write(",".join((PI, "total", str(total), str(total - self.__standard_storage_free_space)))+'\n')
+                print(",".join((PI, "total", str(total), str(total - standard_storage_free_space))))
+                rc_standard_storage_billing_fp.write(",".join((PI, "total", str(total), str(total - standard_storage_free_space)))+'\n')
         rc_standard_storage_billing_fp.close()
 
     def generate_rc_standard_storage_billing(self):
@@ -421,6 +421,7 @@ class LegacyRCBillingHandler:
                 csv_reader = csv.DictReader(csv_file)
                 for billing_row in csv_reader:
                     # print(billing_row)
+                    billing_row['Size'] = str(int(int(billing_row['Size'])/1024))
                     if billing_row['Share Name'] != 'total':
                         pi_billing_row_list.append(billing_row)
                         # if billing_row['Share Name'] in self.__all_fdm_lookup_dict['standard_storage_fdm_info']:
@@ -438,7 +439,7 @@ class LegacyRCBillingHandler:
                             pi_share_list = []
                             for pi_billing_row in pi_billing_row_list:
                                 # print(pi_billing_row)
-                                billing_row_disscount_size = free_space_max * self.__percent_share_ratio(int(pi_billing_row['Size']), int(billing_row['Project Name']))
+                                billing_row_disscount_size = free_space_max * self.__percent_share_ratio(int(pi_billing_row['Size']), int(int(billing_row['Project Name'])/1024))
                                 if pi_billing_row['Share Name'].strip().lower() in self.__all_fdm_lookup_dict['standard_storage_fdm_info'] and len(self.__all_fdm_lookup_dict['standard_storage_fdm_info'][pi_billing_row['Share Name'].lower()]) > 3:
                                     if pi_billing_row['Share Name'].strip().lower() == 'uvabx':
                                         pass
@@ -504,7 +505,7 @@ class LegacyRCBillingHandler:
                     # print(billing_row)
                     if billing_row['vol name'].strip().lower() in self.__all_project_multi_fdm_dict:
                         multi_fdm_list = self.__all_project_multi_fdm_dict[billing_row['vol name'].strip().lower()]
-                        total_size = billing_row['size'].split('TB')[0].strip()
+                        total_size = str(float(int(billing_row['size'].split('GB')[0].strip())/1024))
                         size = int(float(total_size)/len(multi_fdm_list))
                         index = 1
                         for fdm_list in multi_fdm_list:
@@ -514,7 +515,7 @@ class LegacyRCBillingHandler:
                             report_writer.writerow([bill_date.strftime("%d-%b-%y")] + fdm_list + [int((float(size) * 7000)/12)] + [fdm_list[2]] + [description])
                             index = index + 1
                     elif billing_row['vol name'].strip().lower() in self.__all_fdm_lookup_dict['project_storage_fdms_info'] and  len(self.__all_fdm_lookup_dict['project_storage_fdms_info'][billing_row['vol name'].lower()]) > 3:
-                        size = billing_row['size'].split('TB')[0].strip()
+                        size = str(float(int(billing_row['size'].split('GB')[0].strip())/1024))
                         description = "{pi}, {size} TB {project_name} /{share_name} research project storage".format(pi=billing_row['owner'], size=size, project_name=billing_row['group'], share_name=billing_row['vol name'])
                         today = datetime.now()
                         bill_date = (today - timedelta(days=today.day)).replace(day=1)
