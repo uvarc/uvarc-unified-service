@@ -61,19 +61,19 @@ class UVARCAdminFormInfoEndpoint(Resource):
                     application/json: "error!"
         """
         try:
-            # if cors_check(app, request.headers.get('Origin')):
-            #     abort(401)
-            # else:
-            if 'group_users_info' in request.args and request.args['group_users_info'] == 'true':
-                response = jsonify(
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                if 'group_users_info' in request.args and request.args['group_users_info'] == 'true':
+                    response = jsonify(
                     UVARCAdminFormInfoDataManager(group_name).get_group_users_info(),
                     200
-                )
-            else:
-                response = jsonify(
-                    UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
-                    200
-                )
+                    )
+                else:
+                    response = jsonify(
+                        UVARCAdminFormInfoDataManager(group_name).get_group_admin_info(),
+                        200
+                    )
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(
                 response
@@ -104,19 +104,19 @@ class UVARCAdminFormInfoEndpoint(Resource):
                     application/json: "error!"
         """
         try:
-            # if cors_check(app, request.headers.get('Origin')):
-            #     abort(401)
-            # else:
-            group_info = request.get_json()
-            UVARCAdminFormInfoDataManager(group_name).set_group_admin_info(group_info['owner_uid'])
+            if cors_check(app, request.headers.get('Origin')):
+                abort(401)
+            else:
+                group_info = request.get_json()
+                UVARCAdminFormInfoDataManager(group_name).set_group_admin_info(group_info['owner_uid'])
 
-            response = jsonify(
-                {
-                    "status": "success",
-                    "message": 'Group owner updated successfully'
-                },
-                200
-            )
+                response = jsonify(
+                    {
+                      "status": "success",
+                      "message": 'Group owner updated successfully'
+                    },
+                    200
+                 )
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return make_response(
                 response
@@ -134,7 +134,7 @@ class UVARCAdminFormInfoEndpoint(Resource):
                 response
             )
 
-    def options(self, uid=None):
+    def options(self, group_name=None):
         """
         This is a resource request form endpoint that returns all data required for display and processing the form request!'
         ---

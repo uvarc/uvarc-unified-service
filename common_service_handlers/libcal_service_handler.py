@@ -34,6 +34,7 @@ presenters = [
     "Alois D’Uston de Villereglan",
     "Hana Parece",
     "Camden Duy",
+    "Deb Triant"
 ]
 
 
