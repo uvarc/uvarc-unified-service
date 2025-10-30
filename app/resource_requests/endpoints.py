@@ -27,7 +27,6 @@ class UVARCAdminFormStatusUpdateEndpoint(Resource):
             return make_response(
                 response
             )
-            return {'message': ''}, 200
         except Exception as ex:
             print(ex)
             response = jsonify(
@@ -313,7 +312,6 @@ class UVARCResourcRequestFormInfoEndpoint(Resource):
                 response
             )
 
-    # @api.param('uid', 'The user ID')
     def get(self, uid=None):
         """
         This is a resource request form endpoint that returns all data required for display and processing the form request!'

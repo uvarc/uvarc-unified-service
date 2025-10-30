@@ -102,6 +102,28 @@ ENV_BOOL_FLAGS_TUPLE = (ENV_NAME in (
 
 DEVELOPMENT, PRODUCTION = ENV_BOOL_FLAGS_TUPLE
 
+SECRET_KEY = settings_info["INCOMMON_SSO"]["CLIENT_SECRET"]
+if 'SSO_DEVELOPMENT_EPPN' in settings_info:
+    SSO_DEVELOPMENT_EPPN = settings_info["SSO_DEVELOPMENT_EPPN"]
+SSO_ATTRIBUTE_MAP = {
+    'eppn': (False, 'eppn'),  # valid email address
+    'uid': (settings_info["SSO_UID"], 'uid'),  # computing id
+    'givenName': (False, 'givenName'),
+    'cn': (False, 'cn'),
+    'email': (False, 'email'),  # valid email address
+    'sn': (False, 'sn'),  # Lastname
+    'affiliation': (False, 'affiliation'),
+    'displayName': (False, 'displayName'),
+    'title': (False, 'title'),
+    'isMemberOf': (False, 'isMemberOf'),
+    'gid': (False, 'gid'),
+}
+SSO_LOGIN_URL = '/login/sso'
+API_URL = settings_info["API_URL"]
+SITE_URL = settings_info["SITE_URL"]
+FRONTEND_AUTH_CALLBACK, FRONTEND_EMAIL_RESET, FRONTEND_EMAIL_CONFIRM = auth_callback_url_tuple(
+    SITE_URL, '/session', '/reset_password/', '/login/')
+
 WORKDAY_CONN_INFO = {
     'HOST': settings_info['WORKDAY']['HOSTS'][0],
     'PORT': settings_info['WORKDAY']['PORT'],

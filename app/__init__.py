@@ -143,15 +143,22 @@ def stop():
         print('Server is not running.')
 
 from app.core import core
-from app.resource_requests import allocation_requests
+from app.resource_requests import resource_requests
 from app.ticket_requests import ticket_requests
 from app.workshop_visualization import workshop_visualization
+# from common_utils import common_utils
+from common_utils.auth import auth_blueprint
 app.register_blueprint(core)
-app.register_blueprint(allocation_requests)
+app.register_blueprint(resource_requests)
 app.register_blueprint(ticket_requests)
 app.register_blueprint(workshop_visualization)
+# app.register_blueprint(common_utils)
+app.register_blueprint(auth_blueprint)
 
-
+for rule in app.url_map.iter_rules():
+    print(f"Endpoint: {rule.endpoint}, Methods: {', '.join(rule.methods)}, Rule: {rule.rule}")
+# Endpoint: sso_login, Methods: HEAD, OPTIONS, GET, Rule: /accord/onboarding/api/login
+# Endpoint: sso_login, Methods: GET, OPTIONS, HEAD, Rule: /login/sso
 from app.core import tasks
 from app.resource_requests import tasks
 from app.ticket_requests import tasks
