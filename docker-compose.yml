@@ -1,6 +1,6 @@
 networks:
-  uvarc_unified_service_network_private:
-    name: uvarc_unified_service_network_private
+  uvarc_unified_service_network_public:
+    name: uvarc_unified_service_network_public
     external: false
   uvarc_unified_db_network_private:
     name: uvarc_unified_db_network_private
@@ -14,7 +14,7 @@ services:
     ports:
       - 25:25
     networks:
-      - uvarc_unified_service_network_private
+      - uvarc_unified_service_network_public
   uvarc_unified_service:
     build:
       context: .
@@ -69,7 +69,7 @@ services:
     ports:
       - 5000:5000
     networks:
-      - uvarc_unified_service_network_private
+      - uvarc_unified_service_network_public
       - uvarc_unified_db_network_private
     depends_on:
       - postfix
